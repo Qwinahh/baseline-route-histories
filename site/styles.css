@@ -1,0 +1,160 @@
+/* Baseline route histories. Graph-paper instrument log: cool paper, cobalt ink for
+   measured points, amber for age warnings, hatching for time nobody measured. */
+:root {
+  --paper: #eef1f4;
+  --panel: #f8fafb;
+  --ink: #1b2430;
+  --muted: #56647a;
+  --grid: #c9d2dc;
+  --signal: #2f5bd3;
+  --amber: #9a5800;
+  --hatch: #8f9baa;
+  --display: "Bahnschrift", "DIN Alternate", "Arial Narrow", system-ui, sans-serif;
+  --body: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  --mono: "Cascadia Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #10151b;
+    --panel: #161d25;
+    --ink: #dce3ea;
+    --muted: #97a4b3;
+    --grid: #2b3541;
+    --signal: #88a8ff;
+    --amber: #e3a24c;
+    --hatch: #5b6774;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-attachment: fixed;
+  color: var(--ink);
+  font: 16px/1.55 var(--body);
+  padding: 0 clamp(16px, 4vw, 48px) 64px;
+}
+@media (prefers-color-scheme: dark) { body { background-image: none; } }
+main, .masthead { max-width: 1080px; margin: 0 auto; }
+a { color: var(--signal); text-underline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+.skip { position: absolute; left: -9999px; }
+.skip:focus { left: 16px; top: 8px; background: var(--panel); padding: 8px 12px; z-index: 2; }
+
+/* Type */
+.brand, h1, h2, h3, .label-title {
+  font-family: var(--display);
+  font-stretch: 80%;
+  letter-spacing: 0.01em;
+}
+.masthead {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+  gap: 4px 24px; padding: 20px 0 12px; border-bottom: 2px solid var(--ink);
+}
+.brand { margin: 0; font-size: 1.35rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+.masthead-note { margin: 0; color: var(--muted); font-size: 0.9rem; }
+h1 { font-size: clamp(2rem, 5.5vw, 3.6rem); line-height: 1.02; font-weight: 600; margin: 40px 0 16px; max-width: 18ch; }
+h1 .live { color: var(--amber); }
+h2 { font-size: clamp(1.5rem, 3.4vw, 2.1rem); font-weight: 600; margin: 0 0 8px; }
+h3 { font-size: 1.15rem; font-weight: 600; margin: 24px 0 8px; }
+.lede { max-width: 62ch; font-size: 1.08rem; margin: 0 0 24px; }
+.muted { color: var(--muted); }
+.mono, code { font-family: var(--mono); font-size: 0.92em; }
+p { max-width: 70ch; }
+
+/* Standing notice: what this page is not */
+.notice {
+  border: 2px solid var(--ink); background: var(--panel);
+  padding: 12px 16px; margin: 0 0 32px; max-width: 70ch;
+}
+.notice strong { font-family: var(--display); font-stretch: 80%; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* Specimen labels: one per route */
+.labels { list-style: none; padding: 0; margin: 0 0 48px; display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+.label {
+  background: var(--panel); border: 1px solid var(--ink); border-left: 8px solid var(--amber);
+  padding: 12px 16px 14px;
+}
+.label[data-status="recent"] { border-left-color: var(--signal); }
+.label-title { font-size: 1.3rem; font-weight: 600; margin: 0 0 6px; overflow-wrap: anywhere; }
+.label-title a { color: inherit; }
+.fields { display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; margin: 0; font-size: 0.93rem; }
+.fields dt { font-family: var(--mono); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding-top: 2px; }
+.fields dd { margin: 0; overflow-wrap: anywhere; }
+
+.badge {
+  display: inline-block; font-family: var(--mono); font-size: 0.74rem; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 1px 6px; border: 1px solid currentColor; margin-left: 6px; vertical-align: 1px;
+}
+.badge[data-status="stale"], .badge[data-status="aging"] { color: var(--amber); }
+.badge[data-status="recent"] { color: var(--signal); }
+
+/* Route sections */
+.route { border-top: 2px solid var(--ink); padding-top: 24px; margin-top: 48px; }
+.route-head { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; }
+.route-head h2 { font-family: var(--mono); font-stretch: normal; font-size: clamp(1.2rem, 3vw, 1.7rem); letter-spacing: 0; overflow-wrap: anywhere; }
+.panel { background: var(--panel); border: 1px solid var(--grid); padding: 16px; margin: 16px 0; }
+.fresh { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); margin: 0; }
+.fresh div { border-top: 1px solid var(--grid); padding-top: 8px; }
+.fresh dt { font-family: var(--mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.fresh dd { margin: 2px 0 0; }
+.fresh .big { font-family: var(--display); font-stretch: 80%; font-size: 1.45rem; font-weight: 600; display: block; line-height: 1.2; }
+
+/* Chart */
+.chart-scroll { overflow-x: auto; margin: 16px 0 4px; background: var(--panel); border: 1px solid var(--grid); }
+.chart { display: block; width: 100%; min-width: 640px; height: auto; }
+.chart text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+.chart .axis { stroke: var(--ink); stroke-width: 1; }
+.chart .gridline { stroke: var(--grid); stroke-width: 1; }
+.chart .break { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; }
+.chart .point { fill: var(--signal); stroke: var(--panel); stroke-width: 2; }
+.chart .value { fill: var(--ink); font-size: 12px; }
+.chart .letter { fill: var(--ink); font-weight: 700; }
+.chart .today { stroke: var(--amber); stroke-width: 2; }
+.chart .today-label, .chart .gap-label { fill: var(--amber); }
+.chart .hatch-line { stroke: var(--hatch); stroke-width: 1.5; }
+.chart-caption { font-size: 0.88rem; color: var(--muted); margin: 0 0 16px; }
+
+/* Observations table; becomes cards on narrow screens */
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; background: var(--panel); }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-family: var(--mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 600; }
+td.num { font-family: var(--mono); white-space: nowrap; }
+.letter-chip { font-family: var(--mono); font-weight: 700; display: inline-block; min-width: 1.8em; text-align: center; border: 1px solid var(--ink); justify-self: start; }
+.scroll-hint { display: none; font-size: 0.85rem; color: var(--muted); margin: 8px 0 -8px; }
+@media (max-width: 720px) {
+  table, thead, tbody, tr, td { display: block; width: 100%; }
+  thead { position: absolute; left: -9999px; }
+  tr { border: 1px solid var(--grid); margin-bottom: 10px; padding: 6px 0; }
+  td { border: 0; padding: 3px 12px; display: grid; grid-template-columns: 9.5em 1fr; gap: 8px; }
+  td::before { content: attr(data-label); font-family: var(--mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); padding-top: 3px; }
+  td.num { white-space: normal; }
+  .scroll-hint { display: block; }
+}
+
+.breaks { padding-left: 1.2em; margin: 8px 0 0; }
+.breaks li { margin-bottom: 6px; overflow-wrap: anywhere; }
+.breaks .change { font-family: var(--mono); font-size: 0.85em; }
+
+/* Sources, methods, log */
+.section { border-top: 2px solid var(--ink); margin-top: 56px; padding-top: 24px; }
+.source { margin-bottom: 20px; }
+.log { font-size: 0.88rem; }
+.log td { font-family: var(--mono); font-size: 0.82rem; }
+details summary { cursor: pointer; font-family: var(--display); font-stretch: 80%; font-size: 1.1rem; font-weight: 600; }
+.superseded { color: var(--muted); text-decoration: line-through; }
+footer { max-width: 1080px; margin: 56px auto 0; padding-top: 12px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.85rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .chart .point { transition: r 120ms ease-out; }
+  .chart .point:hover { r: 8; }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "deepseek.deepseek-chat",
+      "provider": "DeepSeek",
+      "public_name": "deepseek-chat",
+      "exact_identifier": "deepseek-chat",
+      "identifier_source_url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml",
+      "release_date": null,
+      "release_source_url": null,
+      "availability": "unknown",
+      "notes": "API model name as requested in the source's aider command. It may be an alias: the source labels runs of this name as different underlying models over time (see observation source_details.model)."
+    },
+    {
+      "id": "deepseek.deepseek-reasoner",
+      "provider": "DeepSeek",
+      "public_name": "deepseek-reasoner",
+      "exact_identifier": "deepseek-reasoner",
+      "identifier_source_url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml",
+      "release_date": null,
+      "release_source_url": null,
+      "availability": "unknown",
+      "notes": "API model name as requested in the source's aider command. It may be an alias: the source labels runs of this name as different underlying models over time (see observation source_details.model)."
+    }
+  ]
+}

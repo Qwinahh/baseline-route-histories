@@ -1,0 +1,33 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "livenerf",
+      "author": "GitHub account ninjahawk (repository owner)",
+      "url": "https://github.com/ninjahawk/livenerf",
+      "method": "Author-run longitudinal evaluation of Claude models with a pre-registered protocol (as described in the repository README; not independently verified)",
+      "access_method": "Public GitHub repository, read through the GitHub API",
+      "reuse_decision": "link_and_summary_only",
+      "reuse_evidence": "At revision 5bbe255a36791f7d0788b7d441377e9d3a3284da the README 'License' section says 'Not yet chosen' and no LICENSE file exists (GitHub API 404); repository licence field is null. Numeric republication is not permitted until the author grants a licence or permission.",
+      "revision": "5bbe255a36791f7d0788b7d441377e9d3a3284da",
+      "retrieved_at": "2026-09-28T14:15:10Z",
+      "expected_update_cadence": null,
+      "last_successful_check": "2026-09-28T14:15:10Z",
+      "notes": "Source candidate/protocol reference only. No scores, dates or model IDs copied. Series and observations blocked on reuse rights."
+    },
+    {
+      "id": "aider-polyglot",
+      "author": "Aider project (GitHub organization Aider-AI)",
+      "url": "https://github.com/Aider-AI/aider/blob/main/aider/website/_data/polyglot_leaderboard.yml",
+      "method": "The Aider project's own runs of its polyglot coding benchmark through the aider CLI, published as leaderboard data in its repository. Not independently reproduced by Baseline.",
+      "access_method": "Pinned commit via GitHub API; raw file and licence stored under evidence/snapshots/aider-polyglot/<commit>/",
+      "reuse_decision": "numeric_republication_permitted",
+      "reuse_evidence": "Checked 2026-09-28 UTC at commit 5dc9490bb35f9729ef2c95d00a19ccd30c26339c: GitHub reports licence Apache-2.0; root LICENSE.txt is the unmodified Apache License 2.0 text (sha256 cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30). The data file sits in that repository. No separate data terms were found in README.md, the leaderboard page source or the site _config.yml, and there is no NOTICE file at the root. Conditions: keep attribution and a copy of the licence with redistributed files. Exercise content (Exercism) is not copied.",
+      "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+      "retrieved_at": "2026-09-28T22:32:48Z",
+      "expected_update_cadence": null,
+      "last_successful_check": "2026-09-28T22:36:45Z",
+      "notes": "Update cadence is irregular and not stated. At the checked commit the latest row is dated 2025-10-03 and the repository was last pushed 2026-05-22, so these are old measurements, not current monitoring. Numeric reuse was accepted for pinned commit 5dc9490b in docs/T02_REVIEW.md (attribution, retained licence and provenance; no exercise content). Ingestion refuses any licence whose sha256 differs from the reviewed one until a new review is done."
+    }
+  ]
+}

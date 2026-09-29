@@ -1,0 +1,20 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "fixture-source-a",
+      "fixture": true,
+      "author": "Fixture Author",
+      "url": "https://example.invalid/source",
+      "method": "synthetic",
+      "access_method": "none",
+      "reuse_decision": "numeric_republication_permitted",
+      "reuse_evidence": "SYNTHETIC TEST FIXTURE - not a real model, source or measurement.",
+      "revision": null,
+      "retrieved_at": "2026-01-02T00:00:00Z",
+      "expected_update_cadence": "daily",
+      "last_successful_check": null,
+      "notes": "SYNTHETIC TEST FIXTURE - not a real model, source or measurement."
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "fixture-series-a",
+      "fixture": true,
+      "route_id": "fixture-route-a-api",
+      "source_id": "fixture-source-a",
+      "suite": "fixture-suite",
+      "suite_version": "1",
+      "grader": "exact-match",
+      "prompt_set": "fixture-prompts-v1",
+      "harness": "none",
+      "sampling": {
+        "passes_per_item": 1
+      },
+      "scope": "synthetic",
+      "baseline_definition": "first fixture observation",
+      "notes": "SYNTHETIC TEST FIXTURE - not a real model, source or measurement.",
+      "fingerprint": "416737842ea6332337bb515ee0df450cd9b14eb42923cca2d5b9e4240bac6a75"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "deepseek-api.deepseek-chat",
+      "model_id": "deepseek.deepseek-chat",
+      "access_type": "direct_api",
+      "service": "DeepSeek API, selected by the LiteLLM provider prefix 'deepseek/' in the source's aider command",
+      "requested_model": "deepseek/deepseek-chat",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "deepseek-api.deepseek-reasoner",
+      "model_id": "deepseek.deepseek-reasoner",
+      "access_type": "direct_api",
+      "service": "DeepSeek API, selected by the LiteLLM provider prefix 'deepseek/' in the source's aider command",
+      "requested_model": "deepseek/deepseek-reasoner",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    }
+  ]
+}

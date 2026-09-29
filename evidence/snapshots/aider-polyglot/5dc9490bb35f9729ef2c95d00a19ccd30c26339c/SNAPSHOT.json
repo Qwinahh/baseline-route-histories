@@ -1,0 +1,21 @@
+{
+  "source_id": "aider-polyglot",
+  "repository": "Aider-AI/aider",
+  "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+  "requested_ref": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
+  "retrieved_at": "2026-09-28T22:33:01Z",
+  "files": {
+    "polyglot_leaderboard.yml": {
+      "source_path": "aider/website/_data/polyglot_leaderboard.yml",
+      "url": "https://raw.githubusercontent.com/Aider-AI/aider/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml",
+      "sha256": "85a50b25953512d18ba4bb0c23c0b8e626fcf9a5b52d287644b8a0b44b9535de"
+    },
+    "LICENSE.txt": {
+      "source_path": "LICENSE.txt",
+      "url": "https://raw.githubusercontent.com/Aider-AI/aider/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/LICENSE.txt",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    }
+  },
+  "data_file": "polyglot_leaderboard.yml",
+  "sha256": "85a50b25953512d18ba4bb0c23c0b8e626fcf9a5b52d287644b8a0b44b9535de"
+}

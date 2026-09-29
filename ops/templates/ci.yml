@@ -1,0 +1,32 @@
+# WORKFLOW TEMPLATE (T05 release candidate). GitHub runs it only once it is copied
+# into .github/workflows/ of the public repository (docs/RELEASE_PLAN.md, section 5).
+#
+# Checks every pull request and push. Read-only token, no secrets, never commits or
+# deploys, so code from a pull request (including forks) cannot write or publish.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Offline tests (collector runs on simulated data only)
+        run: python -B -m unittest discover -s tests
+      - name: Validate the registry
+        run: python -B scripts/registry.py
+      - name: Build and inspect the site bundle
+        run: python -B scripts/release_check.py

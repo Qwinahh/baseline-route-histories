@@ -1,0 +1,17 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "fixture-model-a",
+      "fixture": true,
+      "provider": "Example Provider",
+      "public_name": "Example Model A",
+      "exact_identifier": "example-model-a-0001",
+      "identifier_source_url": "https://example.invalid/models",
+      "release_date": null,
+      "release_source_url": null,
+      "availability": "unknown",
+      "notes": "SYNTHETIC TEST FIXTURE - not a real model, source or measurement."
+    }
+  ]
+}

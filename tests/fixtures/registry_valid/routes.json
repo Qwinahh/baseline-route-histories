@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "records": [
+    {
+      "id": "fixture-route-a-api",
+      "fixture": true,
+      "model_id": "fixture-model-a",
+      "access_type": "direct_api",
+      "service": "example.invalid API",
+      "requested_model": "example-model-a-0001",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "temperature": 0
+      },
+      "notes": "SYNTHETIC TEST FIXTURE - not a real model, source or measurement."
+    }
+  ]
+}
