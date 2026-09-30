@@ -23,6 +23,7 @@ refresh = importlib.import_module("refresh")
 release_check = importlib.import_module("release_check")
 build_site = importlib.import_module("build_site")
 registry = importlib.import_module("registry")
+catalog = importlib.import_module("catalog")
 
 # Expected values are derived from the current, validated registry rather than frozen,
 # so ordinary evidence growth never breaks the publication suite (review T05 R2).
@@ -227,6 +228,73 @@ class BundleTests(unittest.TestCase):
         (self.out / "licenses" / "aider-polyglot-LICENSE.txt").unlink()
         problems = release_check.inspect_bundle(self.out.resolve(), data, records)
         self.assertIn("missing file in bundle: licenses/aider-polyglot-LICENSE.txt", problems)
+
+    def test_refresh_adding_routes_still_publishes(self):
+        """T07 R1: (a) a new settings variant and (b) a new reviewed model ID publish,
+        each route shown once; curated catalogue entries unchanged; second run idempotent."""
+        row, _ = synthetic_row()
+        variant = row.replace("aider --model deepseek/deepseek-chat\n",
+                              "aider --model deepseek/deepseek-chat --reasoning-effort high\n")
+        new_model = row.replace("synthetic-test-row", "synthetic-new-model").replace(
+            "aider --model deepseek/deepseek-chat\n", "aider --model deepseek/deepseek-synthetic-model\n").replace(
+            "versions: 99.", "versions: 97.")
+        curated = json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))
+        for label, extra, expect_new_entry in (("variant", variant, False), ("new model", new_model, True)):
+            with self.subTest(case=label):
+                ws = Workspace()
+                self.addCleanup(ws.tmp.cleanup)
+                baseline = set(build_site.build(Path(ws.tmp.name) / "base-out", registry_dir=ws.registry,
+                                                evidence_root=ws.evidence, generated_at=stamp(LATER),
+                                                now=LATER)["catalog_evidence_only"])
+                data = (SNAPSHOT / "polyglot_leaderboard.yml").read_bytes() + extra.encode()
+                upstream = Upstream(hashlib.sha1(data).hexdigest(), data)
+                result = ws.refresh(upstream, MORNING_RUN)
+                self.assertEqual((result["registry_valid"], result["failed_runs"], result["publish"]), (True, [], True))
+                report = ws.release()
+                self.assertTrue(report["ok"], report["problems"])
+                published = build_site.build(ws.out, registry_dir=ws.registry, evidence_root=ws.evidence,
+                                             generated_at=stamp(LATER), now=LATER)
+                records, _ = registry.load_registry(ws.registry)
+                counts = {}
+                for entry in published["catalog"]:
+                    for route_id in entry["route_ids"]:
+                        counts[route_id] = counts.get(route_id, 0) + 1
+                self.assertEqual(counts, {r["id"]: 1 for r in records["routes"]})
+                fresh = set(published["catalog_evidence_only"]) - baseline
+                self.assertEqual(len(fresh), 1 if expect_new_entry else 0)
+                for entry in fresh:
+                    new = next(e for e in published["catalog"] if e["id"] == entry)
+                    self.assertEqual((new["availability"], new["access_kind"]), ("unknown", "direct_api"))
+                curated_ids = {e["id"]: e for e in curated["entries"]}
+                for entry in published["catalog"]:
+                    if entry["id"] in curated_ids:
+                        original = curated_ids[entry["id"]]
+                        self.assertEqual({k: v for k, v in entry.items() if k != "route_ids"},
+                                         {k: v for k, v in original.items() if k != "route_ids"})
+                        self.assertTrue(set(original["route_ids"]) <= set(entry["route_ids"]))
+                again = ws.refresh(upstream, MORNING_RUN.replace(hour=12))
+                self.assertFalse(again["evidence_changed"])
+                self.assertEqual(json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8")), curated)
+
+    def test_catalogue_identity_rules_are_enforced_at_publication(self):
+        """T07: an app never shows API results; each measured route appears exactly once."""
+        records, _ = registry.load_registry(ROOT / "registry")
+        data = build_site.build_data(records, stamp(LATER))
+        curated = json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))
+        data["catalog"], _ = catalog.reconcile(curated, records)
+        self.assertEqual(release_check.inspect_catalog(data, records), [])
+        route_id = records["routes"][0]["id"]
+        app = next(e for e in data["catalog"] if e["access_kind"] == "consumer_app")
+        broken = json.loads(json.dumps(data))
+        next(e for e in broken["catalog"] if e["id"] == app["id"])["route_ids"] = [route_id]
+        problems = release_check.inspect_catalog(broken, records)
+        self.assertTrue(any("must not show API measurements" in p for p in problems), problems)
+        self.assertTrue(any("appears 2 times" in p for p in problems), problems)
+        missing = json.loads(json.dumps(data))
+        for entry in missing["catalog"]:
+            entry["route_ids"] = [r for r in entry["route_ids"] if r != route_id]
+        self.assertTrue(any("appears 0 times" in p for p in release_check.inspect_catalog(missing, records)))
+        self.assertEqual(release_check.inspect_catalog({"catalog": []}, records), ["published data has no model catalogue"])
 
     def test_cli_rejects_unknown_arguments_and_manifest_inside_dist(self):
         with contextlib.redirect_stdout(io.StringIO()):

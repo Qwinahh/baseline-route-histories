@@ -14,6 +14,8 @@ import hashlib
 import json
 import re
 
+import aider_routes
+
 SOURCE_ID = "aider-polyglot"
 REPO = "Aider-AI/aider"
 DATA_PATH = "aider/website/_data/polyglot_leaderboard.yml"
@@ -23,7 +25,16 @@ LICENSE_NAME = "Apache License 2.0"
 # unmodified Apache-2.0 at commit 5dc9490b. Any other licence bytes need a new review.
 REVIEWED_LICENSE_SHA256 = frozenset({"cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"})
 
-SELECTED_MODELS = ("deepseek/deepseek-chat", "deepseek/deepseek-reasoner")
+# Production selection: every row with a reviewed route mapping (scripts/aider_routes.py,
+# docs/AIDER_ROUTE_REVIEW.md). An explicit tuple of requested models keeps the original
+# prefix-only selection, used by the synthetic tests.
+REVIEWED = None
+SELECTED_MODELS = REVIEWED
+DEEPSEEK_MODEL_NOTE = ("API model name as requested in the source's aider command. It may be an alias: "
+                       "the source labels runs of this name as different underlying models over time "
+                       "(see observation source_details.model).")
+MODEL_NOTE = ("Model name as requested in the source's aider command. It may be an alias; the source's own "
+              "label for each run is kept in observation source_details.model.")
 # LiteLLM provider prefix -> (provider, access_type, service). Only prefixes whose
 # endpoint is fixed by the prefix are mapped; anything else is skipped, not guessed.
 PROVIDER_PREFIXES = {
@@ -92,6 +103,38 @@ def parse_rows(text: str) -> list:
     return rows
 
 
+def _selected_mapping(row: dict, selected) -> tuple[dict | None, str | None, str | None]:
+    """Original T02 selection by requested model and provider prefix (synthetic tests).
+
+    Returns (mapping, skip reason, 'not_selected' when the row is simply not selected)."""
+    match = COMMAND_RE.match(row.get("command", ""))
+    requested = match.group(1) if match else None
+    if requested not in selected:
+        if match is None and any(m in row.get("command", "") for m in selected):
+            return None, "unsupported command form", None
+        return None, None, "not_selected"
+    reason = _row_problem(row)
+    settings = {key: row[key] for key in ("reasoning_effort", "thinking_tokens") if key in row}
+    for key, flag in (("reasoning_effort", match.group(2)), ("thinking_tokens", match.group(3))):
+        if flag and settings.setdefault(key, flag) != flag:
+            reason = reason or f"{key} field disagrees with the command flag"
+    prefix, _, model_name = requested.partition("/")
+    if reason is None and prefix not in PROVIDER_PREFIXES:
+        reason = f"provider prefix {prefix!r} has no reviewed route mapping"
+    if reason:
+        return None, reason, None
+    provider, access_type, service = PROVIDER_PREFIXES[prefix]
+    route_id = _slug(f"{prefix}-api.{model_name}")
+    if settings:
+        digest = hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()[:8]
+        route_id = f"{route_id}.s{digest}"
+    return {"maker": provider, "access_type": access_type, "service": service, "requested_model": requested,
+            "exact_identifier": model_name, "model_id": _slug(f"{prefix}.{model_name}"), "route_id": route_id,
+            "settings": settings, "mapping_evidence": None,
+            "route_notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."}, \
+        None, None
+
+
 def _slug(text: str) -> str:
     return re.sub(r"[^a-z0-9._-]+", "-", text.lower()).strip("-.")[:100]
 
@@ -126,23 +169,14 @@ def build_records(rows: list, snapshot: dict, selected=SELECTED_MODELS) -> tuple
     seen = set()
     for row in rows:
         where = {"line": row["_line"], "dirname": row.get("dirname")}
-        match = COMMAND_RE.match(row.get("command", ""))
-        requested = match.group(1) if match else None
-        if requested not in selected:
-            if match is None and any(m in row.get("command", "") for m in selected):
-                problems.append({"type": "skipped_row", **where, "reason": "unsupported command form"})
-                counts["skipped"] += 1
-            else:
+        if selected is REVIEWED:
+            mapping, reason = aider_routes.classify(row)
+            reason = _row_problem(row) or reason
+        else:
+            mapping, reason, skip = _selected_mapping(row, selected)
+            if skip == "not_selected":
                 counts["not_selected"] += 1
-            continue
-        reason = _row_problem(row)
-        settings = {key: row[key] for key in ("reasoning_effort", "thinking_tokens") if key in row}
-        for key, flag in (("reasoning_effort", match.group(2)), ("thinking_tokens", match.group(3))):
-            if flag and settings.setdefault(key, flag) != flag:
-                reason = reason or f"{key} field disagrees with the command flag"
-        prefix, _, model_name = requested.partition("/")
-        if reason is None and prefix not in PROVIDER_PREFIXES:
-            reason = f"provider prefix {prefix!r} has no reviewed route mapping"
+                continue
         if reason is None and row["dirname"] in seen:
             reason = "duplicate dirname within this snapshot"
         if reason:
@@ -151,13 +185,9 @@ def build_records(rows: list, snapshot: dict, selected=SELECTED_MODELS) -> tuple
             continue
         seen.add(row["dirname"])
         counts["selected"] += 1
-        provider, access_type, service = PROVIDER_PREFIXES[prefix]
         row_url = f"{file_url}#L{row['_line']}"
-        model_id = _slug(f"{prefix}.{model_name}")
-        route_id = _slug(f"{prefix}-api.{model_name}")
-        if settings:
-            digest = hashlib.sha256(json.dumps(settings, sort_keys=True).encode()).hexdigest()[:8]
-            route_id = f"{route_id}.s{digest}"
+        route_id, model_id = mapping["route_id"], mapping["model_id"]
+        model_name, settings = mapping["exact_identifier"], mapping["settings"]
         series = {
             "route_id": route_id, "source_id": SOURCE_ID,
             "suite": "Aider polyglot benchmark (Exercism exercises in six languages)",
@@ -172,18 +202,16 @@ def build_records(rows: list, snapshot: dict, selected=SELECTED_MODELS) -> tuple
         config_digest = hashlib.sha256(json.dumps(series, sort_keys=True).encode()).hexdigest()[:12]
         series_id = f"{SOURCE_ID}.{route_id}.c{config_digest}"
         out["models"].append({
-            "id": model_id, "provider": provider, "public_name": model_name,
+            "id": model_id, "provider": mapping["maker"], "public_name": model_name,
             "exact_identifier": model_name,
             "identifier_source_url": f"https://github.com/{REPO}/blob/{revision}/{DATA_PATH}",
             "release_date": None, "release_source_url": None, "availability": "unknown",
-            "notes": "API model name as requested in the source's aider command. It may be an alias: "
-                     "the source labels runs of this name as different underlying models over time "
-                     "(see observation source_details.model).",
+            "notes": DEEPSEEK_MODEL_NOTE if mapping["maker"] == "DeepSeek" else MODEL_NOTE,
         })
         out["routes"].append({
-            "id": route_id, "model_id": model_id, "access_type": access_type, "service": service,
-            "requested_model": requested, "tier": None, "region": None, "settings": settings,
-            "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated.",
+            "id": route_id, "model_id": model_id, "access_type": mapping["access_type"],
+            "service": mapping["service"], "requested_model": mapping["requested_model"],
+            "tier": None, "region": None, "settings": settings, "notes": mapping["route_notes"],
         })
         out["series"].append({
             "id": series_id, **series,

@@ -34,7 +34,7 @@ FORBIDDEN_MARKERS = (b"- dirname:", b'"data_file"', b"simulated_trial", b"draft_
 # that is true both before and after activation (review T05 R3).
 DEPLOYMENT_CLAIMS = ("not published", "local preview", "no schedule", "manual checks only",
                      "being monitored now")
-REQUIRED_PAGE_TEXT = ("runs no independent tests of any model", "Baseline has not run its own tests on this route.", "no recorded evidence",
+REQUIRED_PAGE_TEXT = ("runs no independent tests of any model", "API results are never shown as app results", "Baseline has not run its own tests on this route.", "no recorded evidence",
                       "No observations are recorded here")
 
 
@@ -79,6 +79,36 @@ def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
         shown = published.get(obs["id"])
         if shown and (shown["observed_at"], shown["retrieved_at"]) != (obs["observed_at"], obs["retrieved_at"]):
             problems.append(f"{obs['id']}: published dates differ from the registry")
+    problems.extend(inspect_catalog(data, records))
+    return problems
+
+
+def inspect_catalog(data: dict, records: dict) -> list:
+    """The published catalogue shows every measured route exactly once, and only on an
+    entry with the same identity and access (T07)."""
+    problems = []
+    entries = data.get("catalog")
+    if not isinstance(entries, list) or not entries:
+        return ["published data has no model catalogue"]
+    routes = {r["id"]: r for r in records["routes"]}
+    models = {m["id"]: m for m in records["models"]}
+    linked = {}
+    for entry in entries:
+        for route_id in entry.get("route_ids", []):
+            linked[route_id] = linked.get(route_id, 0) + 1
+            route = routes.get(route_id)
+            if route is None:
+                problems.append(f"catalogue entry {entry['id']} links unknown route {route_id}")
+                continue
+            model = models.get(route["model_id"], {})
+            if entry["access_kind"] != route["access_type"] or entry["exact_identifier"] != model.get("exact_identifier") \
+                    or entry["maker"] != model.get("provider"):
+                problems.append(f"catalogue entry {entry['id']} shows route {route_id} with a different identity or access")
+        if entry["access_kind"] in ("consumer_app", "local") and entry.get("route_ids"):
+            problems.append(f"catalogue entry {entry['id']} ({entry['access_kind']}) must not show API measurements")
+    for route_id in routes:
+        if linked.get(route_id) != 1:
+            problems.append(f"route {route_id} appears {linked.get(route_id, 0)} times in the catalogue (expected once)")
     return problems
 
 

@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 registry = importlib.import_module("registry")
 aider_polyglot = importlib.import_module("aider_polyglot")
 ingest = importlib.import_module("ingest")
+aider_routes = importlib.import_module("aider_routes")
 
 NOW = datetime(2026, 9, 28, 15, 0, tzinfo=timezone.utc)
 LATER = datetime(2026, 12, 31, tzinfo=timezone.utc)  # validation clock after every test run
@@ -499,6 +500,81 @@ class T02ReviewRegressionTests(IngestTestCase):
             run = ingest.ingest("aider-polyglot", self.ws.registry, self.ws.evidence, now=NOW, get=self.ws.get)
         self.assert_failed_and_unchanged(run, "internal_error", before)
         self.assertIn("RuntimeError: boom", run["problems"][-1]["message"])
+
+
+def route_row(command, label="Fixture", **fields):
+    row = {"dirname": f"fixture-{abs(hash((command, label))) % 10**8}", "model": label, "command": command,
+           "edit_format": "diff"}
+    row.update(fields)
+    return row
+
+
+class ReviewedRouteTests(unittest.TestCase):
+    """T07: reviewed Aider route mappings (scripts/aider_routes.py)."""
+
+    def test_unreviewed_alias_and_compound_runs_are_refused(self):
+        self.assertIsNone(aider_routes.resolve_route({"command": "aider --model unknown-alias", "model": "Unverified"}))
+        self.assertIsNone(aider_routes.resolve_route({"command": "aider --model o3", "model": "o3 (high) + gpt-4.1"}))
+        self.assertIsNone(aider_routes.resolve_route(route_row("aider --model o3", edit_format="architect")))
+        self.assertIsNone(aider_routes.resolve_route(route_row("aider --model o3", editor_model="gpt-4.1")))
+        self.assertIsNone(aider_routes.resolve_route(route_row("aider --architect --model r1 --editor-model sonnet")))
+
+    def test_maker_and_service_are_separate_for_hosted_models(self):
+        hosted = aider_routes.resolve_route(route_row("aider --model openrouter/x-ai/grok-3-beta"))
+        direct = aider_routes.resolve_route(route_row("aider --model xai/grok-3-mini-beta"))
+        self.assertEqual((hosted["maker"], hosted["service_provider"], hosted["access_type"]),
+                         ("xAI", "OpenRouter", "intermediary"))
+        self.assertEqual((direct["maker"], direct["service_provider"], direct["access_type"]), ("xAI", "xAI", "direct_api"))
+        self.assertNotEqual(hosted["route_id"], direct["route_id"])
+        same_model = aider_routes.resolve_route(route_row("aider --model openrouter/x-ai/grok-3-mini-beta"))
+        self.assertEqual(same_model["model_id"], direct["model_id"])
+        self.assertNotEqual(same_model["route_id"], direct["route_id"])
+
+    def test_unknown_hosts_makers_and_bases_are_refused(self):
+        for command in ("aider --model openrouter/openrouter/quasar-alpha",
+                        "aider --model openai/Qwen2.5-Coder-32B-Instruct",
+                        "OPENAI_API_BASE=https://example.invalid/v1 aider --model openai/some-model",
+                        "aider --model someprovider/model-x", "aider --model sonnet"):
+            with self.subTest(command=command):
+                self.assertIsNone(aider_routes.resolve_route(route_row(command)))
+        alibaba = aider_routes.resolve_route(route_row(
+            "OPENAI_API_BASE=https://dashscope-intl.aliyuncs.com/compatible-mode/v1 aider --model openai/qwen-max-2025-01-25"))
+        self.assertEqual((alibaba["maker"], alibaba["exact_identifier"]), ("Alibaba (Qwen)", "qwen-max-2025-01-25"))
+
+    def test_label_settings_must_agree(self):
+        refused = [route_row("aider --model o3-mini", "o3-mini (medium)"),
+                   route_row("aider --model o3", "o3 (high)", reasoning_effort="low"),
+                   route_row("aider --model gemini/gemini-x", "gemini-x (32k think)", thinking_tokens="8192"),
+                   route_row("aider --model gemini/gemini-x", "gemini-x (no think)", thinking_tokens="1024"),
+                   route_row("aider --model gemini/gemini-x --thinking-tokens 8k", thinking_tokens="4096")]
+        for row in refused:
+            with self.subTest(row=row["model"]):
+                self.assertIsNone(aider_routes.resolve_route(row))
+        accepted = aider_routes.resolve_route(route_row(
+            "aider --model gemini/gemini-x --thinking-tokens 32k", "gemini-x (32k think)", thinking_tokens="32768"))
+        self.assertEqual(accepted["settings"], {"thinking_tokens": "32768"})
+        self.assertIsNotNone(aider_routes.resolve_route(route_row(
+            "aider --model claude-sonnet-4-20250514", "claude-sonnet-4-20250514 (32k thinking)", thinking_tokens="32000")))
+        plain = aider_routes.resolve_route(route_row("aider --model o3"))
+        high = aider_routes.resolve_route(route_row("aider --model o3 --reasoning-effort high", "o3 (high)"))
+        self.assertNotEqual(plain["route_id"], high["route_id"])  # settings are part of the setup identity
+
+    def test_existing_deepseek_routes_are_unchanged(self):
+        records, _ = registry.load_registry(ROOT / "registry")
+        mapping = aider_routes.resolve_route(route_row("aider --model deepseek/deepseek-chat"))
+        route = next(r for r in records["routes"] if r["id"] == "deepseek-api.deepseek-chat")
+        self.assertEqual((mapping["route_id"], mapping["model_id"], mapping["service"], mapping["route_notes"]),
+                         (route["id"], route["model_id"], route["service"], route["notes"]))
+
+    def test_every_snapshot_row_is_accounted_for_with_a_reason(self):
+        folder = next((ROOT / "evidence" / "snapshots" / "aider-polyglot").iterdir())
+        meta, text = ingest.load_snapshot(folder, aider_polyglot)
+        rows = aider_polyglot.parse_rows(text)
+        out, problems, counts = aider_polyglot.build_records(rows, meta)
+        self.assertEqual(counts["selected"] + counts["skipped"], len(rows))
+        self.assertEqual(counts["not_selected"], 0)
+        self.assertTrue(all(p["reason"] for p in problems if p["type"] == "skipped_row"))
+        self.assertFalse([o for o in out["observations"] if "+" in o["source_details"]["model"]])
 
 
 class ParserTests(unittest.TestCase):

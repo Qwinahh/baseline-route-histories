@@ -14,8 +14,12 @@ on:
     paths:
       - "site/**"
       - "registry/**"
+      - "catalog/**"
       - "scripts/build_site.py"
       - "scripts/release_check.py"
+      - "scripts/catalog.py"
+      - "scripts/aider_routes.py"
+      - "scripts/aider_polyglot.py"
   workflow_dispatch:
     inputs:
       ref:
