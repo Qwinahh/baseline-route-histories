@@ -29,13 +29,17 @@ ROOT = Path(__file__).resolve().parents[1]
 # simulated material, and credential names or key material.
 FORBIDDEN_MARKERS = (b"- dirname:", b'"data_file"', b"simulated_trial", b"draft_pending_human_review",
                      b"SIMULATED-UNASSIGNED", b"pilot-draft", b"PRIVATE KEY", b"CLOUDFLARE_API_TOKEN",
-                     b"ANTHROPIC_API_KEY", b"GITHUB_TOKEN")
+                     b"ANTHROPIC_API_KEY", b"GITHUB_TOKEN", b"FIXTURE-NOT-FOR-PUBLICATION")
 # Statements whose truth depends on how the site is deployed; the page must use wording
 # that is true both before and after activation (review T05 R3).
 DEPLOYMENT_CLAIMS = ("not published", "local preview", "no schedule", "manual checks only",
                      "being monitored now")
-REQUIRED_PAGE_TEXT = ("runs no independent tests of any model", "API results are never shown as app results", "Baseline has not run its own tests on this route.", "no recorded evidence",
+REQUIRED_PAGE_TEXT = ("Baseline's own recurring tests have not started yet.", "Not tested by Baseline",
+                      "We don't yet have our own repeated tests for this model.", "No Baseline test history yet.",
+                      "API results are never shown as app results", "no recorded evidence",
                       "No observations are recorded here")
+# Test fixtures for Baseline status states carry this label and must never ship (T08).
+FIXTURE_LABEL = "FIXTURE-NOT-FOR-PUBLICATION"
 
 
 def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
@@ -72,6 +76,9 @@ def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
             problems.append(f"page makes a deployment-dependent claim {claim!r}")
     if data.get("independent_monitoring") is not False:
         problems.append("data must state that Baseline runs no independent monitoring")
+    if data.get("baseline_tests") != {"runs": 0, "entries": {}}:
+        problems.append("Baseline test results are present, but no reviewed Baseline run store exists; "
+                        "simulated or fixture results must never be published")
     published = {o["id"]: o for r in data["routes"] for o in r["observations"]}
     if set(published) != {o["id"] for o in records["observations"]}:
         problems.append("published observations do not match the registry")

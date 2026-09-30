@@ -272,8 +272,9 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     def test_directory_lists_every_entry_honestly(self):
         page = self.render("#models")
         self.assertIn(f"{len(self.data['catalog'])} entries", page["text"])
-        self.assertIn("runs no independent tests of any model", page["text"])
+        self.assertIn("Baseline's own recurring tests have not started yet.", page["text"])
         self.assertIn("API results are never shown as app results", page["text"])
+        self.assertEqual(page["text"].count("Not tested by Baseline"), len(self.data["catalog"]))
         for entry in self.data["catalog"]:
             self.assertIn(entry["name"], page["text"])
 
@@ -288,7 +289,9 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                     self.assertIn("No observations are recorded here between these runs or after the latest one",
                                   page["text"])
                     self.assertIn("other measurements may exist elsewhere", page["text"])
-                    self.assertIn("Baseline has not run its own tests on this route.", page["text"])
+                    self.assertIn("Not tested by Baseline", page["text"])
+                    self.assertIn("No Baseline test history yet.", page["text"])
+                    self.assertIn("Aider coding results", page["text"])
                     charts = [a for a in page["aria"] if a.startswith("Pass rate for ")]
                     self.assertEqual(len(charts), 1)
                     self.assertIn("Points are not connected.", charts[0])
@@ -298,7 +301,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                                       page["text"])
 
     def test_no_unscoped_absence_or_deployment_claims(self):
-        for hash_ in ("#models", "#sources", "#about", "#model/openai-app.chatgpt",
+        for hash_ in ("#models", "#sources", "#about", "#how-we-test", "#model/openai-app.chatgpt",
                       f"#model/{self.measured_entries()[0]['id']}"):
             with self.subTest(view=hash_):
                 lowered = self.render(hash_)["everything"].lower()
@@ -313,8 +316,9 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                 continue
             with self.subTest(app=entry["id"]):
                 page = self.render(f"#model/{entry['id']}")
-                self.assertIn("No measurements recorded here", page["text"])
+                self.assertIn("No other published results are recorded here for this app", page["text"])
                 self.assertIn("never shown as app results", page["text"])
+                self.assertIn("Not tested by Baseline", page["text"])
                 self.assertNotIn("Pass rate", page["text"])
                 self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
 
@@ -333,6 +337,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                                     capture_output=True, text=True, timeout=60, encoding="utf-8")
             self.assertEqual(result.returncode, 0, result.stderr)
             return json.loads(result.stdout)["text"]
+        render.folder = folder / "dist"
         return render
 
     def test_age_wording_follows_measurement_dates(self):
@@ -359,24 +364,28 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                 render = self.variant(mutate)
                 directory = render("#models")
                 self.assertNotIn("historical results", directory)
-                self.assertIn("Baseline runs no independent tests of any model", directory)
+                self.assertIn("Baseline's own recurring tests have not started yet.", directory)
+                self.assertIn("Other published tests available", directory)
                 fresh = render(f"#model/{fresh_entry['id']}")
                 old = render(f"#model/{old_entry['id']}")
                 self.assertIn("These results come from Aider project", fresh)  # from the source record
+                # The directory shows each entry's latest outside test date, never an age verdict.
+                self.assertNotIn("Recent measurements", directory)
+                self.assertNotIn("Historical evidence only", directory)
                 if label == "all old":
                     self.assertIn("more than 30 days old", fresh)
-                    self.assertNotIn("Recent measurements", directory)
+                    self.assertIn("latest test 2 Jan 2025", directory)
                 else:
                     self.assertIn("The newest measurement is from the last 7 days.", fresh)
-                    self.assertIn("Recent measurements", directory)
                     self.assertNotIn("more than 30 days old", fresh)
                 if label == "mixed":
                     self.assertIn("more than 30 days old", old)
-                    self.assertIn("Historical evidence only", directory)
+                    self.assertIn("latest test 2 Jan 2025", directory)
                 if label == "fresh only":
-                    self.assertNotIn("Historical evidence only", directory)
+                    self.assertNotIn("latest test 2 Jan 2025", directory)
                 for page in (fresh, old):
-                    self.assertIn("Baseline has not run its own tests on this route.", page)
+                    self.assertIn("No Baseline test history yet.", page)
+                    self.assertIn("Not tested by Baseline", page)
                     self.assertIn("each lettered setup is a separate configuration", page)
 
         def no_measurements(data):
@@ -385,10 +394,11 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                 entry["route_ids"] = []
         render = self.variant(no_measurements)
         directory = render("#models")
-        self.assertIn(" 0 have dated measurements", directory)
-        self.assertNotIn("Recent measurements", directory)
-        self.assertNotIn("Historical evidence only", directory)
-        self.assertIn("No measurements recorded here", render(f"#model/{fresh_entry['id']}"))
+        self.assertNotIn("Other published tests available", directory)
+        self.assertGreaterEqual(directory.count("None recorded"), len(self.data["catalog"]))  # plus the filter option
+        detail = render(f"#model/{fresh_entry['id']}")
+        self.assertIn("No other published results are recorded here.", detail)
+        self.assertNotIn("Pass rate", detail)
 
     def test_legacy_route_links_open_their_model(self):
         page = self.render("#deepseek-api.deepseek-chat")
@@ -408,8 +418,106 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         self.assertIn("Apache License 2.0", sources)
         self.assertIn("link only", sources)
         self.assertIn("Ingestion log", sources)
-        about = self.render("#about")["text"]
+        about = self.render("#about")["text"]          # the first release's About link still works
+        self.assertEqual(about, self.render("#how-we-test")["text"])
+        self.assertIn("How we test", about)
         self.assertIn("missing evidence, not a score of zero", about)
+        self.assertIn("Baseline's own recurring tests have not started yet.", about)
+
+    # ---------------------------------------------------------------- T08 monitoring-first
+    def test_zero_baseline_runs_never_show_a_trend(self):
+        """With no Baseline runs every page says "Not tested by Baseline" and nothing more."""
+        self.assertEqual(self.data["baseline_tests"], {"runs": 0, "entries": {}})
+        hashes = ["#models", "#model/openai-app.chatgpt", f"#model/{self.measured_entries()[0]['id']}",
+                  "#model/anthropic-api.claude-opus-5-5"]
+        judged = ("Collecting baseline", "Not enough evidence to judge", "Lower on our tests", "Higher on our tests",
+                  "No meaningful change detected", "Test unavailable", "% change", "0%")
+        for hash_ in hashes:
+            with self.subTest(view=hash_):
+                text = self.render(hash_)["text"]
+                self.assertIn("Not tested by Baseline", text)
+                if hash_ != "#models":
+                    self.assertIn("We don't yet have our own repeated tests for this model.", text)
+                    self.assertIn("No Baseline test history yet.", text)
+                for phrase in judged:
+                    if phrase == "0%" and hash_ == f"#model/{self.measured_entries()[0]['id']}":
+                        continue                            # the outside results' chart axis starts at 0%
+                    self.assertNotIn(phrase, text)
+        unmeasured = self.render("#model/anthropic-api.claude-opus-5-5")
+        self.assertFalse([a for a in unmeasured["aria"] if a.startswith("Pass rate for ")])  # no empty plot
+
+    def test_release_dates_order_the_directory_and_unknowns_say_so(self):
+        dated = sorted((e for e in self.data["catalog"] if e.get("release")),
+                       key=lambda e: e["release"]["date"], reverse=True)
+        undated = [e for e in self.data["catalog"] if not e.get("release")]
+        self.assertTrue(dated and undated)
+        text = self.render("#models")["text"]
+        newest = self.render(f"#model/{dated[0]['id']}")["text"]
+        self.assertIn("release source", newest)
+        self.assertIn(dated[0]["release"]["source"]["claim"], newest)
+        first_unknown = text.index("No verified date")
+        self.assertLess(text.index(dated[0]["name"]), text.index(dated[-1]["name"]))
+        self.assertLess(text.index(dated[-1]["name"]), first_unknown)
+        unknown = self.render(f"#model/{undated[0]['id']}")["text"]
+        self.assertIn("No verified release date recorded", unknown)
+        self.assertNotIn("No release date was found", unknown)       # no claim of a search not documented
+        self.assertIn("Sorted by newest release", text)
+        by_name = self.render("#models?sort=name")["text"]
+        self.assertIn("Sorted by name (A–Z).", by_name)
+        self.assertNotIn("Sorted by newest release", by_name)          # the note follows the selected order
+        names = sorted((e["name"].lower(), e["id"]) for e in self.data["catalog"])
+        self.assertLess(by_name.index(self.data_name(names[0][1])), by_name.index(self.data_name(names[-1][1])))
+
+    def test_review_example_sorts_by_its_cited_release(self):
+        """T08 R1: Command A+ carries Cohere's own release note and sorts by that date."""
+        entry = next(e for e in self.data["catalog"] if e["id"] == "cohere-api.command-a-plus-05-2026")
+        self.assertEqual(entry["release"]["date"], "2026-05-20")
+        self.assertTrue(entry["release"]["source"]["url"].startswith("https://docs.cohere.com/changelog/"))
+        script = ("const D = require(%s); global.window = {}; eval(require('fs').readFileSync(%s, 'utf8'));"
+                  "const list = D.filterEntries(window.BASELINE_DATA.catalog, D.parseState('#models'), Date.now());"
+                  "process.stdout.write(JSON.stringify(list.map((e) => [e.id, e.release ? e.release.date : null])));"
+                  % (json.dumps(str(ROOT / "site" / "directory.js")), json.dumps(str(self.out / "data.js"))))
+        result = subprocess.run(["node", "-e", script], capture_output=True, text=True, timeout=60, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        order = json.loads(result.stdout)
+        at = [i for i, (entry_id, _) in enumerate(order) if entry_id == entry["id"]][0]
+        dates = [d for _, d in order]
+        self.assertTrue(all(d is not None and d >= "2026-05-20" for d in dates[:at]))
+        self.assertTrue(all(d is None or d <= "2026-05-20" for d in dates[at + 1:]))
+        self.assertIsNotNone(dates[at + 1])                               # dated entries follow, not only unknowns
+        page = self.render(f"#model/{entry['id']}")["text"]
+        self.assertIn("Released 20 May 2026", page)
+
+    def data_name(self, entry_id):
+        return next(e["name"] for e in self.data["catalog"] if e["id"] == entry_id)
+
+    def test_status_states_render_only_from_labelled_fixtures_and_never_ship(self):
+        """Fixture data reaches every non-default state; the release gate refuses it."""
+        target = self.measured_entries()[0]["id"]
+        cases = {
+            "Collecting baseline": {"runs": 3, "latest_run": "2026-09-29"},
+            "Not enough evidence to judge a change": {"runs": 40, "baseline_complete": True},
+            "Lower on our tests": {"runs": 40, "baseline_complete": True,
+                                   "analysis": {"reviewed": True, "verdict": "lower"}},
+            "Test unavailable": {"runs": 40, "latest_attempt": "failed"},
+        }
+        records, _ = registry.load_registry(ROOT / "registry")
+        for label, rec in cases.items():
+            with self.subTest(state=label):
+                def mutate(data, rec=rec):
+                    data["baseline_tests"] = {"runs": rec["runs"], "label": release_check.FIXTURE_LABEL,
+                                              "entries": {target: rec}}
+                render = self.variant(mutate)
+                detail = render(f"#model/{target}")
+                self.assertIn(label, detail)
+                self.assertNotIn("Not tested by Baseline", detail)
+                self.assertIn("Not tested by Baseline", render("#models"))   # other entries unchanged
+                folder = render.folder
+                data = json.loads((folder / "data.js").read_text(encoding="utf-8")[len("window.BASELINE_DATA = "):]
+                                  .rstrip().rstrip(";"))
+                problems = release_check.inspect_bundle(folder.resolve(), data, records)
+                self.assertTrue(any("Baseline test results are present" in p for p in problems), problems)
+                self.assertTrue(any("FIXTURE-NOT-FOR-PUBLICATION" in p for p in problems), problems)
 
 
 class PageSourceTests(unittest.TestCase):

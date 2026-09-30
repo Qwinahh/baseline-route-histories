@@ -116,6 +116,10 @@ def build_data(records: dict, generated_at: str) -> dict:
     return {
         "generated_at": generated_at, "schema_version": registry.SCHEMA_VERSION,
         "independent_monitoring": False,
+        # Baseline's own test record (T08). No Baseline run store exists yet: the T04
+        # collector is simulated-only and never publishes, so every entry is "Not tested
+        # by Baseline". The release check refuses anything else until live runs exist.
+        "baseline_tests": {"runs": 0, "entries": {}},
         "routes": routes,
         "sources": [{k: s.get(k) for k in (
             "id", "author", "url", "method", "access_method", "reuse_decision", "reuse_evidence",

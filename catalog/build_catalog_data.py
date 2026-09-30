@@ -4,7 +4,8 @@
 
 The listings were read from each provider's official model page on 30 September 2026
 (CHECKED); every identifier was confirmed verbatim in the downloaded page. See
-docs/CATALOG_SOURCES.md. Evidence-linked historical entries are generated from the
+docs/CATALOG_SOURCES.md. Cited release dates come from catalog/release_dates.json (T08);
+an identity without a row there has an unknown release date. Evidence-linked historical entries are generated from the
 registry routes, one entry per model and access route, and never carry scores here.
 """
 from __future__ import annotations
@@ -156,6 +157,17 @@ API_LISTINGS = {
               [(i, "unknown", "Listed as deprecated since 15 September 2025; retirement not stated.", None)
                for i in ("command-r-03-2024", "command-r-plus-04-2024", "command-r-plus", "command-r", "command-light")],
 }
+# Official display names (T08), shown instead of the raw API identifier where the maker's
+# own page gives one: Mistral's tables and model pages (above) and Anthropic's models
+# overview and model pages. The identifier stays on every entry and remains searchable.
+ANTHROPIC_NAMES = {
+    "claude-fable-5-1": "Claude Fable 5.1", "claude-opus-5-5": "Claude Opus 5.5", "claude-sonnet-5-5": "Claude Sonnet 5.5",
+    "claude-haiku-4-5-20251001": "Claude Haiku 4.5", "claude-fable-5": "Claude Fable 5", "claude-opus-5": "Claude Opus 5",
+    "claude-opus-4-8": "Claude Opus 4.8", "claude-opus-4-7": "Claude Opus 4.7", "claude-opus-4-6": "Claude Opus 4.6",
+    "claude-sonnet-5": "Claude Sonnet 5", "claude-sonnet-4-6": "Claude Sonnet 4.6",
+    "claude-opus-4-5-20251101": "Claude Opus 4.5", "claude-sonnet-4-5-20250929": "Claude Sonnet 4.5",
+}
+DISPLAY_NAMES = {("Anthropic", i): n for i, n in ANTHROPIC_NAMES.items()} |     {("Mistral AI", api): name for api, name, _dep, _ret in MISTRAL_TABLE} |     {("Mistral AI", api): name for api, name, _alias, _slug in MISTRAL_CURRENT}
 # Family-level entries: the page names the model but gives no API identifier.
 FAMILY_ENTRIES = [
     ("Meta", "direct_api", "Muse Spark", "Muse", "unknown"),
@@ -269,8 +281,15 @@ def build(records: dict) -> dict:
             entries.append(target)
             by_key[key] = target
         target["route_ids"].append(route["id"])
+    releases = {(r["maker"], r["exact_identifier"]): r for r in
+                json.loads((ROOT / "catalog" / "release_dates.json").read_text(encoding="utf-8"))["rows"]}
     for e in entries:
         e["route_ids"] = sorted(set(e["route_ids"]))
+        if e["access_kind"] == "direct_api" and (e["maker"], e["exact_identifier"]) in DISPLAY_NAMES:
+            e["name"] = DISPLAY_NAMES[(e["maker"], e["exact_identifier"])]
+        row = releases.get((e["maker"], e["exact_identifier"]))
+        if row and e["access_kind"] == "direct_api":
+            e["release"] = {"date": row["date"], "precision": row["precision"], "source": row["source"]}
     entries.sort(key=lambda e: (e["name"].lower(), e["id"]))
     return {"schema_version": 1, "checked_at": CHECKED, "entries": entries}
 
