@@ -1,0 +1,85 @@
+# WORKFLOW TEMPLATE (T05 release candidate). GitHub runs it only once it is copied
+# into .github/workflows/ of the public repository (docs/RELEASE_PLAN.md, section 5).
+#
+# Source refresh, separate from validation/publication:
+# - runs every six hours at minute 17 UTC, or by hand;
+# - only the registered, permission-reviewed source adapters run (scripts/refresh.py);
+#   the pilot collector is never invoked;
+# - snapshots, new records and the run log (including failures) are committed to the
+#   default branch; a failed source leaves earlier observations untouched;
+# - one writer at a time (concurrency group, never cancelled mid-run);
+# - the push uses GITHUB_TOKEN, which does not start other workflows, so there is no
+#   recursive trigger; publication is called explicitly below when needed.
+name: Refresh sources
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Source branch or commit to fetch (default main; a bad value tests failure handling)"
+        required: false
+        default: main
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: baseline-registry-writer
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      publish: ${{ steps.refresh.outputs.publish }}
+      commit: ${{ steps.store.outputs.commit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Refresh permitted sources
+        id: refresh
+        env:
+          SOURCE_REF: ${{ inputs.ref || 'main' }}
+        run: |
+          set +e
+          python -B scripts/refresh.py --ref "$SOURCE_REF" --github-output "$GITHUB_OUTPUT"
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+      - name: Validate the registry before storing anything
+        run: python -B scripts/registry.py
+      - name: Store snapshots, records and the run log
+        id: store
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add registry evidence/snapshots
+          if ! git diff --cached --quiet; then
+            git commit -m "Source refresh (run ${{ github.run_id }}) [automated]"
+            git push origin HEAD:main
+          fi
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Fail visibly if a source failed or a value conflicted
+        if: steps.refresh.outputs.exit_code != '0'
+        run: |
+          echo "::error::scripts/refresh.py exited ${{ steps.refresh.outputs.exit_code }}; see registry/ingestion_runs.jsonl"
+          exit 1
+
+  publish:
+    needs: refresh
+    if: needs.refresh.outputs.publish == 'true'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/publish-site.yml
+    with:
+      ref: ${{ needs.refresh.outputs.commit }}
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
