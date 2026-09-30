@@ -278,8 +278,12 @@ def ingest(source_id: str, registry_dir: Path, evidence_root: Path, snapshot_dir
         if source.get("reuse_decision") != PERMITTED:
             raise IngestError("rights_error", f"source {source_id!r} reuse_decision is "
                                               f"{source.get('reuse_decision')!r}; ingestion refused")
-        if snapshot_dir is None:
+        fetched = snapshot_dir is None
+        if fetched:
             snapshot_dir = fetch_snapshot(adapter, evidence_root, ref, started, get)
+        else:
+            run["notes"] = ("Re-ingest of a stored snapshot. Upstream was not contacted, so the "
+                            "source's revision and last successful check are unchanged.")
         meta, text = load_snapshot(snapshot_dir, adapter)
         run["source_revision"] = meta["revision"]
         run["snapshot_sha256"] = meta["sha256"]
@@ -306,8 +310,9 @@ def ingest(source_id: str, registry_dir: Path, evidence_root: Path, snapshot_dir
         run["problems"].extend(block_conflict_dependents(new, merge_problems, candidates, merge_counts))
         run["counts"] = {**row_counts, **merge_counts}
         merged = {kind: list(records[kind]) + new.get(kind, []) for kind in registry.FIELDS}
-        updated_source = dict(source, revision=meta["revision"], last_successful_check=stamp(started))
-        merged["sources"] = [updated_source if s is source else s for s in records["sources"]]
+        if fetched:  # only a real upstream check advances the source's check record (T07)
+            updated_source = dict(source, revision=meta["revision"], last_successful_check=stamp(started))
+            merged["sources"] = [updated_source if s is source else s for s in records["sources"]]
         errors = registry.validate_records(merged, now=started)
         if errors:
             raise IngestError("validation_error", "; ".join(errors[:20]))

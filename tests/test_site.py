@@ -241,75 +241,175 @@ class BuildSafetyTests(unittest.TestCase):
 
 @unittest.skipUnless(shutil.which("node"), "node not available")
 class RenderedCoverageWordingTests(unittest.TestCase):
-    """docs/T03_REVIEW.md R2: rendered text and accessibility labels describe this
-    registry's coverage only; gaps are never presented as proof nothing was measured."""
+    """Rendered text and accessibility labels, view by view (T03 R2, T05 R3, T07).
+    Gaps describe this registry's coverage only; apps never show API results; wording
+    stays true before and after publication. Expectations come from the current data."""
 
     @classmethod
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
-        out = Path(cls.tmp.name) / "dist"
-        build_site.build(out, generated_at=GENERATED)
-        result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out)],
-                                capture_output=True, text=True, timeout=60, encoding="utf-8")
-        assert result.returncode == 0, result.stderr
-        rendered = json.loads(result.stdout)
-        cls.text, cls.aria = rendered["text"], rendered["aria"]
-        cls.everything = cls.text + " " + " ".join(cls.aria)
-        # Expectations derived from the current registry (review T05 R2).
-        records, _ = registry.load_registry(ROOT / "registry")
-        series_route = {s["id"]: s["route_id"] for s in records["series"]}
-        routes = {}
-        for obs in records["observations"]:
-            routes.setdefault(series_route[obs["series_id"]], []).append(obs)
-        cls.routes = routes
-        cls.observations = records["observations"]
+        cls.out = Path(cls.tmp.name) / "dist"
+        cls.data = build_site.build(cls.out, generated_at=GENERATED)
+        cls.pages = {}
 
     @classmethod
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
-    def test_no_unscoped_absence_claims(self):
-        # The only allowed "not measured" is Baseline's supported statement about itself.
-        lowered = self.everything.lower().replace("baseline has not measured these routes itself", "")
-        for phrase in ("nothing was measured", "not measured", "unmeasured", "no measurements",
-                       "nobody measured"):
-            self.assertNotIn(phrase, lowered)
+    def render(self, hash_):
+        if hash_ not in self.pages:
+            result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(self.out), hash_],
+                                    capture_output=True, text=True, timeout=60, encoding="utf-8")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            page = json.loads(result.stdout)
+            page["everything"] = page["text"] + " " + " ".join(page["aria"])
+            self.pages[hash_] = page
+        return self.pages[hash_]
 
-    def test_gap_wording_is_scoped_to_recorded_evidence(self):
-        n = len(self.routes)
-        self.assertEqual(self.text.count("No observations are recorded here between these runs or after the latest one"), n)
-        self.assertEqual(self.text.count("other measurements may exist elsewhere"), n)
-        # The band's visible label is drawn only when the band is wide enough (very recent
-        # evidence leaves no room); the scoped aria-label below is always present.
-        self.assertLessEqual(self.text.count("no recorded evidence · "), n)
-        charts = [a for a in self.aria if a.startswith("Pass rate for ")]
-        self.assertEqual(len(charts), n)
-        latest = sorted(max(o["observed_at"] for o in obs) for obs in self.routes.values())
-        self.assertEqual(sorted(label.rsplit("after ", 1)[1].rstrip(".") for label in charts), latest)
-        for label in charts:
-            self.assertIn("Points are not connected.", label)
-            self.assertIn("Hatched band: no observations recorded here after ", label)
+    def measured_entries(self):
+        return [e for e in self.data["catalog"] if e["route_ids"]]
 
-    def test_no_deployment_dependent_claims(self):
-        """Review T05 R3: wording must stay true before and after publication."""
-        lowered = self.everything.lower()
-        for claim in release_check.DEPLOYMENT_CLAIMS:
-            self.assertNotIn(claim, lowered)
-        self.assertNotIn("monitoring", lowered.replace("independent-monitoring", ""))
+    def test_directory_lists_every_entry_honestly(self):
+        page = self.render("#models")
+        self.assertIn(f"{len(self.data['catalog'])} entries", page["text"])
+        self.assertIn("runs no independent tests of any model", page["text"])
+        self.assertIn("API results are never shown as app results", page["text"])
+        for entry in self.data["catalog"]:
+            self.assertIn(entry["name"], page["text"])
 
-    def test_supported_statements_about_baseline_remain(self):
-        self.assertEqual(self.text.count("Baseline has not run its own tests on this route."), len(self.routes))
-        self.assertIn("Baseline has not measured these routes itself", self.text)
-        self.assertIn("runs no independent tests of any model", self.text)
+    def test_every_measured_route_uses_scoped_gap_wording(self):
+        routes = {r["id"]: r for r in self.data["routes"]}
+        for entry in self.measured_entries():
+            for route_id in entry["route_ids"]:
+                with self.subTest(route=route_id):
+                    page = self.render(f"#model/{entry['id']}?route={route_id}")
+                    route = routes[route_id]
+                    latest = route["observations"][-1]["observed_at"]
+                    self.assertIn("No observations are recorded here between these runs or after the latest one",
+                                  page["text"])
+                    self.assertIn("other measurements may exist elsewhere", page["text"])
+                    self.assertIn("Baseline has not run its own tests on this route.", page["text"])
+                    charts = [a for a in page["aria"] if a.startswith("Pass rate for ")]
+                    self.assertEqual(len(charts), 1)
+                    self.assertIn("Points are not connected.", charts[0])
+                    self.assertIn(f"Hatched band: no observations recorded here after {latest}.", charts[0])
+                    for obs in route["observations"]:
+                        self.assertIn(obs["observed_at"] + (" (date only)" if obs["precision"] == "day" else ""),
+                                      page["text"])
 
-    def test_dates_ages_and_separate_series_are_preserved(self):
-        for obs in self.observations:
-            shown = obs["observed_at"] + " (date only)" if len(obs["observed_at"]) == 10 else obs["observed_at"]
-            self.assertIn(shown, self.text)
-        for obs in self.routes.values():
-            setups = len({o["series_id"] for o in obs})
-            self.assertIn(f"{len(obs)} runs in {setups} separate setups", self.text)
-        self.assertRegex(self.text, r"Newest evidence here is (about \d+ days? ago|today \(date only\))\.")
+    def test_no_unscoped_absence_or_deployment_claims(self):
+        for hash_ in ("#models", "#sources", "#about", "#model/openai-app.chatgpt",
+                      f"#model/{self.measured_entries()[0]['id']}"):
+            with self.subTest(view=hash_):
+                lowered = self.render(hash_)["everything"].lower()
+                for phrase in ("nothing was measured", "not measured", "unmeasured", "nobody measured"):
+                    self.assertNotIn(phrase, lowered)
+                for claim in release_check.DEPLOYMENT_CLAIMS:
+                    self.assertNotIn(claim, lowered)
+
+    def test_apps_show_no_measurements_and_say_why(self):
+        for entry in self.data["catalog"]:
+            if entry["access_kind"] != "consumer_app":
+                continue
+            with self.subTest(app=entry["id"]):
+                page = self.render(f"#model/{entry['id']}")
+                self.assertIn("No measurements recorded here", page["text"])
+                self.assertIn("never shown as app results", page["text"])
+                self.assertNotIn("Pass rate", page["text"])
+                self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
+
+    def variant(self, mutate):
+        """Render from a temporary copy of the built page whose data.js is changed by `mutate`."""
+        folder = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        shutil.copytree(self.out, folder / "dist")
+        path = folder / "dist" / "data.js"
+        prefix = "window.BASELINE_DATA = "
+        data = json.loads(path.read_text(encoding="utf-8")[len(prefix):].rstrip().rstrip(";"))
+        mutate(data)
+        path.write_text(prefix + json.dumps(data) + ";\n", encoding="utf-8")
+
+        def render(hash_):
+            result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(folder / "dist"), hash_],
+                                    capture_output=True, text=True, timeout=60, encoding="utf-8")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["text"]
+        return render
+
+    def test_age_wording_follows_measurement_dates(self):
+        """T07 R3: all-old, mixed-age, fresh-only and no-measurement data; wording and badges agree."""
+        today = datetime.now(timezone.utc).date().isoformat()
+        measured = self.measured_entries()
+        fresh_entry, old_entry = measured[0], measured[-1]
+        fresh_routes = set(fresh_entry["route_ids"])
+
+        def set_dates(data, route_ids, day):
+            for route in data["routes"]:
+                if route["id"] in route_ids:
+                    for obs in route["observations"]:
+                        obs["observed_at"] = day
+        all_ids = {r["id"] for r in self.data["routes"]}
+        old_day = "2025-01-02"  # explicit dates: the test must not depend on the evolving registry
+        cases = {
+            "all old": lambda d: set_dates(d, all_ids, old_day),
+            "mixed": lambda d: (set_dates(d, all_ids, old_day), set_dates(d, fresh_routes, today)),
+            "fresh only": lambda d: set_dates(d, all_ids, today),
+        }
+        for label, mutate in cases.items():
+            with self.subTest(case=label):
+                render = self.variant(mutate)
+                directory = render("#models")
+                self.assertNotIn("historical results", directory)
+                self.assertIn("Baseline runs no independent tests of any model", directory)
+                fresh = render(f"#model/{fresh_entry['id']}")
+                old = render(f"#model/{old_entry['id']}")
+                self.assertIn("These results come from Aider project", fresh)  # from the source record
+                if label == "all old":
+                    self.assertIn("more than 30 days old", fresh)
+                    self.assertNotIn("Recent measurements", directory)
+                else:
+                    self.assertIn("The newest measurement is from the last 7 days.", fresh)
+                    self.assertIn("Recent measurements", directory)
+                    self.assertNotIn("more than 30 days old", fresh)
+                if label == "mixed":
+                    self.assertIn("more than 30 days old", old)
+                    self.assertIn("Historical evidence only", directory)
+                if label == "fresh only":
+                    self.assertNotIn("Historical evidence only", directory)
+                for page in (fresh, old):
+                    self.assertIn("Baseline has not run its own tests on this route.", page)
+                    self.assertIn("each lettered setup is a separate configuration", page)
+
+        def no_measurements(data):
+            data["routes"] = []
+            for entry in data["catalog"]:
+                entry["route_ids"] = []
+        render = self.variant(no_measurements)
+        directory = render("#models")
+        self.assertIn(" 0 have dated measurements", directory)
+        self.assertNotIn("Recent measurements", directory)
+        self.assertNotIn("Historical evidence only", directory)
+        self.assertIn("No measurements recorded here", render(f"#model/{fresh_entry['id']}"))
+
+    def test_legacy_route_links_open_their_model(self):
+        page = self.render("#deepseek-api.deepseek-chat")
+        self.assertEqual(page["hash"], "#model/deepseek-api.deepseek-chat?route=deepseek-api.deepseek-chat")
+        self.assertIn("deepseek-chat", page["text"])
+        self.assertIn("Pass rate by run", page["text"])
+
+    def test_unknown_ids_get_a_usable_page(self):
+        for hash_ in ("#model/no-such-model", "#model/%E0%A4%A", "#no-such-route"):
+            with self.subTest(hash=hash_):
+                page = self.render(hash_)
+                self.assertIn("Not found", page["text"])
+                self.assertIn("Go to the model directory", page["text"])
+
+    def test_sources_and_about_keep_attribution_and_limits(self):
+        sources = self.render("#sources")["text"]
+        self.assertIn("Apache License 2.0", sources)
+        self.assertIn("link only", sources)
+        self.assertIn("Ingestion log", sources)
+        about = self.render("#about")["text"]
+        self.assertIn("missing evidence, not a score of zero", about)
 
 
 class PageSourceTests(unittest.TestCase):

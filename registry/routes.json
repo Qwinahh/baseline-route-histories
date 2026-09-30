@@ -22,6 +22,507 @@
       "region": null,
       "settings": {},
       "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.0-pro-exp-02-05",
+      "model_id": "google.gemini-2.0-pro-exp-02-05",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.0-pro-exp-02-05",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4o-mini-2024-07-18",
+      "model_id": "openai.gpt-4o-mini-2024-07-18",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4o-mini-2024-07-18",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-3-5-sonnet-20241022",
+      "model_id": "anthropic.claude-3-5-sonnet-20241022",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-3-5-sonnet-20241022",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4o-2024-11-20",
+      "model_id": "openai.gpt-4o-2024-11-20",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4o-2024-11-20",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4o-2024-08-06",
+      "model_id": "openai.gpt-4o-2024-08-06",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4o-2024-08-06",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-3-5-haiku-20241022",
+      "model_id": "anthropic.claude-3-5-haiku-20241022",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-3-5-haiku-20241022",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.o1-mini",
+      "model_id": "openai.o1-mini",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "o1-mini",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-exp-1206",
+      "model_id": "google.gemini-exp-1206",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-exp-1206",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.0-flash-exp",
+      "model_id": "google.gemini-2.0-flash-exp",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.0-flash-exp",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "mistral-api.codestral-latest",
+      "model_id": "mistral.codestral-latest",
+      "access_type": "direct_api",
+      "service": "Mistral API",
+      "requested_model": "mistral/codestral-latest",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "alibaba-model-studio-api.qwen-max-2025-01-25",
+      "model_id": "qwen.qwen-max-2025-01-25",
+      "access_type": "direct_api",
+      "service": "Alibaba Cloud Model Studio API (international), OpenAI-compatible endpoint recorded in the command",
+      "requested_model": "openai/qwen-max-2025-01-25",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.0-flash-thinking-exp-01-21",
+      "model_id": "google.gemini-2.0-flash-thinking-exp-01-21",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.0-flash-thinking-exp-01-21",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-3-7-sonnet-20250219.see059b03",
+      "model_id": "anthropic.claude-3-7-sonnet-20250219",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "anthropic/claude-3-7-sonnet-20250219",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "32k"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "fireworks.qwq-32b",
+      "model_id": "qwen.qwq-32b",
+      "access_type": "intermediary",
+      "service": "Fireworks AI",
+      "requested_model": "fireworks_ai/accounts/fireworks/models/qwq-32b",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by Fireworks AI; the model was made by Alibaba (Qwen). The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "openrouter.google.gemma-3-27b-it",
+      "model_id": "google.gemma-3-27b-it",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/google/gemma-3-27b-it",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by OpenRouter; the model was made by Google. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-pro-preview-03-25",
+      "model_id": "google.gemini-2.5-pro-preview-03-25",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-pro-preview-03-25",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.chatgpt-4o-latest",
+      "model_id": "openai.chatgpt-4o-latest",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "chatgpt-4o-latest",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "nvidia-nim.meta.llama-4-maverick-17b-128e-instruct",
+      "model_id": "meta.llama-4-maverick-17b-128e-instruct",
+      "access_type": "intermediary",
+      "service": "NVIDIA NIM",
+      "requested_model": "nvidia_nim/meta/llama-4-maverick-17b-128e-instruct",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by NVIDIA NIM; the model was made by Meta. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "openrouter.x-ai.grok-3-beta",
+      "model_id": "xai.grok-3-beta",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/x-ai/grok-3-beta",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by OpenRouter; the model was made by xAI. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "xai-api.grok-3-mini-beta.s4abea339",
+      "model_id": "xai.grok-3-mini-beta",
+      "access_type": "direct_api",
+      "service": "xAI API",
+      "requested_model": "xai/grok-3-mini-beta",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4.1",
+      "model_id": "openai.gpt-4.1",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4.1",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4.1-mini",
+      "model_id": "openai.gpt-4.1-mini",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4.1-mini",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-4.1-nano",
+      "model_id": "openai.gpt-4.1-nano",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "gpt-4.1-nano",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-flash-preview-04-17",
+      "model_id": "google.gemini-2.5-flash-preview-04-17",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-flash-preview-04-17",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-pro-preview-05-06",
+      "model_id": "google.gemini-2.5-pro-preview-05-06",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-pro-preview-05-06",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openrouter.qwen.qwen3-32b",
+      "model_id": "qwen.qwen3-32b",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/qwen/qwen3-32b",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by OpenRouter; the model was made by Alibaba (Qwen). The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "anthropic-api.claude-sonnet-4-20250514",
+      "model_id": "anthropic.claude-sonnet-4-20250514",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-sonnet-4-20250514",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-sonnet-4-20250514.scb728c19",
+      "model_id": "anthropic.claude-sonnet-4-20250514",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-sonnet-4-20250514",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "32000"
+      },
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-opus-4-20250514",
+      "model_id": "anthropic.claude-opus-4-20250514",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-opus-4-20250514",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "anthropic-api.claude-opus-4-20250514.scb728c19",
+      "model_id": "anthropic.claude-opus-4-20250514",
+      "access_type": "direct_api",
+      "service": "Anthropic API",
+      "requested_model": "claude-opus-4-20250514",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "32000"
+      },
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-flash-preview-05-20.sd31515a6",
+      "model_id": "google.gemini-2.5-flash-preview-05-20",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-flash-preview-05-20",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "0"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-flash-preview-05-20.sc58a8cc4",
+      "model_id": "google.gemini-2.5-flash-preview-05-20",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-flash-preview-05-20",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "24576"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-pro-preview-06-05",
+      "model_id": "google.gemini-2.5-pro-preview-06-05",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-pro-preview-06-05",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "gemini-api.gemini-2.5-pro-preview-06-05.se6270291",
+      "model_id": "google.gemini-2.5-pro-preview-06-05",
+      "access_type": "direct_api",
+      "service": "Google Gemini API",
+      "requested_model": "gemini/gemini-2.5-pro-preview-06-05",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "thinking_tokens": "32768"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.o3.s4abea339",
+      "model_id": "openai.o3",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "o3",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.o3",
+      "model_id": "openai.o3",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "o3",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openai-api.o3-pro.s4abea339",
+      "model_id": "openai.o3-pro",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "o3-pro",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Route inferred from a bare model name as documented by Aider; tier/region not stated."
+    },
+    {
+      "id": "openrouter.x-ai.grok-4.s4abea339",
+      "model_id": "xai.grok-4",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/x-ai/grok-4",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Hosted by OpenRouter; the model was made by xAI. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "openrouter.moonshotai.kimi-k2",
+      "model_id": "moonshot.kimi-k2",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/moonshotai/kimi-k2",
+      "tier": null,
+      "region": null,
+      "settings": {},
+      "notes": "Hosted by OpenRouter; the model was made by Moonshot AI. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "openrouter.openai.gpt-oss-120b.s4abea339",
+      "model_id": "openai.gpt-oss-120b",
+      "access_type": "intermediary",
+      "service": "OpenRouter",
+      "requested_model": "openrouter/openai/gpt-oss-120b",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Hosted by OpenRouter; the model was made by OpenAI. The host's serving configuration is not stated by the source."
+    },
+    {
+      "id": "openai-api.gpt-5.s4abea339",
+      "model_id": "openai.gpt-5",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "openai/gpt-5",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "high"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-5.s82bf9e1d",
+      "model_id": "openai.gpt-5",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "openai/gpt-5",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "medium"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
+    },
+    {
+      "id": "openai-api.gpt-5.sa8da54bc",
+      "model_id": "openai.gpt-5",
+      "access_type": "direct_api",
+      "service": "OpenAI API",
+      "requested_model": "openai/gpt-5",
+      "tier": null,
+      "region": null,
+      "settings": {
+        "reasoning_effort": "low"
+      },
+      "notes": "Route inferred from the provider prefix recorded by the source; tier/region not stated."
     }
   ]
 }

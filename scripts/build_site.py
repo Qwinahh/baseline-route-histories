@@ -21,11 +21,12 @@ import stat
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import catalog  # noqa: E402
 import ingest  # noqa: E402
 import registry  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-SITE_FILES = ("index.html", "styles.css", "app.js", "freshness.js")
+SITE_FILES = ("index.html", "styles.css", "app.js", "freshness.js", "directory.js")
 OWNER_MARKER = ".baseline-build"
 OWNED_FILES = frozenset(SITE_FILES + ("data.js", OWNER_MARKER))
 # Series configuration fields whose change is shown as a configuration break.
@@ -133,7 +134,7 @@ def _licence_info(source: dict) -> dict | None:
 
 
 def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path | None = None,
-          generated_at: str | None = None, now: datetime | None = None) -> dict:
+          generated_at: str | None = None, now: datetime | None = None, catalog_path: Path | None = None) -> dict:
     registry_dir = registry_dir or ROOT / "registry"
     evidence_root = evidence_root or ROOT / "evidence" / "snapshots"
     errors = registry.validate_registry(registry_dir, now=now)  # now: tests simulating later dates
@@ -142,6 +143,26 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
     records, _ = registry.load_registry(registry_dir)
     generated_at = generated_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     data = build_data(records, generated_at)
+    # The catalogue is validated against the registry before anything is written (T07).
+    try:
+        document = catalog.load(catalog_path or catalog.CATALOG_PATH)
+    except (OSError, ValueError) as exc:
+        raise BuildError(f"catalogue unreadable: {exc}") from exc
+    problems = catalog.validate_catalog(document, records, now)
+    if problems:
+        raise BuildError("catalogue does not validate: " + "; ".join(problems[:10]))
+    # Every registry route is shown once, even one added by a refresh after the catalogue
+    # was curated (T07 R1); the reconciled catalogue passes the same validation.
+    try:
+        entries, added = catalog.reconcile(document, records)
+    except catalog.ReconcileError as exc:
+        raise BuildError(str(exc)) from exc
+    problems = catalog.validate_catalog({"schema_version": catalog.SCHEMA_VERSION, "entries": entries}, records, now)
+    if problems:
+        raise BuildError("reconciled catalogue does not validate: " + "; ".join(problems[:10]))
+    data["catalog"] = entries  # routes are joined in the browser by id; no copies
+    data["catalog_evidence_only"] = added
+    data["catalog_checked_at"] = document.get("checked_at")
 
     # Prepare every output file in memory before touching the output folder.
     files = {name: (ROOT / "site" / name).read_bytes() for name in SITE_FILES}

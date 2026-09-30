@@ -1,0 +1,4249 @@
+{
+ "schema_version": 1,
+ "checked_at": "2026-09-30T08:07:11Z",
+ "entries": [
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.babbage-002",
+   "name": "babbage-002",
+   "maker": "OpenAI",
+   "family": "babbage-002",
+   "identity_kind": "exact",
+   "exact_identifier": "babbage-002",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'babbage-002' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.c4ai-aya-expanse-32b",
+   "name": "c4ai-aya-expanse-32b",
+   "maker": "Cohere",
+   "family": "Aya",
+   "identity_kind": "exact",
+   "exact_identifier": "c4ai-aya-expanse-32b",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'c4ai-aya-expanse-32b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.c4ai-aya-vision-32b",
+   "name": "c4ai-aya-vision-32b",
+   "maker": "Cohere",
+   "family": "Aya",
+   "identity_kind": "exact",
+   "exact_identifier": "c4ai-aya-vision-32b",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'c4ai-aya-vision-32b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.chat-latest",
+   "name": "chat-latest",
+   "maker": "OpenAI",
+   "family": "chat-latest",
+   "identity_kind": "exact",
+   "exact_identifier": "chat-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'chat-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://chatgpt.com/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "openai-app.chatgpt",
+   "name": "ChatGPT app",
+   "maker": "OpenAI",
+   "family": "ChatGPT",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "OpenAI",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "OpenAI's API documentation links to chatgpt.com"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.chatgpt-4o-latest"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.chatgpt-4o-latest",
+   "name": "chatgpt-4o-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "chatgpt-4o-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'chatgpt-4o-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://claude.ai/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "anthropic-app.claude",
+   "name": "Claude app",
+   "maker": "Anthropic",
+   "family": "Claude",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Anthropic",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Anthropic's models overview links to claude.ai for chatting with Claude"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "anthropic-api.claude-3-5-haiku-20241022"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "anthropic-api.claude-3-5-haiku-20241022",
+   "name": "claude-3-5-haiku-20241022",
+   "maker": "Anthropic",
+   "family": "Claude",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-3-5-haiku-20241022",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L183",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'claude-3-5-haiku-20241022'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "anthropic-api.claude-3-5-sonnet-20241022"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "anthropic-api.claude-3-5-sonnet-20241022",
+   "name": "claude-3-5-sonnet-20241022",
+   "maker": "Anthropic",
+   "family": "Claude",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-3-5-sonnet-20241022",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L53",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'claude-3-5-sonnet-20241022'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "anthropic-api.claude-3-7-sonnet-20250219.see059b03"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "anthropic-api.claude-3-7-sonnet-20250219",
+   "name": "claude-3-7-sonnet-20250219",
+   "maker": "Anthropic",
+   "family": "Claude",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-3-7-sonnet-20250219",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L626",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'anthropic/claude-3-7-sonnet-20250219'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-fable-5",
+   "name": "claude-fable-5",
+   "maker": "Anthropic",
+   "family": "Claude Fable",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-fable-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-fable-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-fable-5-1",
+   "name": "claude-fable-5-1",
+   "maker": "Anthropic",
+   "family": "Claude Fable",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-fable-5-1",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-fable-5-1' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model; alias claude-haiku-4-5.",
+   "id": "anthropic-api.claude-haiku-4-5-20251001",
+   "name": "claude-haiku-4-5-20251001",
+   "maker": "Anthropic",
+   "family": "Claude Haiku",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-haiku-4-5-20251001",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-haiku-4-5-20251001' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "anthropic-api.claude-opus-4-20250514",
+    "anthropic-api.claude-opus-4-20250514.scb728c19"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "anthropic-api.claude-opus-4-20250514",
+   "name": "claude-opus-4-20250514",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-20250514",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1313",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'claude-opus-4-20250514'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Legacy model still available (overview); alias claude-opus-4-5. Dated ID from the model's own page.",
+   "id": "anthropic-api.claude-opus-4-5-20251101",
+   "name": "claude-opus-4-5-20251101",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-5-20251101",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'claude-opus-4-5-20251101' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-6",
+   "name": "claude-opus-4-6",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-6",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-6' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-7",
+   "name": "claude-opus-4-7",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-7",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-7' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-8",
+   "name": "claude-opus-4-8",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-8",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-8' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-5",
+   "name": "claude-opus-5",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-opus-5-5",
+   "name": "claude-opus-5-5",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-5-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-5-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "anthropic-api.claude-sonnet-4-20250514",
+    "anthropic-api.claude-sonnet-4-20250514.scb728c19"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "anthropic-api.claude-sonnet-4-20250514",
+   "name": "claude-sonnet-4-20250514",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-4-20250514",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1256",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'claude-sonnet-4-20250514'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Legacy model still available (overview); alias claude-sonnet-4-5. Dated ID from the model's own page.",
+   "id": "anthropic-api.claude-sonnet-4-5-20250929",
+   "name": "claude-sonnet-4-5-20250929",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-4-5-20250929",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/sonnet-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'claude-sonnet-4-5-20250929' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-sonnet-4-6",
+   "name": "claude-sonnet-4-6",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-4-6",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-4-6' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-sonnet-5",
+   "name": "claude-sonnet-5",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-sonnet-5-5",
+   "name": "claude-sonnet-5-5",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-5-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-5-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-16.",
+   "id": "mistral-api.codestral-2405",
+   "name": "codestral-2405",
+   "maker": "Mistral AI",
+   "family": "Codestral",
+   "identity_kind": "exact",
+   "exact_identifier": "codestral-2405",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'codestral-2405' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.codestral-2501",
+   "name": "codestral-2501",
+   "maker": "Mistral AI",
+   "family": "Codestral",
+   "identity_kind": "exact",
+   "exact_identifier": "codestral-2501",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'codestral-2501' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Codestral 25.08; current model. Alias codestral-latest.",
+   "id": "mistral-api.codestral-2508",
+   "name": "codestral-2508",
+   "maker": "Mistral AI",
+   "family": "Codestral",
+   "identity_kind": "exact",
+   "exact_identifier": "codestral-2508",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/codestral-25-08",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'codestral-2508' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "mistral-api.codestral-latest"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "mistral-api.codestral-latest",
+   "name": "codestral-latest",
+   "maker": "Mistral AI",
+   "family": "Codestral",
+   "identity_kind": "exact",
+   "exact_identifier": "codestral-latest",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L391",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'mistral/codestral-latest'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.codex-mini-latest",
+   "name": "codex-mini-latest",
+   "maker": "OpenAI",
+   "family": "codex-mini-latest",
+   "identity_kind": "exact",
+   "exact_identifier": "codex-mini-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'codex-mini-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-a-03-2025",
+   "name": "command-a-03-2025",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-a-03-2025",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-a-03-2025' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-a-plus-05-2026",
+   "name": "command-a-plus-05-2026",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-a-plus-05-2026",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-a-plus-05-2026' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-a-reasoning-08-2025",
+   "name": "command-a-reasoning-08-2025",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-a-reasoning-08-2025",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-a-reasoning-08-2025' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-a-translate-08-2025",
+   "name": "command-a-translate-08-2025",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-a-translate-08-2025",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-a-translate-08-2025' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-a-vision-07-2025",
+   "name": "command-a-vision-07-2025",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-a-vision-07-2025",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-a-vision-07-2025' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as deprecated since 15 September 2025; retirement not stated.",
+   "id": "cohere-api.command-light",
+   "name": "command-light",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-light",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-light' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as deprecated since 15 September 2025; retirement not stated.",
+   "id": "cohere-api.command-r",
+   "name": "command-r",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as deprecated since 15 September 2025; retirement not stated.",
+   "id": "cohere-api.command-r-03-2024",
+   "name": "command-r-03-2024",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r-03-2024",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r-03-2024' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-r-08-2024",
+   "name": "command-r-08-2024",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r-08-2024",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r-08-2024' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as deprecated since 15 September 2025; retirement not stated.",
+   "id": "cohere-api.command-r-plus",
+   "name": "command-r-plus",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r-plus",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r-plus' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as deprecated since 15 September 2025; retirement not stated.",
+   "id": "cohere-api.command-r-plus-04-2024",
+   "name": "command-r-plus-04-2024",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r-plus-04-2024",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r-plus-04-2024' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-r-plus-08-2024",
+   "name": "command-r-plus-08-2024",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r-plus-08-2024",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r-plus-08-2024' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.command-r7b-12-2024",
+   "name": "command-r7b-12-2024",
+   "maker": "Cohere",
+   "family": "Command",
+   "identity_kind": "exact",
+   "exact_identifier": "command-r7b-12-2024",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'command-r7b-12-2024' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.computer-use-preview",
+   "name": "computer-use-preview",
+   "maker": "OpenAI",
+   "family": "computer-use-preview",
+   "identity_kind": "exact",
+   "exact_identifier": "computer-use-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'computer-use-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.davinci-002",
+   "name": "davinci-002",
+   "maker": "OpenAI",
+   "family": "davinci-002",
+   "identity_kind": "exact",
+   "exact_identifier": "davinci-002",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'davinci-002' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://chat.deepseek.com/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "deepseek-app.deepseek",
+   "name": "DeepSeek chat app",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "DeepSeek",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://www.deepseek.com/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "DeepSeek's home page links to chat.deepseek.com"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "deepseek-api.deepseek-chat"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "deepseek-api.deepseek-chat",
+   "name": "deepseek-chat",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "exact",
+   "exact_identifier": "deepseek-chat",
+   "service_provider": "DeepSeek",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1830",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'deepseek/deepseek-chat'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model name.",
+   "id": "deepseek-api.deepseek-flash",
+   "name": "deepseek-flash",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "exact",
+   "exact_identifier": "deepseek-flash",
+   "service_provider": "DeepSeek",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'deepseek-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "deepseek-api.deepseek-reasoner"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "deepseek-api.deepseek-reasoner",
+   "name": "deepseek-reasoner",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "exact",
+   "exact_identifier": "deepseek-reasoner",
+   "service_provider": "DeepSeek",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1802",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'deepseek/deepseek-reasoner'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Legacy name still accepted, but the page says the model it named has been retired.",
+   "id": "deepseek-api.deepseek-v4-flash",
+   "name": "deepseek-v4-flash",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "exact",
+   "exact_identifier": "deepseek-v4-flash",
+   "service_provider": "DeepSeek",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'deepseek-v4-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed; status not stated.",
+   "id": "deepseek-api.deepseek-v4-pro",
+   "name": "deepseek-v4-pro",
+   "maker": "DeepSeek",
+   "family": "DeepSeek",
+   "identity_kind": "exact",
+   "exact_identifier": "deepseek-v4-pro",
+   "service_provider": "DeepSeek",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://api-docs.deepseek.com/quick_start/pricing/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'deepseek-v4-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.devstral-2512",
+   "name": "devstral-2512",
+   "maker": "Mistral AI",
+   "family": "Devstral",
+   "identity_kind": "exact",
+   "exact_identifier": "devstral-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'devstral-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-05-31.",
+   "id": "mistral-api.devstral-medium-2507",
+   "name": "devstral-medium-2507",
+   "maker": "Mistral AI",
+   "family": "Devstral",
+   "identity_kind": "exact",
+   "exact_identifier": "devstral-medium-2507",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'devstral-medium-2507' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.devstral-small-2505",
+   "name": "devstral-small-2505",
+   "maker": "Mistral AI",
+   "family": "Devstral",
+   "identity_kind": "exact",
+   "exact_identifier": "devstral-small-2505",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'devstral-small-2505' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-05-31.",
+   "id": "mistral-api.devstral-small-2507",
+   "name": "devstral-small-2507",
+   "maker": "Mistral AI",
+   "family": "Devstral",
+   "identity_kind": "exact",
+   "exact_identifier": "devstral-small-2507",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'devstral-small-2507' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://gemini.google.com/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "google-app.gemini",
+   "name": "Gemini app",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Google",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://gemini.google.com/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "The Gemini app loads at gemini.google.com"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.0-flash-exp"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.0-flash-exp",
+   "name": "gemini-2.0-flash-exp",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.0-flash-exp",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L287",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.0-flash-exp'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.0-flash-thinking-exp-01-21"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.0-flash-thinking-exp-01-21",
+   "name": "gemini-2.0-flash-thinking-exp-01-21",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.0-flash-thinking-exp-01-21",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L548",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.0-flash-thinking-exp-01-21'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.0-pro-exp-02-05"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.0-pro-exp-02-05",
+   "name": "gemini-2.0-pro-exp-02-05",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.0-pro-exp-02-05",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.0-pro-exp-02-05'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Preview model.",
+   "id": "google-api.gemini-2.5-computer-use-preview-10-2025",
+   "name": "gemini-2.5-computer-use-preview-10-2025",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-computer-use-preview-10-2025",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-2.5-computer-use-preview-10-2025' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed; status not stated on the overview.",
+   "id": "google-api.gemini-2.5-flash",
+   "name": "gemini-2.5-flash",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-flash",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-2.5-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed; status not stated on the overview.",
+   "id": "google-api.gemini-2.5-flash-lite",
+   "name": "gemini-2.5-flash-lite",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-flash-lite",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-2.5-flash-lite' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.5-flash-preview-04-17"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.5-flash-preview-04-17",
+   "name": "gemini-2.5-flash-preview-04-17",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-flash-preview-04-17",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1148",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.5-flash-preview-04-17'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.5-flash-preview-05-20.sc58a8cc4",
+    "gemini-api.gemini-2.5-flash-preview-05-20.sd31515a6"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.5-flash-preview-05-20",
+   "name": "gemini-2.5-flash-preview-05-20",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-flash-preview-05-20",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1370",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.5-flash-preview-05-20'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed; status not stated on the overview.",
+   "id": "google-api.gemini-2.5-pro",
+   "name": "gemini-2.5-pro",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-pro",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-2.5-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.5-pro-preview-03-25"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.5-pro-preview-03-25",
+   "name": "gemini-2.5-pro-preview-03-25",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-pro-preview-03-25",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L810",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.5-pro-preview-03-25'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.5-pro-preview-05-06"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.5-pro-preview-05-06",
+   "name": "gemini-2.5-pro-preview-05-06",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-pro-preview-05-06",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1174",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.5-pro-preview-05-06'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-2.5-pro-preview-06-05",
+    "gemini-api.gemini-2.5-pro-preview-06-05.se6270291"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-2.5-pro-preview-06-05",
+   "name": "gemini-2.5-pro-preview-06-05",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-2.5-pro-preview-06-05",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1428",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-2.5-pro-preview-06-05'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Preview model.",
+   "id": "google-api.gemini-3-flash-preview",
+   "name": "gemini-3-flash-preview",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3-flash-preview",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3-flash-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.1-flash-lite",
+   "name": "gemini-3.1-flash-lite",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.1-flash-lite",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.1-flash-lite' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Preview model.",
+   "id": "google-api.gemini-3.1-pro-preview",
+   "name": "gemini-3.1-pro-preview",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.1-pro-preview",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.1-pro-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.5-flash",
+   "name": "gemini-3.5-flash",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.5-flash",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.5-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.5-flash-lite",
+   "name": "gemini-3.5-flash-lite",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.5-flash-lite",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.5-flash-lite' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.6-flash",
+   "name": "gemini-3.6-flash",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.6-flash",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.6-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.7-flash",
+   "name": "gemini-3.7-flash",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.7-flash",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.7-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Stable model.",
+   "id": "google-api.gemini-3.8-flash",
+   "name": "gemini-3.8-flash",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-3.8-flash",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://ai.google.dev/gemini-api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gemini-3.8-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "gemini-api.gemini-exp-1206"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "google-api.gemini-exp-1206",
+   "name": "gemini-exp-1206",
+   "maker": "Google",
+   "family": "Gemini",
+   "identity_kind": "exact",
+   "exact_identifier": "gemini-exp-1206",
+   "service_provider": "Google",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L261",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gemini/gemini-exp-1206'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.google.gemma-3-27b-it"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by Google.",
+   "id": "google-openrouter.gemma-3-27b-it",
+   "name": "gemma-3-27b-it",
+   "maker": "Google",
+   "family": "Gemma",
+   "identity_kind": "exact",
+   "exact_identifier": "gemma-3-27b-it",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L758",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/google/gemma-3-27b-it'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-3.5-turbo",
+   "name": "gpt-3.5-turbo",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-3.5-turbo",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-3.5-turbo' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4",
+   "name": "gpt-4",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4-turbo",
+   "name": "gpt-4-turbo",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4-turbo",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4-turbo' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4-turbo-preview",
+   "name": "gpt-4-turbo-preview",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4-turbo-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4-turbo-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4.1"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4.1",
+   "name": "gpt-4.1",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4.1",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4.1' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4.1-mini"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4.1-mini",
+   "name": "gpt-4.1-mini",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4.1-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4.1-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4.1-nano"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4.1-nano",
+   "name": "gpt-4.1-nano",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4.1-nano",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4.1-nano' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4.5-preview",
+   "name": "gpt-4.5-preview",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4.5-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4.5-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4o",
+   "name": "gpt-4o",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4o' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4o-2024-08-06"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "openai-api.gpt-4o-2024-08-06",
+   "name": "gpt-4o-2024-08-06",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-2024-08-06",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L105",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gpt-4o-2024-08-06'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4o-2024-11-20"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "openai-api.gpt-4o-2024-11-20",
+   "name": "gpt-4o-2024-11-20",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-2024-11-20",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L79",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gpt-4o-2024-11-20'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4o-mini",
+   "name": "gpt-4o-mini",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4o-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-4o-mini-2024-07-18"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "openai-api.gpt-4o-mini-2024-07-18",
+   "name": "gpt-4o-mini-2024-07-18",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-mini-2024-07-18",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L27",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'gpt-4o-mini-2024-07-18'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4o-mini-search-preview",
+   "name": "gpt-4o-mini-search-preview",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-mini-search-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4o-mini-search-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-4o-search-preview",
+   "name": "gpt-4o-search-preview",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-4o-search-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-4o-search-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.gpt-5.s4abea339",
+    "openai-api.gpt-5.s82bf9e1d",
+    "openai-api.gpt-5.sa8da54bc"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5",
+   "name": "gpt-5",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5-chat-latest",
+   "name": "gpt-5-chat-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5-chat-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5-chat-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5-codex",
+   "name": "gpt-5-codex",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5-codex",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5-codex' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5-mini",
+   "name": "gpt-5-mini",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5-nano",
+   "name": "gpt-5-nano",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5-nano",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5-nano' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5-pro",
+   "name": "gpt-5-pro",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.1",
+   "name": "gpt-5.1",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.1",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.1' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.1-chat-latest",
+   "name": "gpt-5.1-chat-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.1-chat-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.1-chat-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.1-codex",
+   "name": "gpt-5.1-codex",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.1-codex",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.1-codex' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.1-codex-max",
+   "name": "gpt-5.1-codex-max",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.1-codex-max",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.1-codex-max' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.1-codex-mini",
+   "name": "gpt-5.1-codex-mini",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.1-codex-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.1-codex-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.2",
+   "name": "gpt-5.2",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.2",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.2' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.2-chat-latest",
+   "name": "gpt-5.2-chat-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.2-chat-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.2-chat-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.2-codex",
+   "name": "gpt-5.2-codex",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.2-codex",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.2-codex' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.2-pro",
+   "name": "gpt-5.2-pro",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.2-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.2-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.3-chat-latest",
+   "name": "gpt-5.3-chat-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.3-chat-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.3-chat-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.3-codex",
+   "name": "gpt-5.3-codex",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.3-codex",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.3-codex' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.4",
+   "name": "gpt-5.4",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.4",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.4' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.4-mini",
+   "name": "gpt-5.4-mini",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.4-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.4-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.4-nano",
+   "name": "gpt-5.4-nano",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.4-nano",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.4-nano' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.4-pro",
+   "name": "gpt-5.4-pro",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.4-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.4-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.5",
+   "name": "gpt-5.5",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.5",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.5-pro",
+   "name": "gpt-5.5-pro",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.5-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.5-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.6-cyber",
+   "name": "gpt-5.6-cyber",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.6-cyber",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.6-cyber' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.6-luna",
+   "name": "gpt-5.6-luna",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.6-luna",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.6-luna' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.6-sol",
+   "name": "gpt-5.6-sol",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.6-sol",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.6-sol' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-5.6-terra",
+   "name": "gpt-5.6-terra",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-5.6-terra",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-5.6-terra' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-6-astra",
+   "name": "gpt-6-astra",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-6-astra",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-6-astra' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-6-luna",
+   "name": "gpt-6-luna",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-6-luna",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-6-luna' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-6-sol",
+   "name": "gpt-6-sol",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-6-sol",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-6-sol' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-6.1-sol",
+   "name": "gpt-6.1-sol",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-6.1-sol",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-6.1-sol' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-daybreak-blue-latest",
+   "name": "gpt-daybreak-blue-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-daybreak-blue-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-daybreak-blue-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.gpt-daybreak-red-latest",
+   "name": "gpt-daybreak-red-latest",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-daybreak-red-latest",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-daybreak-red-latest' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Open-weight model; runs wherever it is deployed. Hosted runs are separate entries.",
+   "id": "openai-local.gpt-oss-120b",
+   "name": "gpt-oss-120b",
+   "maker": "OpenAI",
+   "family": "gpt-oss",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-oss-120b",
+   "service_provider": "Self-hosted",
+   "access_kind": "local",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-oss-120b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.openai.gpt-oss-120b.s4abea339"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by OpenAI.",
+   "id": "openai-openrouter.gpt-oss-120b",
+   "name": "gpt-oss-120b",
+   "maker": "OpenAI",
+   "family": "gpt-oss",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-oss-120b",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1687",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/openai/gpt-oss-120b'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Open-weight model; runs wherever it is deployed. Hosted runs are separate entries.",
+   "id": "openai-local.gpt-oss-20b",
+   "name": "gpt-oss-20b",
+   "maker": "OpenAI",
+   "family": "gpt-oss",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-oss-20b",
+   "service_provider": "Self-hosted",
+   "access_kind": "local",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'gpt-oss-20b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on the models overview; lifecycle status not stated.",
+   "id": "openai-api.gpt-rosalind-research",
+   "name": "gpt-rosalind-research",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-rosalind-research",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'gpt-rosalind-research' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://grok.com/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "xai-app.grok",
+   "name": "Grok app",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "xAI",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "xAI's developer documentation links to grok.com"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.x-ai.grok-3-beta"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by xAI.",
+   "id": "xai-openrouter.grok-3-beta",
+   "name": "grok-3-beta",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-3-beta",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L914",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/x-ai/grok-3-beta'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "xai-api.grok-3-mini-beta.s4abea339"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "xai-api.grok-3-mini-beta",
+   "name": "grok-3-mini-beta",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-3-mini-beta",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L966",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'xai/grok-3-mini-beta'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.x-ai.grok-4.s4abea339"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by xAI.",
+   "id": "xai-openrouter.grok-4",
+   "name": "grok-4",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1630",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/x-ai/grok-4'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.20-0309-non-reasoning",
+   "name": "grok-4.20-0309-non-reasoning",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.20-0309-non-reasoning",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.20-0309-non-reasoning' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.20-0309-reasoning",
+   "name": "grok-4.20-0309-reasoning",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.20-0309-reasoning",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.20-0309-reasoning' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.20-multi-agent-0309",
+   "name": "grok-4.20-multi-agent-0309",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.20-multi-agent-0309",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.20-multi-agent-0309' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.3",
+   "name": "grok-4.3",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.3",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.3' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.5",
+   "name": "grok-4.5",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.5",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.6",
+   "name": "grok-4.6",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.6",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.6' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-4.7",
+   "name": "grok-4.7",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-4.7",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-4.7' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed model; lifecycle status not stated.",
+   "id": "xai-api.grok-build-0.1",
+   "name": "grok-build-0.1",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "grok-build-0.1",
+   "service_provider": "xAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.x.ai/developers/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'grok-build-0.1' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://www.kimi.com/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "moonshot-app.kimi",
+   "name": "Kimi app",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Moonshot AI",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.kimi.ai/docs/pricing/chat",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Moonshot's platform documentation links to kimi.com"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.moonshotai.kimi-k2"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by Moonshot AI.",
+   "id": "moonshot-openrouter.kimi-k2",
+   "name": "kimi-k2",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "exact",
+   "exact_identifier": "kimi-k2",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1659",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/moonshotai/kimi-k2'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed chat model; status not stated.",
+   "id": "moonshot-api.kimi-k2.6",
+   "name": "kimi-k2.6",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "exact",
+   "exact_identifier": "kimi-k2.6",
+   "service_provider": "Moonshot AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://platform.kimi.ai/docs/pricing/chat",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'kimi-k2.6' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed chat model; status not stated.",
+   "id": "moonshot-api.kimi-k2.7-code",
+   "name": "kimi-k2.7-code",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "exact",
+   "exact_identifier": "kimi-k2.7-code",
+   "service_provider": "Moonshot AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://platform.kimi.ai/docs/pricing/chat",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'kimi-k2.7-code' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed chat model; status not stated.",
+   "id": "moonshot-api.kimi-k2.7-code-highspeed",
+   "name": "kimi-k2.7-code-highspeed",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "exact",
+   "exact_identifier": "kimi-k2.7-code-highspeed",
+   "service_provider": "Moonshot AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://platform.kimi.ai/docs/pricing/chat",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'kimi-k2.7-code-highspeed' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed chat model; status not stated.",
+   "id": "moonshot-api.kimi-k3",
+   "name": "kimi-k3",
+   "maker": "Moonshot AI",
+   "family": "Kimi",
+   "identity_kind": "exact",
+   "exact_identifier": "kimi-k3",
+   "service_provider": "Moonshot AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://platform.kimi.ai/docs/pricing/chat",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'kimi-k3' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-03-31.",
+   "id": "mistral-api.labs-devstral-small-2512",
+   "name": "labs-devstral-small-2512",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-devstral-small-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-devstral-small-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Retirement is listed for 2026-09-30, the check date.",
+   "id": "mistral-api.labs-leanstral-1-5",
+   "name": "labs-leanstral-1-5",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-leanstral-1-5",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-leanstral-1-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-06-30.",
+   "id": "mistral-api.labs-leanstral-2603",
+   "name": "labs-leanstral-2603",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-leanstral-2603",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-leanstral-2603' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-04-30.",
+   "id": "mistral-api.labs-mistral-small-creative",
+   "name": "labs-mistral-small-creative",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-mistral-small-creative",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-mistral-small-creative' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://chat.mistral.ai/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "mistral-app.le-chat",
+   "name": "Le Chat",
+   "maker": "Mistral AI",
+   "family": "Le Chat",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Mistral AI",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Mistral's documentation links to chat.mistral.ai"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Open-weight model family; runs wherever it is deployed. Local and self-hosted runs have no approved evidence representation yet, so no measurements link here.",
+   "id": "meta-local.llama-4-open-weights",
+   "name": "Llama 4 (open weights)",
+   "maker": "Meta",
+   "family": "Llama",
+   "identity_kind": "family",
+   "exact_identifier": null,
+   "service_provider": "Self-hosted",
+   "access_kind": "local",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://dev.meta.ai/llama/docs/model-cards-and-prompt-formats",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Meta's Llama model cards describe Llama 4"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "nvidia-nim.meta.llama-4-maverick-17b-128e-instruct"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by NVIDIA NIM; made by Meta.",
+   "id": "meta-nvidia-nim.llama-4-maverick-17b-128e-instruct",
+   "name": "llama-4-maverick-17b-128e-instruct",
+   "maker": "Meta",
+   "family": "Llama",
+   "identity_kind": "exact",
+   "exact_identifier": "llama-4-maverick-17b-128e-instruct",
+   "service_provider": "NVIDIA NIM",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L888",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'nvidia_nim/meta/llama-4-maverick-17b-128e-instruct'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.magistral-medium-2506",
+   "name": "magistral-medium-2506",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-medium-2506",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-medium-2506' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.magistral-medium-2507",
+   "name": "magistral-medium-2507",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-medium-2507",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-medium-2507' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.magistral-medium-2509",
+   "name": "magistral-medium-2509",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-medium-2509",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-medium-2509' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.magistral-small-2506",
+   "name": "magistral-small-2506",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-small-2506",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-small-2506' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.magistral-small-2507",
+   "name": "magistral-small-2507",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-small-2507",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-small-2507' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.magistral-small-2509",
+   "name": "magistral-small-2509",
+   "maker": "Mistral AI",
+   "family": "Magistral",
+   "identity_kind": "exact",
+   "exact_identifier": "magistral-small-2509",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'magistral-small-2509' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://www.meta.ai/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "meta-app.meta-ai",
+   "name": "Meta AI app",
+   "maker": "Meta",
+   "family": "Meta AI",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Meta",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://dev.meta.ai/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Meta's developer documentation links to meta.ai"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Ministral 3 14B; current model. Alias ministral-14b-latest.",
+   "id": "mistral-api.ministral-14b-2512",
+   "name": "ministral-14b-2512",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-14b-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/ministral-3-14b-25-12",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-14b-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-12-31.",
+   "id": "mistral-api.ministral-3b-2410",
+   "name": "ministral-3b-2410",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-3b-2410",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-3b-2410' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Ministral 3 3B; current model. Alias ministral-3b-latest.",
+   "id": "mistral-api.ministral-3b-2512",
+   "name": "ministral-3b-2512",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-3b-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/ministral-3-3b-25-12",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-3b-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-12-31.",
+   "id": "mistral-api.ministral-8b-2410",
+   "name": "ministral-8b-2410",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-8b-2410",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-8b-2410' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Ministral 3 8B; current model. Alias ministral-8b-latest.",
+   "id": "mistral-api.ministral-8b-2512",
+   "name": "ministral-8b-2512",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-8b-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/ministral-3-8b-25-12",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-8b-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-16.",
+   "id": "mistral-api.mistral-large-2402",
+   "name": "mistral-large-2402",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-large-2402",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-large-2402' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-03-30.",
+   "id": "mistral-api.mistral-large-2407",
+   "name": "mistral-large-2407",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-large-2407",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-large-2407' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-05-31.",
+   "id": "mistral-api.mistral-large-2411",
+   "name": "mistral-large-2411",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-large-2411",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-large-2411' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Mistral Large 3; current model. Alias mistral-large-latest.",
+   "id": "mistral-api.mistral-large-2512",
+   "name": "mistral-large-2512",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-large-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/mistral-large-3-25-12",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-large-2512' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-16.",
+   "id": "mistral-api.mistral-medium-2312",
+   "name": "mistral-medium-2312",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-medium-2312",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-medium-2312' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-08-31.",
+   "id": "mistral-api.mistral-medium-2505",
+   "name": "mistral-medium-2505",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-medium-2505",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-medium-2505' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-08-31.",
+   "id": "mistral-api.mistral-medium-2508",
+   "name": "mistral-medium-2508",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-medium-2508",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-medium-2508' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Mistral Medium 3.5; current model. Alias mistral-medium-latest.",
+   "id": "mistral-api.mistral-medium-3-5",
+   "name": "mistral-medium-3-5",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-medium-3-5",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/mistral-medium-3-5-26-04",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-medium-3-5' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-09-30.",
+   "id": "mistral-api.mistral-saba-2502",
+   "name": "mistral-saba-2502",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-saba-2502",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-saba-2502' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-16.",
+   "id": "mistral-api.mistral-small-2402",
+   "name": "mistral-small-2402",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2402",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2402' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.mistral-small-2409",
+   "name": "mistral-small-2409",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2409",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2409' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.mistral-small-2501",
+   "name": "mistral-small-2501",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2501",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2501' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-11-30.",
+   "id": "mistral-api.mistral-small-2503",
+   "name": "mistral-small-2503",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2503",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2503' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.mistral-small-2506",
+   "name": "mistral-small-2506",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2506",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2506' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Mistral Small 4.0; current model. Alias mistral-small-latest.",
+   "id": "mistral-api.mistral-small-2603",
+   "name": "mistral-small-2603",
+   "maker": "Mistral AI",
+   "family": "Mistral",
+   "identity_kind": "exact",
+   "exact_identifier": "mistral-small-2603",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models/mistral-small-4-0-26-03",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'mistral-small-2603' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Named in the official listing; the exact API identifier was not verified, so this is a family-level entry.",
+   "id": "meta-api.muse-spark",
+   "name": "Muse Spark",
+   "maker": "Meta",
+   "family": "Muse",
+   "identity_kind": "family",
+   "exact_identifier": null,
+   "service_provider": "Meta",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://dev.meta.ai/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Muse Spark is named in the official listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.north-mini-code-1-0",
+   "name": "north-mini-code-1-0",
+   "maker": "Cohere",
+   "family": "North",
+   "identity_kind": "exact",
+   "exact_identifier": "north-mini-code-1-0",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'north-mini-code-1-0' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o1",
+   "name": "o1",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o1",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o1' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.o1-mini"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o1-mini",
+   "name": "o1-mini",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o1-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o1-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o1-preview",
+   "name": "o1-preview",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o1-preview",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o1-preview' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o1-pro",
+   "name": "o1-pro",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o1-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o1-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.o3",
+    "openai-api.o3.s4abea339"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o3",
+   "name": "o3",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o3",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o3' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o3-deep-research",
+   "name": "o3-deep-research",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o3-deep-research",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o3-deep-research' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o3-mini",
+   "name": "o3-mini",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o3-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o3-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openai-api.o3-pro.s4abea339"
+   ],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o3-pro",
+   "name": "o3-pro",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o3-pro",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o3-pro' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o4-mini",
+   "name": "o4-mini",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o4-mini",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o4-mini' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed on OpenAI's all-models page; lifecycle status is not taken from that page.",
+   "id": "openai-api.o4-mini-deep-research",
+   "name": "o4-mini-deep-research",
+   "maker": "OpenAI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "o4-mini-deep-research",
+   "service_provider": "OpenAI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://developers.openai.com/api/docs/models/all",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'o4-mini-deep-research' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-06.",
+   "id": "mistral-api.open-codestral-mamba",
+   "name": "open-codestral-mamba",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-codestral-mamba",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-codestral-mamba' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-03-30.",
+   "id": "mistral-api.open-mistral-7b",
+   "name": "open-mistral-7b",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mistral-7b",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mistral-7b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.open-mistral-nemo-2407",
+   "name": "open-mistral-nemo-2407",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mistral-nemo-2407",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mistral-nemo-2407' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-03-30.",
+   "id": "mistral-api.open-mixtral-8x7b",
+   "name": "open-mixtral-8x7b",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mixtral-8x7b",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mixtral-8x7b' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-12-31.",
+   "id": "mistral-api.pixtral-12b-2409",
+   "name": "pixtral-12b-2409",
+   "maker": "Mistral AI",
+   "family": "Pixtral",
+   "identity_kind": "exact",
+   "exact_identifier": "pixtral-12b-2409",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'pixtral-12b-2409' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-05-31.",
+   "id": "mistral-api.pixtral-large-2411",
+   "name": "pixtral-large-2411",
+   "maker": "Mistral AI",
+   "family": "Pixtral",
+   "identity_kind": "exact",
+   "exact_identifier": "pixtral-large-2411",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'pixtral-large-2411' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Consumer app at https://chat.qwen.ai/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
+   "id": "qwen-app.qwen",
+   "name": "Qwen Chat",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "automatic",
+   "exact_identifier": null,
+   "service_provider": "Alibaba (Qwen)",
+   "access_kind": "consumer_app",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://chat.qwen.ai/",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Qwen Chat loads at chat.qwen.ai"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "alibaba-model-studio-api.qwen-max-2025-01-25"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown.",
+   "id": "qwen-api.qwen-max-2025-01-25",
+   "name": "qwen-max-2025-01-25",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwen-max-2025-01-25",
+   "service_provider": "Alibaba (Qwen)",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L471",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openai/qwen-max-2025-01-25'"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "openrouter.qwen.qwen3-32b"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by OpenRouter; made by Alibaba (Qwen).",
+   "id": "qwen-openrouter.qwen3-32b",
+   "name": "qwen3-32b",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwen3-32b",
+   "service_provider": "OpenRouter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1200",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'openrouter/qwen/qwen3-32b'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed under text generation; status not stated.",
+   "id": "qwen-api.qwen3.7-plus",
+   "name": "qwen3.7-plus",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwen3.7-plus",
+   "service_provider": "Alibaba (Qwen)",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'qwen3.7-plus' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed under text generation; status not stated.",
+   "id": "qwen-api.qwen3.8-flash",
+   "name": "qwen3.8-flash",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwen3.8-flash",
+   "service_provider": "Alibaba (Qwen)",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'qwen3.8-flash' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed under text generation; status not stated.",
+   "id": "qwen-api.qwen3.8-max",
+   "name": "qwen3.8-max",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwen3.8-max",
+   "service_provider": "Alibaba (Qwen)",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'qwen3.8-max' appears in the official model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [
+    "fireworks.qwq-32b"
+   ],
+   "notes": "Known from historical third-party evidence only. It is not in the maker's current listing checked on this date, so current availability is unknown. Hosted by Fireworks AI; made by Alibaba (Qwen).",
+   "id": "qwen-fireworks-ai.qwq-32b",
+   "name": "qwq-32b",
+   "maker": "Alibaba (Qwen)",
+   "family": "Qwen",
+   "identity_kind": "exact",
+   "exact_identifier": "qwq-32b",
+   "service_provider": "Fireworks AI",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L678",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "Aider polyglot run requested 'fireworks_ai/accounts/fireworks/models/qwq-32b'"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as live.",
+   "id": "cohere-api.tiny-aya-global",
+   "name": "tiny-aya-global",
+   "maker": "Cohere",
+   "family": "Aya",
+   "identity_kind": "exact",
+   "exact_identifier": "tiny-aya-global",
+   "service_provider": "Cohere",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://docs.cohere.com/docs/models",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'tiny-aya-global' appears in the official model listing"
+    }
+   ]
+  }
+ ]
+}

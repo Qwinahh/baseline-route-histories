@@ -39,7 +39,17 @@ fixes are still required before T03.
   either use bare model names or intermediaries/overridden API bases that the adapter
   does not map without review. Provider diversity is an open gap.
 
-## Not researched this session
+## Candidate sources checked on 30 September 2026 (T07)
 
-Epoch AI Benchmarking Hub, LMArena, SWE-bench and other leaderboards were not
-checked; no decision is implied.
+None of these is imported yet. Importing numbers needs a separately reviewed adapter,
+with route mapping and reuse scope checked per benchmark. Old Aider results are not
+presented as live testing.
+
+| Candidate | Reuse terms found | Dating and identity | Finding |
+| --- | --- | --- | --- |
+| Epoch AI Benchmarking Hub (https://epoch.ai/data/ai-benchmarking-dashboard) | The page states Epoch AI's data is free to use, distribute and reproduce with credit under the Creative Commons Attribution licence. Data from external projects keeps its original licence. | Runs are dated. Models are named by API identifier (for example `gpt-4-0613`), with API-default settings. The page was updated 30 Sep 2026. | **Strongest next candidate.** It is newer and covers more than coding. Before import, check the licence of each benchmark's underlying data and map each API route explicitly. |
+| LMArena (https://arena.ai/leaderboard, redirected from lmarena.ai) | The page states no reuse terms; it links to general terms of use that were not reviewed. | The page shows no run or measurement dates. Entries are display names and settings labels. | **Not suitable yet:** no reuse terms and no dated observations. These are preference rankings, not task pass rates. |
+| SWE-bench (https://www.swebench.com/) | The page shows no reuse terms in the part checked. | Not established from the page. | **Not assessed.** The results repository and its licence would need checking. |
+
+Consumer apps remain unmeasured: none of these sources measures ChatGPT, Claude,
+Gemini or similar apps. API results must not be presented as app results.

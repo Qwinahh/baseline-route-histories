@@ -4,20 +4,25 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
-<title>Baseline · Route histories</title>
-<meta name="description" content="Dated, source-linked history of AI model API routes, with coverage gaps and evidence age shown.">
+<title>Baseline · Model histories</title>
+<meta name="description" content="A directory of AI models across providers, with dated, source-linked measurement history where evidence exists and coverage gaps shown.">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<a class="skip" href="#routes">Skip to routes</a>
+<a class="skip" href="#app">Skip to content</a>
 <header class="masthead">
-  <p class="brand">Baseline</p>
-  <p class="masthead-note">Route histories</p>
+  <a class="brand" href="#models">Baseline</a>
+  <nav class="primary" aria-label="Main">
+    <a href="#models" data-view="models">Models</a>
+    <a href="#sources" data-view="sources">Sources</a>
+    <a href="#about" data-view="about">About</a>
+  </nav>
 </header>
-<main id="app" aria-live="off">
+<main id="app" tabindex="-1">
   <noscript><p class="notice">This page needs JavaScript to read its data file and compute how old each measurement is.</p></noscript>
 </main>
 <script src="freshness.js"></script>
+<script src="directory.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
 </body>
