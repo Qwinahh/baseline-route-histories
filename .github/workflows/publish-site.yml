@@ -1,0 +1,66 @@
+# WORKFLOW TEMPLATE (T05 release candidate). GitHub runs it only once it is copied
+# into .github/workflows/ of the public repository (docs/RELEASE_PLAN.md, section 5).
+#
+# Validation and publication of the static site to Cloudflare Pages (Direct Upload).
+# Runs on a push to main that changes the site or its data, by hand, or when the
+# refresh workflow calls it. Read-only repository token; the Cloudflare token is used
+# only in the final step. Nothing is deployed unless the full test suite, the
+# registry validator and the bundle inspection all pass.
+name: Publish site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "registry/**"
+      - "scripts/build_site.py"
+      - "scripts/release_check.py"
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit or branch to publish (defaults to the triggering commit)"
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+    secrets:
+      CLOUDFLARE_API_TOKEN:
+        required: true
+      CLOUDFLARE_ACCOUNT_ID:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    concurrency:
+      group: baseline-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+      - name: Offline tests
+        run: python -B -m unittest discover -s tests
+      - name: Build and inspect the bundle (refuses invalid data)
+        run: python -B scripts/release_check.py --manifest "$RUNNER_TEMP/release-manifest.json"
+      - name: Deploy dist/ to Cloudflare Pages
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4.143.0"
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main
