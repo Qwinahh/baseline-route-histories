@@ -145,6 +145,383 @@
    ]
   },
   {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-fable-5",
+   "name": "Claude Fable 5",
+   "maker": "Anthropic",
+   "family": "Claude Fable",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-fable-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-fable-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-06-09",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/fable-5/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released June 9, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-fable-5-1",
+   "name": "Claude Fable 5.1",
+   "maker": "Anthropic",
+   "family": "Claude Fable",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-fable-5-1",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-fable-5-1' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-09-01",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "The models overview lists claude-fable-5-1 as released on 2026-09-01"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model; alias claude-haiku-4-5.",
+   "id": "anthropic-api.claude-haiku-4-5-20251001",
+   "name": "Claude Haiku 4.5",
+   "maker": "Anthropic",
+   "family": "Claude Haiku",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-haiku-4-5-20251001",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-haiku-4-5-20251001' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2025-10-15",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "The models overview lists claude-haiku-4-5-20251001 as released on 2025-10-15"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Legacy model still available (overview); alias claude-opus-4-5. Dated ID from the model's own page.",
+   "id": "anthropic-api.claude-opus-4-5-20251101",
+   "name": "Claude Opus 4.5",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-5-20251101",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'claude-opus-4-5-20251101' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2025-11-24",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "The model page lists “Released November 24, 2025”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-6",
+   "name": "Claude Opus 4.6",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-6",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-6' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-02-05",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-6/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released February 5, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-7",
+   "name": "Claude Opus 4.7",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-7",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-7' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-04-16",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-7/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released April 16, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-4-8",
+   "name": "Claude Opus 4.8",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-4-8",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-4-8' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-05-28",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/opus-4-8/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released May 28, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-opus-5",
+   "name": "Claude Opus 5",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-07-24",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/opus-5/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released July 24, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-opus-5-5",
+   "name": "Claude Opus 5.5",
+   "maker": "Anthropic",
+   "family": "Claude Opus",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-opus-5-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-opus-5-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-09-22",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "The models overview lists claude-opus-5-5 as released on 2026-09-22"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Legacy model still available (overview); alias claude-sonnet-4-5. Dated ID from the model's own page.",
+   "id": "anthropic-api.claude-sonnet-4-5-20250929",
+   "name": "Claude Sonnet 4.5",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-4-5-20250929",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/sonnet-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'claude-sonnet-4-5-20250929' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2025-09-29",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/sonnet-4-5/overview",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "The model page lists “Released September 29, 2025”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-sonnet-4-6",
+   "name": "Claude Sonnet 4.6",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-4-6",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-4-6' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-02-17",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/sonnet-4-6/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released February 17, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as a legacy model that is still available.",
+   "id": "anthropic-api.claude-sonnet-5",
+   "name": "Claude Sonnet 5",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-06-30",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/sonnet-5/overview",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "The model page lists “Released June 30, 2026”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Current model.",
+   "id": "anthropic-api.claude-sonnet-5-5",
+   "name": "Claude Sonnet 5.5",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-5-5",
+   "service_provider": "Anthropic",
+   "access_kind": "direct_api",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "'claude-sonnet-5-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-09-28",
+    "precision": "day",
+    "source": {
+     "url": "https://platform.claude.com/docs/en/models/overview",
+     "checked_at": "2026-09-30T08:07:11Z",
+     "claim": "The models overview lists claude-sonnet-5-5 as released on 2026-09-28"
+    }
+   }
+  },
+  {
    "route_ids": [
     "anthropic-api.claude-3-5-haiku-20241022"
    ],
@@ -211,66 +588,6 @@
    ]
   },
   {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-fable-5",
-   "name": "claude-fable-5",
-   "maker": "Anthropic",
-   "family": "Claude Fable",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-fable-5",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-fable-5' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Current model.",
-   "id": "anthropic-api.claude-fable-5-1",
-   "name": "claude-fable-5-1",
-   "maker": "Anthropic",
-   "family": "Claude Fable",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-fable-5-1",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-fable-5-1' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Current model; alias claude-haiku-4-5.",
-   "id": "anthropic-api.claude-haiku-4-5-20251001",
-   "name": "claude-haiku-4-5-20251001",
-   "maker": "Anthropic",
-   "family": "Claude Haiku",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-haiku-4-5-20251001",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-haiku-4-5-20251001' appears in the official model listing"
-    }
-   ]
-  },
-  {
    "route_ids": [
     "anthropic-api.claude-opus-4-20250514",
     "anthropic-api.claude-opus-4-20250514.scb728c19"
@@ -290,126 +607,6 @@
      "url": "https://github.com/Aider-AI/aider/blob/5dc9490bb35f9729ef2c95d00a19ccd30c26339c/aider/website/_data/polyglot_leaderboard.yml#L1313",
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "Aider polyglot run requested 'claude-opus-4-20250514'"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Legacy model still available (overview); alias claude-opus-4-5. Dated ID from the model's own page.",
-   "id": "anthropic-api.claude-opus-4-5-20251101",
-   "name": "claude-opus-4-5-20251101",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-4-5-20251101",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/opus-4-5/overview",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'claude-opus-4-5-20251101' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-opus-4-6",
-   "name": "claude-opus-4-6",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-4-6",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-opus-4-6' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-opus-4-7",
-   "name": "claude-opus-4-7",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-4-7",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-opus-4-7' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-opus-4-8",
-   "name": "claude-opus-4-8",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-4-8",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-opus-4-8' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-opus-5",
-   "name": "claude-opus-5",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-5",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-opus-5' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Current model.",
-   "id": "anthropic-api.claude-opus-5-5",
-   "name": "claude-opus-5-5",
-   "maker": "Anthropic",
-   "family": "Claude Opus",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-opus-5-5",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-opus-5-5' appears in the official model listing"
     }
    ]
   },
@@ -438,89 +635,9 @@
   },
   {
    "route_ids": [],
-   "notes": "Legacy model still available (overview); alias claude-sonnet-4-5. Dated ID from the model's own page.",
-   "id": "anthropic-api.claude-sonnet-4-5-20250929",
-   "name": "claude-sonnet-4-5-20250929",
-   "maker": "Anthropic",
-   "family": "Claude Sonnet",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-sonnet-4-5-20250929",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/sonnet-4-5/overview",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'claude-sonnet-4-5-20250929' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-sonnet-4-6",
-   "name": "claude-sonnet-4-6",
-   "maker": "Anthropic",
-   "family": "Claude Sonnet",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-sonnet-4-6",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-sonnet-4-6' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as a legacy model that is still available.",
-   "id": "anthropic-api.claude-sonnet-5",
-   "name": "claude-sonnet-5",
-   "maker": "Anthropic",
-   "family": "Claude Sonnet",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-sonnet-5",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-sonnet-5' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Current model.",
-   "id": "anthropic-api.claude-sonnet-5-5",
-   "name": "claude-sonnet-5-5",
-   "maker": "Anthropic",
-   "family": "Claude Sonnet",
-   "identity_kind": "exact",
-   "exact_identifier": "claude-sonnet-5-5",
-   "service_provider": "Anthropic",
-   "access_kind": "direct_api",
-   "availability": "available",
-   "sources": [
-    {
-     "url": "https://platform.claude.com/docs/en/models/overview",
-     "checked_at": "2026-09-30T08:07:11Z",
-     "claim": "'claude-sonnet-5-5' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
    "notes": "Listed as retired on 2025-06-16.",
    "id": "mistral-api.codestral-2405",
-   "name": "codestral-2405",
+   "name": "Codestral",
    "maker": "Mistral AI",
    "family": "Codestral",
    "identity_kind": "exact",
@@ -534,13 +651,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'codestral-2405' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-05-29",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-05-29: “New model available: codestral-latest (aka codestral-2405).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.codestral-2501",
-   "name": "codestral-2501",
+   "name": "Codestral",
    "maker": "Mistral AI",
    "family": "Codestral",
    "identity_kind": "exact",
@@ -554,13 +680,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'codestral-2501' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-01-13",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-01-13: “We released Codestral 2501 (codestral-2501).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Codestral 25.08; current model. Alias codestral-latest.",
    "id": "mistral-api.codestral-2508",
-   "name": "codestral-2508",
+   "name": "Codestral 25.08",
    "maker": "Mistral AI",
    "family": "Codestral",
    "identity_kind": "exact",
@@ -574,7 +709,45 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'codestral-2508' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-30",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-30: “We released Codestral 2508 (codestral-2508).”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-06-06.",
+   "id": "mistral-api.open-codestral-mamba",
+   "name": "Codestral Mamba 7B",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-codestral-mamba",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-codestral-mamba' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2024-07-16",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-07-16: “We released Codestral Mamba (open-codestral-mamba) and Mathstral.”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -636,7 +809,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-a-03-2025' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-13",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/command-a",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated March 13, 2025: “through the SDK with command-a-03-2025”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -656,7 +838,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-a-plus-05-2026' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-05-20",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/command-a-plus-05-2026",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated May 20, 2026: “Model Name: command-a-plus-05-2026”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -676,7 +867,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-a-reasoning-08-2025' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-21",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/2025-08-21-command-a-reasoning",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated August 21, 2025: “Model Name: command-a-reasoning-08-2025”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -696,7 +896,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-a-translate-08-2025' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-28",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/2025-08-28-command-a-translate",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated August 28, 2025: “We’re excited to announce the release of Command A Translate”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -716,7 +925,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-a-vision-07-2025' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-31",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/2025-07-31-command-a-vision",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated July 31, 2025: “Model Name: command-a-vision-07-2025”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -796,7 +1014,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-r-08-2024' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-08-30",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/command-gets-refreshed",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated August 30, 2024: “The updated Command R is command-r-08-2024 on the API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -856,7 +1083,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-r-plus-08-2024' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-08-30",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/command-gets-refreshed",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated August 30, 2024: “The updated Command R+ is command-r-plus-08-2024 on the API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -876,7 +1112,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'command-r7b-12-2024' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-12-13",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/command-r-7b",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated December 13, 2024: “access it in the SDK with command-r7b-12-2024”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -896,7 +1141,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'computer-use-preview' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-11",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1020,7 +1274,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'deepseek-v4-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-04-24",
+    "precision": "day",
+    "source": {
+     "url": "https://api-docs.deepseek.com/updates",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-04-24: “the model parameter should be set to deepseek-v4-pro or deepseek-v4-flash”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1040,13 +1303,22 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'deepseek-v4-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-04-24",
+    "precision": "day",
+    "source": {
+     "url": "https://api-docs.deepseek.com/updates",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-04-24: “the model parameter should be set to deepseek-v4-pro or deepseek-v4-flash”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-07-31.",
    "id": "mistral-api.devstral-2512",
-   "name": "devstral-2512",
+   "name": "Devstral 2",
    "maker": "Mistral AI",
    "family": "Devstral",
    "identity_kind": "exact",
@@ -1060,13 +1332,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'devstral-2512' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-12-09",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-09: “We released Devstral 2 (devstral-2512) and Devstral Small 2 (labs-devstral-small-2512).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-05-31.",
    "id": "mistral-api.devstral-medium-2507",
-   "name": "devstral-medium-2507",
+   "name": "Devstral Medium 1.0",
    "maker": "Mistral AI",
    "family": "Devstral",
    "identity_kind": "exact",
@@ -1080,13 +1361,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'devstral-medium-2507' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-10",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-10: “We released Devstral Small 1.1 (devstral-small-2507) and Devstral Medium (devstral-medium-2507).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.devstral-small-2505",
-   "name": "devstral-small-2505",
+   "name": "Devstral Small 1.0",
    "maker": "Mistral AI",
    "family": "Devstral",
    "identity_kind": "exact",
@@ -1100,13 +1390,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'devstral-small-2505' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-05-21",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-05-21: “We released Devstral Small (devstral-small-2505).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-05-31.",
    "id": "mistral-api.devstral-small-2507",
-   "name": "devstral-small-2507",
+   "name": "Devstral Small 1.1",
    "maker": "Mistral AI",
    "family": "Devstral",
    "identity_kind": "exact",
@@ -1120,7 +1419,45 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'devstral-small-2507' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-10",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-10: “We released Devstral Small 1.1 (devstral-small-2507) and Devstral Medium (devstral-medium-2507).”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-03-31.",
+   "id": "mistral-api.labs-devstral-small-2512",
+   "name": "Devstral Small 2",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-devstral-small-2512",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-devstral-small-2512' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2025-12-09",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-09: “We released Devstral 2 (devstral-2512) and Devstral Small 2 (labs-devstral-small-2512).”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1246,7 +1583,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-2.5-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-17",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-17: “Released gemini-2.5-flash, our first stable 2.5 Flash model.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1266,7 +1612,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-2.5-flash-lite' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-22",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-22: “Released gemini-2.5-flash-lite, our fast, low-cost, high-performance Gemini 2.5 model.”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1331,7 +1686,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-2.5-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-17",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-17: “Released gemini-2.5-pro, the stable version of our most powerful model”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1418,7 +1782,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3-flash-preview' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-12-17",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-17: “Launched Gemini 3 Flash Preview, gemini-3-flash-preview”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1438,7 +1811,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.1-flash-lite' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-05-07",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-05-07: “Released gemini-3.1-flash-lite, the generally available”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1478,7 +1860,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.5-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-05-19",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-05-19: “Released gemini-3.5-flash, the generally available”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1498,7 +1889,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.5-flash-lite' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-07-21",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-07-21: “Released stable, production-ready versions of our latest 3.x Flash models”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1518,7 +1918,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.6-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-07-21",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-07-21: “Released stable, production-ready versions of our latest 3.x Flash models”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1538,7 +1947,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.7-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-08-13",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-08-13: “Released our most intelligent workhorse model yet for coding and agents”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1558,7 +1976,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'gemini-3.8-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-02",
+    "precision": "day",
+    "source": {
+     "url": "https://ai.google.dev/gemini-api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-02: “Released gemini-3.8-flash, our most intelligent Flash model”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1704,7 +2131,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-4.1' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-04-14",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1726,7 +2162,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-4.1-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-04-14",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1748,7 +2193,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-4.1-nano' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-04-14",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1810,7 +2264,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "Aider polyglot run requested 'gpt-4o-2024-08-06'"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-08-06",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-08-06: “Released gpt-4o-2024-08-06, our newest model in the gpt-4o series.”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1832,7 +2295,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "Aider polyglot run requested 'gpt-4o-2024-11-20'"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-11-20",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-11-20: “Released gpt-4o-2024-11-20, our newest model in the gpt-4o series.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1894,7 +2366,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-4o-mini-search-preview' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-11",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1914,7 +2395,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-4o-search-preview' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-11",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -1938,7 +2428,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-07",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1978,7 +2477,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5-codex' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-09-23",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-09-23: “Launched special-purpose model gpt-5-codex”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -1998,7 +2506,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-07",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2018,7 +2535,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5-nano' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-07",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2038,7 +2564,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-10-06",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-10-06: “Released GPT-5 Pro, a version of GPT-5 that uses more compute”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2058,7 +2593,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.1' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-11-13",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-11-13: “Released GPT-5.1, the newest flagship model in the GPT-5 model family.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2098,7 +2642,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.1-codex' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-11-13",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-11-13: “Released gpt-5.1-codex and gpt-5.1-codex-mini to the Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2118,7 +2671,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.1-codex-max' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-12-04",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-04: “Released gpt-5.1-codex-max to the Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2138,7 +2700,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.1-codex-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-11-13",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-11-13: “Released gpt-5.1-codex and gpt-5.1-codex-mini to the Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2158,7 +2729,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.2' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-12-11",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-11: “Released GPT-5.2, the newest flagship model in the GPT-5 model family.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2198,7 +2778,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.2-codex' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-01-14",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-01-14: “Released gpt-5.2-codex to the Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2258,7 +2847,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.3-codex' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-02-24",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-02-24: “Released gpt-5.3-codex to the Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2278,7 +2876,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.4' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-03-05",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-05: “Released GPT-5.4, our newest frontier model for professional work”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2298,7 +2905,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.4-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-03-17",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-17: “Released GPT-5.4 mini and GPT-5.4 nano to the Chat Completions and Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2318,7 +2934,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.4-nano' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-03-17",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-17: “Released GPT-5.4 mini and GPT-5.4 nano to the Chat Completions and Responses API.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2338,7 +2963,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.4-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-03-05",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-05: “Released GPT-5.4, our newest frontier model for professional work”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2358,7 +2992,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.5' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-04-24",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-04-24: “Released GPT-5.5, a new frontier model for complex professional work”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2378,7 +3021,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.5-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-04-24",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-04-24: “Released GPT-5.5, a new frontier model for complex professional work”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2418,7 +3070,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.6-luna' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-07-09",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2438,7 +3099,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.6-sol' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-07-09",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2458,7 +3128,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-5.6-terra' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-07-09",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2478,7 +3157,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-6-astra' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-03",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-03: “Released GPT-6 Astra, our most capable model”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2498,7 +3186,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-6-luna' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-22",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-22: “Released GPT-6 Sol (gpt-6-sol) and GPT-6 Luna (gpt-6-luna).”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2518,7 +3215,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-6-sol' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-22",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-22: “Released GPT-6 Sol (gpt-6-sol) and GPT-6 Luna (gpt-6-luna).”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2538,7 +3244,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'gpt-6.1-sol' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-29",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-29: “Released GPT-6.1 Sol (gpt-6.1-sol)”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -2886,7 +3601,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'grok-4.7' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-09-21",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.x.ai/developers/release-notes",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-09-21: “is now available on the xAI API as grok-4.7”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3032,86 +3756,6 @@
   },
   {
    "route_ids": [],
-   "notes": "Listed as retired on 2026-03-31.",
-   "id": "mistral-api.labs-devstral-small-2512",
-   "name": "labs-devstral-small-2512",
-   "maker": "Mistral AI",
-   "family": "Mistral Labs",
-   "identity_kind": "exact",
-   "exact_identifier": "labs-devstral-small-2512",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'labs-devstral-small-2512' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Retirement is listed for 2026-09-30, the check date.",
-   "id": "mistral-api.labs-leanstral-1-5",
-   "name": "labs-leanstral-1-5",
-   "maker": "Mistral AI",
-   "family": "Mistral Labs",
-   "identity_kind": "exact",
-   "exact_identifier": "labs-leanstral-1-5",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "unknown",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'labs-leanstral-1-5' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2026-06-30.",
-   "id": "mistral-api.labs-leanstral-2603",
-   "name": "labs-leanstral-2603",
-   "maker": "Mistral AI",
-   "family": "Mistral Labs",
-   "identity_kind": "exact",
-   "exact_identifier": "labs-leanstral-2603",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'labs-leanstral-2603' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2026-04-30.",
-   "id": "mistral-api.labs-mistral-small-creative",
-   "name": "labs-mistral-small-creative",
-   "maker": "Mistral AI",
-   "family": "Mistral Labs",
-   "identity_kind": "exact",
-   "exact_identifier": "labs-mistral-small-creative",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'labs-mistral-small-creative' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
    "notes": "Consumer app at https://chat.mistral.ai/. The model behind a reply can change or be chosen automatically, so it is not an exact model version. API measurements never count as app measurements.",
    "id": "mistral-app.le-chat",
    "name": "Le Chat",
@@ -3129,6 +3773,64 @@
      "claim": "Mistral's documentation links to chat.mistral.ai"
     }
    ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-06-30.",
+   "id": "mistral-api.labs-leanstral-2603",
+   "name": "Leanstral",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-leanstral-2603",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-leanstral-2603' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-03-16",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-16: “We released Leanstral (labs-leanstral-2603), our first open-source code agent designed for Lean 4 formal proof engineering.”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Retirement is listed for 2026-09-30, the check date.",
+   "id": "mistral-api.labs-leanstral-1-5",
+   "name": "Leanstral 1.5",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-leanstral-1-5",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-leanstral-1-5' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-06-30",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-06-30: “We released Leanstral 1.5 (labs-leanstral-1-5), an updated Lean 4 formal proof engineering model with improved SFT mixture quality and extended long-context reasoning.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3176,7 +3878,7 @@
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.magistral-medium-2506",
-   "name": "magistral-medium-2506",
+   "name": "Magistral Medium 1.0",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3190,13 +3892,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-medium-2506' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-10",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-10: “We released Magistral Medium (magistral-medium-2506) and Magistral Small (magistral-small-2506).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.magistral-medium-2507",
-   "name": "magistral-medium-2507",
+   "name": "Magistral Medium 1.1",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3210,13 +3921,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-medium-2507' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-24",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-24: “We released Magistral Medium 1.1 (magistral-medium-2507) and Magistral Small 1.1 (magistral-small-2507).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-07-31.",
    "id": "mistral-api.magistral-medium-2509",
-   "name": "magistral-medium-2509",
+   "name": "Magistral Medium 1.2",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3230,13 +3950,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-medium-2509' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-09-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-09-17: “We released Magistral Medium 1.2 (magistral-medium-2509) and Magistral Small 1.2 (magistral-small-2509).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.magistral-small-2506",
-   "name": "magistral-small-2506",
+   "name": "Magistral Small 1.0",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3250,13 +3979,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-small-2506' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-10",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-10: “We released Magistral Medium (magistral-medium-2506) and Magistral Small (magistral-small-2506).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.magistral-small-2507",
-   "name": "magistral-small-2507",
+   "name": "Magistral Small 1.1",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3270,13 +4008,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-small-2507' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-07-24",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-07-24: “We released Magistral Medium 1.1 (magistral-medium-2507) and Magistral Small 1.1 (magistral-small-2507).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-07-31.",
    "id": "mistral-api.magistral-small-2509",
-   "name": "magistral-small-2509",
+   "name": "Magistral Small 1.2",
    "maker": "Mistral AI",
    "family": "Magistral",
    "identity_kind": "exact",
@@ -3290,7 +4037,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'magistral-small-2509' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-09-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-09-17: “We released Magistral Medium 1.2 (magistral-medium-2509) and Magistral Small 1.2 (magistral-small-2509).”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3316,7 +4072,7 @@
    "route_ids": [],
    "notes": "Ministral 3 14B; current model. Alias ministral-14b-latest.",
    "id": "mistral-api.ministral-14b-2512",
-   "name": "ministral-14b-2512",
+   "name": "Ministral 3 14B",
    "maker": "Mistral AI",
    "family": "Ministral",
    "identity_kind": "exact",
@@ -3330,33 +4086,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'ministral-14b-2512' appears in the official model listing"
     }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2025-12-31.",
-   "id": "mistral-api.ministral-3b-2410",
-   "name": "ministral-3b-2410",
-   "maker": "Mistral AI",
-   "family": "Ministral",
-   "identity_kind": "exact",
-   "exact_identifier": "ministral-3b-2410",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'ministral-3b-2410' appears in the official model listing"
+   ],
+   "release": {
+    "date": "2025-12-02",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
     }
-   ]
+   }
   },
   {
    "route_ids": [],
    "notes": "Ministral 3 3B; current model. Alias ministral-3b-latest.",
    "id": "mistral-api.ministral-3b-2512",
-   "name": "ministral-3b-2512",
+   "name": "Ministral 3 3B",
    "maker": "Mistral AI",
    "family": "Ministral",
    "identity_kind": "exact",
@@ -3370,33 +4115,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'ministral-3b-2512' appears in the official model listing"
     }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2025-12-31.",
-   "id": "mistral-api.ministral-8b-2410",
-   "name": "ministral-8b-2410",
-   "maker": "Mistral AI",
-   "family": "Ministral",
-   "identity_kind": "exact",
-   "exact_identifier": "ministral-8b-2410",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'ministral-8b-2410' appears in the official model listing"
+   ],
+   "release": {
+    "date": "2025-12-02",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
     }
-   ]
+   }
   },
   {
    "route_ids": [],
    "notes": "Ministral 3 8B; current model. Alias ministral-8b-latest.",
    "id": "mistral-api.ministral-8b-2512",
-   "name": "ministral-8b-2512",
+   "name": "Ministral 3 8B",
    "maker": "Mistral AI",
    "family": "Ministral",
    "identity_kind": "exact",
@@ -3410,13 +4144,100 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'ministral-8b-2512' appears in the official model listing"
     }
+   ],
+   "release": {
+    "date": "2025-12-02",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-12-31.",
+   "id": "mistral-api.ministral-3b-2410",
+   "name": "Ministral 3B",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-3b-2410",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-3b-2410' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2024-10-09",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-10-09: “We released Ministral 3B (ministral-3b-2410) and Ministral 8B (ministral-8b-2410).”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-12-31.",
+   "id": "mistral-api.ministral-8b-2410",
+   "name": "Ministral 8B",
+   "maker": "Mistral AI",
+   "family": "Ministral",
+   "identity_kind": "exact",
+   "exact_identifier": "ministral-8b-2410",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'ministral-8b-2410' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2024-10-09",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-10-09: “We released Ministral 3B (ministral-3b-2410) and Ministral 8B (ministral-8b-2410).”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-03-30.",
+   "id": "mistral-api.open-mistral-7b",
+   "name": "Mistral 7B",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mistral-7b",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mistral-7b' appears in the official model listing"
+    }
    ]
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-06-16.",
    "id": "mistral-api.mistral-large-2402",
-   "name": "mistral-large-2402",
+   "name": "Mistral Large 1.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3436,7 +4257,7 @@
    "route_ids": [],
    "notes": "Listed as retired on 2025-03-30.",
    "id": "mistral-api.mistral-large-2407",
-   "name": "mistral-large-2407",
+   "name": "Mistral Large 2.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3450,13 +4271,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-large-2407' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-07-24",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-07-24: “We released Mistral Large 2 (mistral-large-2407).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-05-31.",
    "id": "mistral-api.mistral-large-2411",
-   "name": "mistral-large-2411",
+   "name": "Mistral Large 2.1",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3470,13 +4300,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-large-2411' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-11-18",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-11-18: “We released Mistral Large 2.1 (mistral-large-2411) and Pixtral Large (pixtral-large-2411).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Mistral Large 3; current model. Alias mistral-large-latest.",
    "id": "mistral-api.mistral-large-2512",
-   "name": "mistral-large-2512",
+   "name": "Mistral Large 3",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3490,13 +4329,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-large-2512' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-12-02",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-06-16.",
    "id": "mistral-api.mistral-medium-2312",
-   "name": "mistral-medium-2312",
+   "name": "Mistral Medium 1.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3516,7 +4364,7 @@
    "route_ids": [],
    "notes": "Listed as retired on 2026-08-31.",
    "id": "mistral-api.mistral-medium-2505",
-   "name": "mistral-medium-2505",
+   "name": "Mistral Medium 3",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3530,13 +4378,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-medium-2505' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-05-07",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-05-07: “We released Mistral Medium 3 (mistral-medium-2505).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-08-31.",
    "id": "mistral-api.mistral-medium-2508",
-   "name": "mistral-medium-2508",
+   "name": "Mistral Medium 3.1",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3550,13 +4407,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-medium-2508' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-08-12",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-08-12: “We released Mistral Medium 3.1 (mistral-medium-2508).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Mistral Medium 3.5; current model. Alias mistral-medium-latest.",
    "id": "mistral-api.mistral-medium-3-5",
-   "name": "mistral-medium-3-5",
+   "name": "Mistral Medium 3.5",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3570,13 +4436,42 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-medium-3-5' appears in the official model listing"
     }
+   ],
+   "release": {
+    "date": "2026-04-28",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-04-28: “We released Mistral Medium 3.5 (mistral-medium-3-5), our frontier-class multimodal model optimized for agentic and coding use cases, with adjustable reasoning via the reasoning_effort parameter.”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-07-31.",
+   "id": "mistral-api.open-mistral-nemo-2407",
+   "name": "Mistral Nemo 12B",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mistral-nemo-2407",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mistral-nemo-2407' appears in the official model listing"
+    }
    ]
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-09-30.",
    "id": "mistral-api.mistral-saba-2502",
-   "name": "mistral-saba-2502",
+   "name": "Mistral Saba",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3590,13 +4485,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-saba-2502' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-02-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-02-17: “We released Mistral Saba (mistral-saba-2502).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-06-16.",
    "id": "mistral-api.mistral-small-2402",
-   "name": "mistral-small-2402",
+   "name": "Mistral Small 1.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3610,13 +4514,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-small-2402' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-02-26",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-02-26: “mistral-small-latest (aka mistral-small-2402): new model.”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.mistral-small-2409",
-   "name": "mistral-small-2409",
+   "name": "Mistral Small 2.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3630,13 +4543,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-small-2409' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-09-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-09-17: “We released Pixtral (pixtral-12b-2409) and Mistral Small v24.09 (mistral-small-2409).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.mistral-small-2501",
-   "name": "mistral-small-2501",
+   "name": "Mistral Small 3.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3650,13 +4572,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-small-2501' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-01-30",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-01-30: “We released Mistral Small 3 (mistral-small-2501).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-11-30.",
    "id": "mistral-api.mistral-small-2503",
-   "name": "mistral-small-2503",
+   "name": "Mistral Small 3.1",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3670,13 +4601,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-small-2503' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-03-17: “We released Mistral Small 3.1 (mistral-small-2503).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-07-31.",
    "id": "mistral-api.mistral-small-2506",
-   "name": "mistral-small-2506",
+   "name": "Mistral Small 3.2",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3696,7 +4636,7 @@
    "route_ids": [],
    "notes": "Mistral Small 4.0; current model. Alias mistral-small-latest.",
    "id": "mistral-api.mistral-small-2603",
-   "name": "mistral-small-2603",
+   "name": "Mistral Small 4.0",
    "maker": "Mistral AI",
    "family": "Mistral",
    "identity_kind": "exact",
@@ -3709,6 +4649,64 @@
      "url": "https://docs.mistral.ai/models/mistral-small-4-0-26-03",
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'mistral-small-2603' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2026-03-16",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2026-03-16: “We released Mistral Small 4 (mistral-small-2603), a hybrid model unifying instruct, reasoning, and coding in a single multimodal model with a 256k context window.”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2026-04-30.",
+   "id": "mistral-api.labs-mistral-small-creative",
+   "name": "Mistral Small Creative",
+   "maker": "Mistral AI",
+   "family": "Mistral Labs",
+   "identity_kind": "exact",
+   "exact_identifier": "labs-mistral-small-creative",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'labs-mistral-small-creative' appears in the official model listing"
+    }
+   ],
+   "release": {
+    "date": "2025-12-16",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-12-16: “We released Mistral Small Creative (labs-mistral-small-creative) as a Labs model.”"
+    }
+   }
+  },
+  {
+   "route_ids": [],
+   "notes": "Listed as retired on 2025-03-30.",
+   "id": "mistral-api.open-mixtral-8x7b",
+   "name": "Mixtral 8x7B",
+   "maker": "Mistral AI",
+   "family": "OpenAI o-series",
+   "identity_kind": "exact",
+   "exact_identifier": "open-mixtral-8x7b",
+   "service_provider": "Mistral AI",
+   "access_kind": "direct_api",
+   "availability": "retired",
+   "sources": [
+    {
+     "url": "https://docs.mistral.ai/models",
+     "checked_at": "2026-09-30T09:01:11Z",
+     "claim": "'open-mixtral-8x7b' appears in the official model listing"
     }
    ]
   },
@@ -3750,7 +4748,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'north-mini-code-1-0' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-06-09",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.cohere.com/changelog/north-mini-code-1-0",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Release note dated June 9, 2026: “Model Name: north-mini-code-1-0”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3792,7 +4799,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o1-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-09-12",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-09-12: “Released o1-preview and o1-mini”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3812,7 +4828,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o1-preview' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-09-12",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-09-12: “Released o1-preview and o1-mini”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3832,7 +4857,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o1-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-03-19",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-03-19: “Released o1-pro, a version of the o1 reasoning model”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -3855,7 +4889,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o3' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-04-16",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-04-16: “Added two new o-series reasoning models, o3 and o4-mini.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3875,7 +4918,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o3-deep-research' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-24",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-24: “Released o3-deep-research and o4-mini-deep-research”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3895,7 +4947,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o3-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-01-31",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-01-31: “Launched o3-mini, a new small reasoning model”"
+    }
+   }
   },
   {
    "route_ids": [
@@ -3917,7 +4978,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o3-pro' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-06-10",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-10: “Released o3-pro, a version of the o3 reasoning model”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3937,7 +5007,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o4-mini' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2025-04-16",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-04-16: “Added two new o-series reasoning models, o3 and o4-mini.”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -3957,93 +5036,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'o4-mini-deep-research' appears in the official model listing"
     }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2025-06-06.",
-   "id": "mistral-api.open-codestral-mamba",
-   "name": "open-codestral-mamba",
-   "maker": "Mistral AI",
-   "family": "OpenAI o-series",
-   "identity_kind": "exact",
-   "exact_identifier": "open-codestral-mamba",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'open-codestral-mamba' appears in the official model listing"
+   ],
+   "release": {
+    "date": "2025-06-24",
+    "precision": "day",
+    "source": {
+     "url": "https://developers.openai.com/api/docs/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2025-06-24: “Released o3-deep-research and o4-mini-deep-research”"
     }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2025-03-30.",
-   "id": "mistral-api.open-mistral-7b",
-   "name": "open-mistral-7b",
-   "maker": "Mistral AI",
-   "family": "OpenAI o-series",
-   "identity_kind": "exact",
-   "exact_identifier": "open-mistral-7b",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'open-mistral-7b' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2026-07-31.",
-   "id": "mistral-api.open-mistral-nemo-2407",
-   "name": "open-mistral-nemo-2407",
-   "maker": "Mistral AI",
-   "family": "OpenAI o-series",
-   "identity_kind": "exact",
-   "exact_identifier": "open-mistral-nemo-2407",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'open-mistral-nemo-2407' appears in the official model listing"
-    }
-   ]
-  },
-  {
-   "route_ids": [],
-   "notes": "Listed as retired on 2025-03-30.",
-   "id": "mistral-api.open-mixtral-8x7b",
-   "name": "open-mixtral-8x7b",
-   "maker": "Mistral AI",
-   "family": "OpenAI o-series",
-   "identity_kind": "exact",
-   "exact_identifier": "open-mixtral-8x7b",
-   "service_provider": "Mistral AI",
-   "access_kind": "direct_api",
-   "availability": "retired",
-   "sources": [
-    {
-     "url": "https://docs.mistral.ai/models",
-     "checked_at": "2026-09-30T09:01:11Z",
-     "claim": "'open-mixtral-8x7b' appears in the official model listing"
-    }
-   ]
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2025-12-31.",
    "id": "mistral-api.pixtral-12b-2409",
-   "name": "pixtral-12b-2409",
+   "name": "Pixtral 12B",
    "maker": "Mistral AI",
    "family": "Pixtral",
    "identity_kind": "exact",
@@ -4057,13 +5065,22 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'pixtral-12b-2409' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-09-17",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-09-17: “We released Pixtral (pixtral-12b-2409) and Mistral Small v24.09 (mistral-small-2409).”"
+    }
+   }
   },
   {
    "route_ids": [],
    "notes": "Listed as retired on 2026-05-31.",
    "id": "mistral-api.pixtral-large-2411",
-   "name": "pixtral-large-2411",
+   "name": "Pixtral Large",
    "maker": "Mistral AI",
    "family": "Pixtral",
    "identity_kind": "exact",
@@ -4077,7 +5094,16 @@
      "checked_at": "2026-09-30T09:01:11Z",
      "claim": "'pixtral-large-2411' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2024-11-18",
+    "precision": "day",
+    "source": {
+     "url": "https://docs.mistral.ai/getting-started/changelog",
+     "checked_at": "2026-09-30T17:24:52Z",
+     "claim": "Changelog entry dated 2024-11-18: “We released Mistral Large 2.1 (mistral-large-2411) and Pixtral Large (pixtral-large-2411).”"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -4161,7 +5187,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'qwen3.7-plus' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-06-01",
+    "precision": "day",
+    "source": {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Newly released models table: Date 2026-06-01, Model ID qwen3.7-plus"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -4181,7 +5216,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'qwen3.8-flash' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-08-26",
+    "precision": "day",
+    "source": {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Newly released models table: Date 2026-08-26, Model ID qwen3.8-flash"
+    }
+   }
   },
   {
    "route_ids": [],
@@ -4201,7 +5245,16 @@
      "checked_at": "2026-09-30T08:07:11Z",
      "claim": "'qwen3.8-max' appears in the official model listing"
     }
-   ]
+   ],
+   "release": {
+    "date": "2026-08-02",
+    "precision": "day",
+    "source": {
+     "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+     "checked_at": "2026-09-30T18:13:44Z",
+     "claim": "Newly released models table: Date 2026-08-02, Model ID qwen3.8-max"
+    }
+   }
   },
   {
    "route_ids": [

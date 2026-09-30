@@ -33,6 +33,7 @@ h1 { font-size: clamp(1.9rem, 4.2vw, 2.7rem); line-height: 1.15; font-weight: 65
 h2 { font-size: 1.25rem; font-weight: 650; margin: 36px 0 10px; }
 .sub { display: block; color: var(--muted); font-size: 0.86rem; }
 .fine, .caption { color: var(--muted); font-size: 0.9rem; }
+.muted { color: var(--muted); }
 
 /* Masthead */
 .masthead {
@@ -62,12 +63,14 @@ nav.primary a[aria-current="page"] { color: var(--ink); border-bottom-color: var
   background: var(--surface); color: var(--ink);
 }
 .filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; margin-top: 12px; }
+.primary-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 select {
   width: 100%; font: inherit; padding: 8px 10px; border: 1px solid var(--divider); border-radius: 8px;
   background: var(--surface); color: var(--ink);
 }
 .filter-panel { background: transparent; border: 0; padding: 0; margin: 12px 0 0; }
 .filter-panel summary { font-weight: 600; font-size: 0.9rem; color: var(--ink); }
+.filter-panel[open] summary { margin-bottom: 0; }
 @media (min-width: 721px) { .filter-panel summary { display: none; } }
 .result-count { color: var(--muted); font-size: 0.9rem; margin: 16px 0 8px; }
 
@@ -75,12 +78,14 @@ select {
 .results { background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; overflow: hidden; }
 .rows { list-style: none; margin: 0; padding: 0; }
 .row {
-  display: grid; grid-template-columns: 2.2fr 1.3fr 1.3fr 1.4fr; gap: 12px;
+  display: grid; grid-template-columns: 2.3fr 1fr 1.3fr 1.5fr; gap: 12px;
   padding: 12px 16px; border-top: 1px solid var(--divider); align-items: start;
 }
 .row.head { border-top: 0; font-size: 0.8rem; color: var(--muted); font-weight: 600; padding-block: 10px; }
 .cell.name a { font-weight: 600; overflow-wrap: anywhere; }
-.tag { font-size: 0.86rem; }
+.cell code.sub { font-size: 0.8rem; }
+.tag, .status { font-size: 0.9rem; }
+.status[data-status="not_tested"] { color: var(--muted); }
 .tag[data-kind="none"] { color: var(--muted); }
 .tag[data-kind="recent"], .tag[data-kind="aging"], .tag[data-kind="historical"] { color: var(--ink); }
 .empty { padding: 24px 16px; }
@@ -89,16 +94,33 @@ select {
   background: var(--surface); color: var(--accent); cursor: pointer;
 }
 @media (max-width: 720px) {
-  .row { grid-template-columns: 1fr; gap: 2px; }
+  .controls { padding: 12px; }
+  .filters { margin-top: 10px; gap: 10px; }
+  .row { grid-template-columns: 1fr; gap: 2px; padding: 10px 14px; }
   .row.head { display: none; }
+  .row .cell[data-label] { font-size: 0.9rem; }
   .row .cell[data-label]::before { content: attr(data-label) ": "; color: var(--muted); font-size: 0.82rem; }
-  .row .cell .sub { display: inline; margin-left: 6px; }
+  .row .cell[data-label] .sub { display: inline; margin-left: 6px; }
 }
 
 /* Detail */
 .back { margin: 20px 0 4px; }
 .eyebrow { color: var(--muted); font-size: 0.9rem; margin: 0; }
-.identity .note { color: var(--muted); }
+.identity .note, .part .note { color: var(--muted); }
+.released { margin: 0 0 12px; color: var(--muted); }
+.ident { margin: -6px 0 6px; color: var(--muted); }
+.status-block { background: var(--surface); border: 1px solid var(--divider); border-left: 3px solid var(--muted);
+  border-radius: 0 10px 10px 0; padding: 12px 16px; margin: 12px 0 8px; }
+.status-block p { margin: 0; }
+.status-block .status-label { font-weight: 650; }
+.part { border-top: 1px solid var(--divider); margin-top: 28px; }
+.part h2 { margin-top: 20px; }
+.summary { margin: 0 0 8px; }
+details.evidence > summary { color: var(--accent); }
+.statuses { display: grid; grid-template-columns: max-content 1fr; gap: 8px 18px; }
+.statuses dt { font-weight: 600; }
+.statuses dd { margin: 0; }
+@media (max-width: 560px) { .statuses { grid-template-columns: 1fr; } .statuses dd { margin-bottom: 8px; } }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 12px 0; }
 .facts dt { color: var(--muted); font-size: 0.9rem; }
 .facts dd { margin: 0; overflow-wrap: anywhere; }

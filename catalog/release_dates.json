@@ -1,0 +1,1423 @@
+{
+ "schema_version": 1,
+ "rows": [
+  {
+   "maker": "Alibaba (Qwen)",
+   "exact_identifier": "qwen3.7-plus",
+   "date": "2026-06-01",
+   "precision": "day",
+   "source": {
+    "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Newly released models table: Date 2026-06-01, Model ID qwen3.7-plus"
+   }
+  },
+  {
+   "maker": "Alibaba (Qwen)",
+   "exact_identifier": "qwen3.8-flash",
+   "date": "2026-08-26",
+   "precision": "day",
+   "source": {
+    "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Newly released models table: Date 2026-08-26, Model ID qwen3.8-flash"
+   }
+  },
+  {
+   "maker": "Alibaba (Qwen)",
+   "exact_identifier": "qwen3.8-max",
+   "date": "2026-08-02",
+   "precision": "day",
+   "source": {
+    "url": "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Newly released models table: Date 2026-08-02, Model ID qwen3.8-max"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-fable-5",
+   "date": "2026-06-09",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/fable-5/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released June 9, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-fable-5-1",
+   "date": "2026-09-01",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/overview",
+    "checked_at": "2026-09-30T08:07:11Z",
+    "claim": "The models overview lists claude-fable-5-1 as released on 2026-09-01"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-haiku-4-5-20251001",
+   "date": "2025-10-15",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/overview",
+    "checked_at": "2026-09-30T08:07:11Z",
+    "claim": "The models overview lists claude-haiku-4-5-20251001 as released on 2025-10-15"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-4-5-20251101",
+   "date": "2025-11-24",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/opus-4-5/overview",
+    "checked_at": "2026-09-30T09:01:11Z",
+    "claim": "The model page lists “Released November 24, 2025”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-4-6",
+   "date": "2026-02-05",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/opus-4-6/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released February 5, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-4-7",
+   "date": "2026-04-16",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/opus-4-7/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released April 16, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-4-8",
+   "date": "2026-05-28",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/opus-4-8/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released May 28, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-5",
+   "date": "2026-07-24",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/opus-5/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released July 24, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-opus-5-5",
+   "date": "2026-09-22",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/overview",
+    "checked_at": "2026-09-30T08:07:11Z",
+    "claim": "The models overview lists claude-opus-5-5 as released on 2026-09-22"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-sonnet-4-5-20250929",
+   "date": "2025-09-29",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/sonnet-4-5/overview",
+    "checked_at": "2026-09-30T09:01:11Z",
+    "claim": "The model page lists “Released September 29, 2025”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-sonnet-4-6",
+   "date": "2026-02-17",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/sonnet-4-6/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released February 17, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-sonnet-5",
+   "date": "2026-06-30",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/sonnet-5/overview",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "The model page lists “Released June 30, 2026”"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "exact_identifier": "claude-sonnet-5-5",
+   "date": "2026-09-28",
+   "precision": "day",
+   "source": {
+    "url": "https://platform.claude.com/docs/en/models/overview",
+    "checked_at": "2026-09-30T08:07:11Z",
+    "claim": "The models overview lists claude-sonnet-5-5 as released on 2026-09-28"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-a-03-2025",
+   "date": "2025-03-13",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/command-a",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated March 13, 2025: “through the SDK with command-a-03-2025”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-a-plus-05-2026",
+   "date": "2026-05-20",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/command-a-plus-05-2026",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated May 20, 2026: “Model Name: command-a-plus-05-2026”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-a-reasoning-08-2025",
+   "date": "2025-08-21",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/2025-08-21-command-a-reasoning",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated August 21, 2025: “Model Name: command-a-reasoning-08-2025”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-a-translate-08-2025",
+   "date": "2025-08-28",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/2025-08-28-command-a-translate",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated August 28, 2025: “We’re excited to announce the release of Command A Translate”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-a-vision-07-2025",
+   "date": "2025-07-31",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/2025-07-31-command-a-vision",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated July 31, 2025: “Model Name: command-a-vision-07-2025”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-r-08-2024",
+   "date": "2024-08-30",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/command-gets-refreshed",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated August 30, 2024: “The updated Command R is command-r-08-2024 on the API.”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-r-plus-08-2024",
+   "date": "2024-08-30",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/command-gets-refreshed",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated August 30, 2024: “The updated Command R+ is command-r-plus-08-2024 on the API.”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "command-r7b-12-2024",
+   "date": "2024-12-13",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/command-r-7b",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated December 13, 2024: “access it in the SDK with command-r7b-12-2024”"
+   }
+  },
+  {
+   "maker": "Cohere",
+   "exact_identifier": "north-mini-code-1-0",
+   "date": "2026-06-09",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.cohere.com/changelog/north-mini-code-1-0",
+    "checked_at": "2026-09-30T18:13:44Z",
+    "claim": "Release note dated June 9, 2026: “Model Name: north-mini-code-1-0”"
+   }
+  },
+  {
+   "maker": "DeepSeek",
+   "exact_identifier": "deepseek-v4-flash",
+   "date": "2026-04-24",
+   "precision": "day",
+   "source": {
+    "url": "https://api-docs.deepseek.com/updates",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-04-24: “the model parameter should be set to deepseek-v4-pro or deepseek-v4-flash”"
+   }
+  },
+  {
+   "maker": "DeepSeek",
+   "exact_identifier": "deepseek-v4-pro",
+   "date": "2026-04-24",
+   "precision": "day",
+   "source": {
+    "url": "https://api-docs.deepseek.com/updates",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-04-24: “the model parameter should be set to deepseek-v4-pro or deepseek-v4-flash”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-2.5-flash",
+   "date": "2025-06-17",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-17: “Released gemini-2.5-flash, our first stable 2.5 Flash model.”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-2.5-flash-lite",
+   "date": "2025-07-22",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-22: “Released gemini-2.5-flash-lite, our fast, low-cost, high-performance Gemini 2.5 model.”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-2.5-pro",
+   "date": "2025-06-17",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-17: “Released gemini-2.5-pro, the stable version of our most powerful model”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3-flash-preview",
+   "date": "2025-12-17",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-17: “Launched Gemini 3 Flash Preview, gemini-3-flash-preview”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.1-flash-lite",
+   "date": "2026-05-07",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-05-07: “Released gemini-3.1-flash-lite, the generally available”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.5-flash",
+   "date": "2026-05-19",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-05-19: “Released gemini-3.5-flash, the generally available”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.5-flash-lite",
+   "date": "2026-07-21",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-07-21: “Released stable, production-ready versions of our latest 3.x Flash models”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.6-flash",
+   "date": "2026-07-21",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-07-21: “Released stable, production-ready versions of our latest 3.x Flash models”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.7-flash",
+   "date": "2026-08-13",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-08-13: “Released our most intelligent workhorse model yet for coding and agents”"
+   }
+  },
+  {
+   "maker": "Google",
+   "exact_identifier": "gemini-3.8-flash",
+   "date": "2026-09-02",
+   "precision": "day",
+   "source": {
+    "url": "https://ai.google.dev/gemini-api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-02: “Released gemini-3.8-flash, our most intelligent Flash model”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "codestral-2405",
+   "date": "2024-05-29",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-05-29: “New model available: codestral-latest (aka codestral-2405).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "codestral-2501",
+   "date": "2025-01-13",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-01-13: “We released Codestral 2501 (codestral-2501).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "codestral-2508",
+   "date": "2025-07-30",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-30: “We released Codestral 2508 (codestral-2508).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "devstral-2512",
+   "date": "2025-12-09",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-09: “We released Devstral 2 (devstral-2512) and Devstral Small 2 (labs-devstral-small-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "devstral-medium-2507",
+   "date": "2025-07-10",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-10: “We released Devstral Small 1.1 (devstral-small-2507) and Devstral Medium (devstral-medium-2507).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "devstral-small-2505",
+   "date": "2025-05-21",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-05-21: “We released Devstral Small (devstral-small-2505).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "devstral-small-2507",
+   "date": "2025-07-10",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-10: “We released Devstral Small 1.1 (devstral-small-2507) and Devstral Medium (devstral-medium-2507).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "labs-devstral-small-2512",
+   "date": "2025-12-09",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-09: “We released Devstral 2 (devstral-2512) and Devstral Small 2 (labs-devstral-small-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "labs-leanstral-1-5",
+   "date": "2026-06-30",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-06-30: “We released Leanstral 1.5 (labs-leanstral-1-5), an updated Lean 4 formal proof engineering model with improved SFT mixture quality and extended long-context reasoning.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "labs-leanstral-2603",
+   "date": "2026-03-16",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-16: “We released Leanstral (labs-leanstral-2603), our first open-source code agent designed for Lean 4 formal proof engineering.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "labs-mistral-small-creative",
+   "date": "2025-12-16",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-16: “We released Mistral Small Creative (labs-mistral-small-creative) as a Labs model.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-medium-2506",
+   "date": "2025-06-10",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-10: “We released Magistral Medium (magistral-medium-2506) and Magistral Small (magistral-small-2506).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-medium-2507",
+   "date": "2025-07-24",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-24: “We released Magistral Medium 1.1 (magistral-medium-2507) and Magistral Small 1.1 (magistral-small-2507).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-medium-2509",
+   "date": "2025-09-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-09-17: “We released Magistral Medium 1.2 (magistral-medium-2509) and Magistral Small 1.2 (magistral-small-2509).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-small-2506",
+   "date": "2025-06-10",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-10: “We released Magistral Medium (magistral-medium-2506) and Magistral Small (magistral-small-2506).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-small-2507",
+   "date": "2025-07-24",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-07-24: “We released Magistral Medium 1.1 (magistral-medium-2507) and Magistral Small 1.1 (magistral-small-2507).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "magistral-small-2509",
+   "date": "2025-09-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-09-17: “We released Magistral Medium 1.2 (magistral-medium-2509) and Magistral Small 1.2 (magistral-small-2509).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "ministral-14b-2512",
+   "date": "2025-12-02",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "ministral-3b-2410",
+   "date": "2024-10-09",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-10-09: “We released Ministral 3B (ministral-3b-2410) and Ministral 8B (ministral-8b-2410).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "ministral-3b-2512",
+   "date": "2025-12-02",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "ministral-8b-2410",
+   "date": "2024-10-09",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-10-09: “We released Ministral 3B (ministral-3b-2410) and Ministral 8B (ministral-8b-2410).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "ministral-8b-2512",
+   "date": "2025-12-02",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-large-2407",
+   "date": "2024-07-24",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-07-24: “We released Mistral Large 2 (mistral-large-2407).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-large-2411",
+   "date": "2024-11-18",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-11-18: “We released Mistral Large 2.1 (mistral-large-2411) and Pixtral Large (pixtral-large-2411).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-large-2512",
+   "date": "2025-12-02",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-02: “We released Mistral Large 3 (mistral-large-2512) and Ministral 3 (ministral-3b-2512, ministral-8b-2512 and ministral-14b-2512).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-medium-2505",
+   "date": "2025-05-07",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-05-07: “We released Mistral Medium 3 (mistral-medium-2505).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-medium-2508",
+   "date": "2025-08-12",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-08-12: “We released Mistral Medium 3.1 (mistral-medium-2508).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-medium-3-5",
+   "date": "2026-04-28",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-04-28: “We released Mistral Medium 3.5 (mistral-medium-3-5), our frontier-class multimodal model optimized for agentic and coding use cases, with adjustable reasoning via the reasoning_effort parameter.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-saba-2502",
+   "date": "2025-02-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-02-17: “We released Mistral Saba (mistral-saba-2502).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-small-2402",
+   "date": "2024-02-26",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-02-26: “mistral-small-latest (aka mistral-small-2402): new model.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-small-2409",
+   "date": "2024-09-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-09-17: “We released Pixtral (pixtral-12b-2409) and Mistral Small v24.09 (mistral-small-2409).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-small-2501",
+   "date": "2025-01-30",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-01-30: “We released Mistral Small 3 (mistral-small-2501).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-small-2503",
+   "date": "2025-03-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-03-17: “We released Mistral Small 3.1 (mistral-small-2503).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "mistral-small-2603",
+   "date": "2026-03-16",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-16: “We released Mistral Small 4 (mistral-small-2603), a hybrid model unifying instruct, reasoning, and coding in a single multimodal model with a 256k context window.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "open-codestral-mamba",
+   "date": "2024-07-16",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-07-16: “We released Codestral Mamba (open-codestral-mamba) and Mathstral.”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "pixtral-12b-2409",
+   "date": "2024-09-17",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-09-17: “We released Pixtral (pixtral-12b-2409) and Mistral Small v24.09 (mistral-small-2409).”"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "exact_identifier": "pixtral-large-2411",
+   "date": "2024-11-18",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.mistral.ai/getting-started/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-11-18: “We released Mistral Large 2.1 (mistral-large-2411) and Pixtral Large (pixtral-large-2411).”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "computer-use-preview",
+   "date": "2025-03-11",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4.1",
+   "date": "2025-04-14",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4.1-mini",
+   "date": "2025-04-14",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4.1-nano",
+   "date": "2025-04-14",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-04-14: “Added gpt-4.1, gpt-4.1-mini, and gpt-4.1-nano models to the API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4o-2024-08-06",
+   "date": "2024-08-06",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-08-06: “Released gpt-4o-2024-08-06, our newest model in the gpt-4o series.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4o-2024-11-20",
+   "date": "2024-11-20",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-11-20: “Released gpt-4o-2024-11-20, our newest model in the gpt-4o series.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4o-mini-search-preview",
+   "date": "2025-03-11",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-4o-search-preview",
+   "date": "2025-03-11",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-03-11: “Announced new models: gpt-4o-search-preview, gpt-4o-mini-search-preview”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5",
+   "date": "2025-08-07",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5-codex",
+   "date": "2025-09-23",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-09-23: “Launched special-purpose model gpt-5-codex”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5-mini",
+   "date": "2025-08-07",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5-nano",
+   "date": "2025-08-07",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-08-07: “Released GPT-5 family of models in the API, including gpt-5, gpt-5-mini, and gpt-5-nano.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5-pro",
+   "date": "2025-10-06",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-10-06: “Released GPT-5 Pro, a version of GPT-5 that uses more compute”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.1",
+   "date": "2025-11-13",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-11-13: “Released GPT-5.1, the newest flagship model in the GPT-5 model family.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.1-codex",
+   "date": "2025-11-13",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-11-13: “Released gpt-5.1-codex and gpt-5.1-codex-mini to the Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.1-codex-max",
+   "date": "2025-12-04",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-04: “Released gpt-5.1-codex-max to the Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.1-codex-mini",
+   "date": "2025-11-13",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-11-13: “Released gpt-5.1-codex and gpt-5.1-codex-mini to the Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.2",
+   "date": "2025-12-11",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-12-11: “Released GPT-5.2, the newest flagship model in the GPT-5 model family.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.2-codex",
+   "date": "2026-01-14",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-01-14: “Released gpt-5.2-codex to the Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.3-codex",
+   "date": "2026-02-24",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-02-24: “Released gpt-5.3-codex to the Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.4",
+   "date": "2026-03-05",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-05: “Released GPT-5.4, our newest frontier model for professional work”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.4-mini",
+   "date": "2026-03-17",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-17: “Released GPT-5.4 mini and GPT-5.4 nano to the Chat Completions and Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.4-nano",
+   "date": "2026-03-17",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-17: “Released GPT-5.4 mini and GPT-5.4 nano to the Chat Completions and Responses API.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.4-pro",
+   "date": "2026-03-05",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-03-05: “Released GPT-5.4, our newest frontier model for professional work”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.5",
+   "date": "2026-04-24",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-04-24: “Released GPT-5.5, a new frontier model for complex professional work”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.5-pro",
+   "date": "2026-04-24",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-04-24: “Released GPT-5.5, a new frontier model for complex professional work”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.6-luna",
+   "date": "2026-07-09",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.6-sol",
+   "date": "2026-07-09",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-5.6-terra",
+   "date": "2026-07-09",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-07-09: “Released the GPT-5.6 model family”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-6-astra",
+   "date": "2026-09-03",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-03: “Released GPT-6 Astra, our most capable model”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-6-luna",
+   "date": "2026-09-22",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-22: “Released GPT-6 Sol (gpt-6-sol) and GPT-6 Luna (gpt-6-luna).”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-6-sol",
+   "date": "2026-09-22",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-22: “Released GPT-6 Sol (gpt-6-sol) and GPT-6 Luna (gpt-6-luna).”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "gpt-6.1-sol",
+   "date": "2026-09-29",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-29: “Released GPT-6.1 Sol (gpt-6.1-sol)”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o1-mini",
+   "date": "2024-09-12",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-09-12: “Released o1-preview and o1-mini”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o1-preview",
+   "date": "2024-09-12",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2024-09-12: “Released o1-preview and o1-mini”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o1-pro",
+   "date": "2025-03-19",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-03-19: “Released o1-pro, a version of the o1 reasoning model”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o3",
+   "date": "2025-04-16",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-04-16: “Added two new o-series reasoning models, o3 and o4-mini.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o3-deep-research",
+   "date": "2025-06-24",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-24: “Released o3-deep-research and o4-mini-deep-research”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o3-mini",
+   "date": "2025-01-31",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-01-31: “Launched o3-mini, a new small reasoning model”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o3-pro",
+   "date": "2025-06-10",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-10: “Released o3-pro, a version of the o3 reasoning model”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o4-mini",
+   "date": "2025-04-16",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-04-16: “Added two new o-series reasoning models, o3 and o4-mini.”"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "exact_identifier": "o4-mini-deep-research",
+   "date": "2025-06-24",
+   "precision": "day",
+   "source": {
+    "url": "https://developers.openai.com/api/docs/changelog",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2025-06-24: “Released o3-deep-research and o4-mini-deep-research”"
+   }
+  },
+  {
+   "maker": "xAI",
+   "exact_identifier": "grok-4.7",
+   "date": "2026-09-21",
+   "precision": "day",
+   "source": {
+    "url": "https://docs.x.ai/developers/release-notes",
+    "checked_at": "2026-09-30T17:24:52Z",
+    "claim": "Changelog entry dated 2026-09-21: “is now available on the xAI API as grok-4.7”"
+   }
+  }
+ ],
+ "research": [
+  {
+   "maker": "Alibaba (Qwen)",
+   "checked_at": "2026-09-30T18:13:44Z",
+   "outcome": "3 dated from the newly released models table",
+   "pages": [
+    "https://www.alibabacloud.com/help/en/model-studio/newly-released-models",
+    "https://www.alibabacloud.com/help/en/model-studio/models"
+   ],
+   "unresolved": {
+    "qwen-max-2025-01-25": "evidence-only identifier; not in the current release table"
+   }
+  },
+  {
+   "maker": "Anthropic",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://platform.claude.com/docs/en/models/overview",
+    "each legacy model's overview page"
+   ],
+   "outcome": "13 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  },
+  {
+   "maker": "Cohere",
+   "checked_at": "2026-09-30T18:13:44Z",
+   "outcome": "9 dated from dedicated release-note entries",
+   "pages": [
+    "https://docs.cohere.com/changelog (index; recent entries only)",
+    "https://docs.cohere.com/changelog/2025-07-31-command-a-vision",
+    "https://docs.cohere.com/changelog/2025-08-21-command-a-reasoning",
+    "https://docs.cohere.com/changelog/2025-08-28-command-a-translate",
+    "https://docs.cohere.com/changelog/command-a",
+    "https://docs.cohere.com/changelog/command-a-plus-05-2026",
+    "https://docs.cohere.com/changelog/command-gets-refreshed",
+    "https://docs.cohere.com/changelog/command-r-7b",
+    "https://docs.cohere.com/changelog/north-mini-code-1-0",
+    "https://docs.cohere.com/changelog/command-r-retrieval-augmented-generation-at-production-scale",
+    "https://docs.cohere.com/changelog/aya-vision-announcement",
+    "https://docs.cohere.com/changelog/aya-expanse-on-whatsapp",
+    "https://docs.cohere.com/docs/aya-vision",
+    "https://docs.cohere.com/docs/aya",
+    "https://docs.cohere.com/docs/tiny-aya"
+   ],
+   "unresolved": {
+    "command-r-03-2024": "the 24 March 2024 Command R entry names no API identifier",
+    "command-r-plus-04-2024": "no entry found naming this identifier",
+    "c4ai-aya-vision-32b": "the 4 March 2025 Aya Vision entry names no API identifier",
+    "c4ai-aya-expanse-32b": "no release entry found naming this identifier",
+    "tiny-aya-global": "model page gives no release date",
+    "command-r": "alias; the model behind it changed",
+    "command-r-plus": "alias; the model behind it changed",
+    "command-light": "no release entry found naming this identifier"
+   }
+  },
+  {
+   "maker": "DeepSeek",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://api-docs.deepseek.com/updates"
+   ],
+   "outcome": "2 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  },
+  {
+   "maker": "Google",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://ai.google.dev/gemini-api/docs/changelog"
+   ],
+   "outcome": "10 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  },
+  {
+   "maker": "Meta",
+   "checked_at": "2026-09-30T18:13:44Z",
+   "outcome": "none dated: no exact API or open-weight identity in the catalogue",
+   "pages": [
+    "https://dev.meta.ai/docs/models"
+   ],
+   "unresolved": {
+    "Muse Spark": "family entry (exact versions not catalogued); the page states no release date",
+    "Llama 4 (open weights)": "family entry; exact variants not catalogued"
+   }
+  },
+  {
+   "maker": "Mistral AI",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://docs.mistral.ai/getting-started/changelog"
+   ],
+   "outcome": "37 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  },
+  {
+   "maker": "Moonshot AI",
+   "checked_at": "2026-09-30T18:13:44Z",
+   "outcome": "none dated: the checked pages state no release dates",
+   "pages": [
+    "https://platform.kimi.ai/docs/pricing/chat",
+    "https://platform.kimi.ai/docs/changelog (redirects to the Quickstart page)",
+    "https://platform.kimi.ai/docs/guide/kimi-k3-quickstart",
+    "https://platform.kimi.ai/docs/guide/kimi-k2-7-code-quickstart",
+    "https://platform.kimi.ai/docs/guide/kimi-k2-6-quickstart"
+   ],
+   "unresolved": {
+    "kimi-k3": "no release date stated on the checked pages",
+    "kimi-k2.7-code": "no release date stated on the checked pages",
+    "kimi-k2.7-code-highspeed": "no release date stated on the checked pages",
+    "kimi-k2.6": "no release date stated on the checked pages"
+   }
+  },
+  {
+   "maker": "OpenAI",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://developers.openai.com/api/docs/changelog"
+   ],
+   "outcome": "42 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  },
+  {
+   "maker": "xAI",
+   "checked_at": "2026-09-30T17:24:52Z",
+   "pages": [
+    "https://docs.x.ai/developers/release-notes"
+   ],
+   "outcome": "1 dated; undated identifiers listed in docs/CATALOG_SOURCES.md",
+   "unresolved": {}
+  }
+ ]
+}

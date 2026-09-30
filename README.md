@@ -1,19 +1,20 @@
-# Baseline — model histories
+# Baseline — AI model tests
 
-A directory of AI models across providers, with dated, traceable performance history
-where reusable evidence exists, and every gap shown as a gap.
+Follow changes in AI model performance. A directory of AI models across providers,
+newest releases first, with other published test results shown by date and source.
 
-**Current status:** the directory lists models and apps from ten makers, taken from their
-official model listings. The measurements are third-party results, copied with
-permission and shown with their measurement dates. Baseline has not run its own tests on any model. Nothing is
-independently monitored. No observation here says whether a provider changed a model
-on purpose.
+**Current status:** Baseline's own recurring tests have not started yet, so every model
+is marked "Not tested by Baseline". The directory lists models and apps from ten makers,
+taken from their official model listings; release dates are shown only where a maker's
+announcement, changelog or model page states them. The test results shown are
+third-party results, copied with permission and shown with their measurement dates. No
+observation here says whether a provider changed a model on purpose.
 
 ## What is here
 
 - `catalog/`: the model and app directory, with no scores. Apps, direct APIs,
-  third-party hosts and open weights are separate entries. How it was checked is in
-  `docs/CATALOG_SOURCES.md`.
+  third-party hosts and open weights are separate entries. Cited release dates are in
+  `catalog/release_dates.json`. How both were checked is in `docs/CATALOG_SOURCES.md`.
 - `registry/`: models, routes, sources, series, observations, ingestion runs and
   corrections. The rules are in `docs/DATA_CONTRACT.md` (schema v2).
 - `evidence/snapshots/`: unchanged copies of permitted source files, each stored with

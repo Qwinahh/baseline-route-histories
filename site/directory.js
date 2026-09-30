@@ -1,4 +1,5 @@
-/* Directory helpers: URL state, search, filters, sorting and evidence coverage.
+/* Directory helpers: URL state, search, filters, sorting, evidence coverage and the
+   Baseline test status.
    Pure functions (no DOM). Browser global BaselineDirectory; CommonJS for Node tests. */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
@@ -6,11 +7,13 @@
 })(this, function () {
   "use strict";
   var DAY_MS = 86400000;
-  var VIEWS = ["models", "model", "sources", "about"];
+  var VIEWS = ["models", "model", "sources", "how-we-test"];
+  var ALIASES = { about: "how-we-test" };     // first-release "About" links keep working
+  var DEFAULT_SORT = "release";
   var FILTER_KEYS = ["q", "provider", "access", "evidence", "availability", "sort"];
   var ACCESS_LABELS = {
-    consumer_app: "Consumer app", direct_api: "Direct API", intermediary: "Hosted by a third party",
-    cloud_platform: "Cloud platform", local: "Open weights / local", unknown: "Unknown access"
+    consumer_app: "App", direct_api: "API", intermediary: "Third-party host",
+    cloud_platform: "Cloud platform", local: "Open weights", unknown: "Unknown access"
   };
 
   function decode(text) {
@@ -19,10 +22,11 @@
 
   function emptyState() {
     return { view: "models", id: "", route: "", q: "", provider: "", access: "", evidence: "",
-             availability: "", sort: "name", legacy: "" };
+             availability: "", sort: DEFAULT_SORT, legacy: "" };
   }
 
-  // "#models?q=..", "#model/<id>?route=..&q=..", "#sources", "#about", or a legacy
+  // "#models?q=..", "#model/<id>?route=..&q=..", "#sources", "#how-we-test" (or the old
+  // "#about"), or a legacy
   // "#<route id>" from the first release. Never throws on malformed input.
   function parseState(hash) {
     var state = emptyState();
@@ -37,12 +41,12 @@
       try { value = params.get(key); } catch (e) { value = null; }
       if (value !== null) state[key] = value.normalize ? value.normalize("NFC") : value;
     });
-    if (!state.sort) state.sort = "name";
+    if (!state.sort) state.sort = DEFAULT_SORT;
     if (path.indexOf("model/") === 0) {
       state.view = "model";
       state.id = decode(path.slice(6));
-    } else if (path === "" || VIEWS.indexOf(path) !== -1) {
-      state.view = path || "models";
+    } else if (path === "" || VIEWS.indexOf(path) !== -1 || ALIASES[path]) {
+      state.view = ALIASES[path] || path || "models";
     } else {
       state.view = "legacy";          // resolved by the app against route ids
       state.legacy = decode(path);
@@ -55,7 +59,7 @@
     if (state.view === "model" && state.route) params.set("route", state.route);
     FILTER_KEYS.forEach(function (key) {
       var value = state[key];
-      if (value && !(key === "sort" && value === "name")) params.set(key, value);
+      if (value && !(key === "sort" && value === DEFAULT_SORT)) params.set(key, value);
     });
     var query = params.toString();
     var path = state.view === "model" ? "model/" + encodeURIComponent(state.id || "")
@@ -90,6 +94,32 @@
     return { kind: kind, label: label, count: count, newest: newest, ageDays: days };
   }
 
+  // Cited release date ("YYYY-MM-DD" or "YYYY-MM"), or null when unknown. Never inferred.
+  function releaseDate(entry) {
+    return entry.release && entry.release.date ? entry.release.date : null;
+  }
+
+  // Baseline's own test status. `tests` is the bundle's baseline_tests record; with no
+  // Baseline runs for an entry the answer is always "Not tested by Baseline". Change
+  // wording needs a reviewed analysis; anything else stays in a non-judging state.
+  var STATUS = {
+    not_tested: "Not tested by Baseline", collecting: "Collecting baseline",
+    insufficient: "Not enough evidence to judge a change", lower: "Lower on our tests",
+    higher: "Higher on our tests", no_change: "No meaningful change detected", unavailable: "Test unavailable"
+  };
+  function baselineStatus(entry, tests) {
+    var rec = tests && tests.entries ? tests.entries[entry.id] : null;
+    var runs = rec && typeof rec.runs === "number" ? rec.runs : 0;
+    var latest = rec && rec.latest_run ? rec.latest_run : null;
+    var key;
+    if (!runs) key = "not_tested";
+    else if (rec.latest_attempt === "failed") key = "unavailable";
+    else if (rec.analysis && rec.analysis.reviewed === true && STATUS[rec.analysis.verdict] &&
+             rec.analysis.verdict !== "not_tested" && rec.analysis.verdict !== "collecting") key = rec.analysis.verdict;
+    else key = rec.baseline_complete === true ? "insufficient" : "collecting";
+    return { key: key, label: STATUS[key], runs: runs, latest: latest };
+  }
+
   function matches(entry, q) {
     if (!q) return true;
     var haystack = fold([entry.name, entry.id, entry.exact_identifier, entry.family, entry.maker,
@@ -111,7 +141,10 @@
       }
       return true;
     });
-    var byName = function (a, b) { return fold(a.name) < fold(b.name) ? -1 : fold(a.name) > fold(b.name) ? 1 : 0; };
+    var byName = function (a, b) {
+      var x = fold(a.name), y = fold(b.name);
+      return x < y ? -1 : x > y ? 1 : a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+    };
     if (state.sort === "provider") {
       list.sort(function (a, b) { return fold(a.maker) < fold(b.maker) ? -1 : fold(a.maker) > fold(b.maker) ? 1 : byName(a, b); });
     } else if (state.sort === "date") {
@@ -122,8 +155,16 @@
         if (y === null) return -1;
         return x < y ? 1 : -1;              // newest first
       });
-    } else {
+    } else if (state.sort === "name") {
       list.sort(byName);
+    } else {                                // newest cited release first; unknown dates last
+      list.sort(function (a, b) {
+        var x = releaseDate(a), y = releaseDate(b);
+        if (x === y) return byName(a, b);
+        if (x === null) return 1;
+        if (y === null) return -1;
+        return x < y ? 1 : -1;
+      });
     }
     return list;
   }
@@ -136,5 +177,6 @@
 
   return { parseState: parseState, encodeState: encodeState, filterEntries: filterEntries,
            coverage: coverage, newestObservation: newestObservation, distinct: distinct,
-           ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState };
+           releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS,
+           ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState, DEFAULT_SORT: DEFAULT_SORT };
 });

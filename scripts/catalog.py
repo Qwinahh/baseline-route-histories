@@ -31,6 +31,11 @@ FIELDS = {"id": str, "name": str, "maker": str, "family": str, "identity_kind": 
           "exact_identifier": (str, type(None)), "service_provider": str, "access_kind": str,
           "availability": str, "route_ids": list, "sources": list, "notes": str}
 SOURCE_FIELDS = {"url", "checked_at", "claim"}
+# Optional, cited release date (T08). Absent means unknown; it is never inferred from a
+# name suffix, a retrieval time or a benchmark run date.
+OPTIONAL_FIELDS = {"release"}
+RELEASE_FIELDS = {"date", "precision", "source"}
+RELEASE_DATE = {"day": re.compile(r"^\d{4}-\d{2}-\d{2}$"), "month": re.compile(r"^\d{4}-\d{2}$")}
 
 
 def load(path: Path = CATALOG_PATH) -> dict:
@@ -53,6 +58,31 @@ def _check_source(where: str, source, now: datetime) -> list:
     return problems
 
 
+def _check_release(where: str, entry: dict, now: datetime) -> list:
+    release = entry["release"]
+    if not isinstance(release, dict) or set(release) != RELEASE_FIELDS:
+        return [f"{where}.release: needs exactly date, precision and source"]
+    if entry["identity_kind"] != "exact" or entry["access_kind"] not in ("direct_api", "local"):
+        return [f"{where}.release: only exact API or open-weight entries carry a release date"]
+    problems = _check_source(f"{where}.release.source", release["source"], now)
+    precision = release["precision"]
+    # Type first: a list or object would otherwise make the dictionary lookup raise (T08 R2).
+    pattern = RELEASE_DATE.get(precision) if isinstance(precision, str) else None
+    if pattern is None:
+        return problems + [f"{where}.release.precision: must be one of {sorted(RELEASE_DATE)}"]
+    date = release["date"]
+    if not isinstance(date, str) or not pattern.match(date):
+        return problems + [f"{where}.release.date: must be a string matching the {precision} precision"]
+    try:
+        datetime.strptime(date if precision == "day" else date + "-01", "%Y-%m-%d")
+    except ValueError:
+        return problems + [f"{where}.release.date: not a calendar date"]
+    checked = release["source"].get("checked_at") if isinstance(release["source"], dict) else None
+    if isinstance(checked, str) and date > checked[:len(date)]:
+        problems.append(f"{where}.release.date: is after the source was checked")
+    return problems
+
+
 def validate_catalog(document: dict, records: dict, now: datetime | None = None) -> list:
     """Return every problem with the catalogue and its links to `records` (registry)."""
     now = now or datetime.now(timezone.utc)
@@ -68,7 +98,7 @@ def validate_catalog(document: dict, records: dict, now: datetime | None = None)
             problems.append(f"{where}: must be an object")
             continue
         where = f"entries[{entry.get('id', index)}]"
-        for name in sorted(set(entry) - set(FIELDS)):
+        for name in sorted(set(entry) - set(FIELDS) - OPTIONAL_FIELDS):
             problems.append(f"{where}: unknown field {name!r}")
         missing = [name for name in FIELDS if name not in entry]
         for name in missing:
@@ -97,6 +127,8 @@ def validate_catalog(document: dict, records: dict, now: datetime | None = None)
             problems.append(f"{where}.sources: at least one source is required")
         for i, source in enumerate(entry["sources"]):
             problems.extend(_check_source(f"{where}.sources[{i}]", source, now))
+        if "release" in entry:
+            problems.extend(_check_release(where, entry, now))
         if len(set(map(str, entry["route_ids"]))) != len(entry["route_ids"]):
             problems.append(f"{where}.route_ids: repeated route")
         if entry["route_ids"] and (entry["access_kind"] not in LINKABLE or not exact):

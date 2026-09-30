@@ -1,11 +1,14 @@
 """T07 catalogue: strict validation and explicit, identity-safe route joins."""
+import contextlib
 import copy
 from datetime import datetime, timezone
 import importlib
+import io
 import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -117,6 +120,63 @@ class CatalogValidationTests(unittest.TestCase):
         self.assertEqual([r["id"] for r in joined[0]["routes"]], ["fixture-api"])
 
 
+def release(**changes):
+    value = {"date": "2026-09-01", "precision": "day",
+             "source": {"url": "https://example.invalid/changelog", "checked_at": "2026-09-30T00:00:00Z",
+                        "claim": "Changelog entry dated 2026-09-01"}}
+    value.update(changes)
+    return value
+
+
+class ReleaseDateTests(unittest.TestCase):
+    """T08: release dates are optional, cited, and never later than their source check."""
+
+    def test_cited_day_and_month_dates_validate(self):
+        self.assertEqual(errors([api_entry(release=release())]), [])
+        self.assertEqual(errors([api_entry(release=release(date="2025-07", precision="month"))]), [])
+        self.assertEqual(errors([api_entry()]), [])                     # absent means unknown
+
+    def test_malformed_or_uncited_dates_are_refused(self):
+        bad = [release(date="2026-9-1"), release(date="2026-02-30"), release(date="2025-07"),
+               release(precision="year"), release(date="2026-10-01"),     # after the source was checked
+               {"date": "2026-09-01", "precision": "day"},
+               release(source={"url": "http://example.invalid/", "checked_at": "2026-09-30T00:00:00Z", "claim": "x"}),
+               release(source={"url": "https://example.invalid/", "checked_at": "2026-09-30T00:00:00Z", "claim": " "})]
+        for value in bad:
+            self.assertTrue(errors([api_entry(release=value)]), value)
+
+    def test_wrong_types_are_reported_not_raised(self):
+        """T08 R2: list, object, null, number and boolean values give problems, never a TypeError."""
+        for wrong in ([], {}, None, 5, 1.5, True):
+            for field in ("date", "precision", "source"):
+                with self.subTest(field=field, value=wrong):
+                    self.assertTrue(errors([api_entry(release=release(**{field: wrong}))]))
+            for field in ("url", "checked_at", "claim"):
+                source = dict(release()["source"], **{field: wrong})
+                with self.subTest(source_field=field, value=wrong):
+                    self.assertTrue(errors([api_entry(release=release(source=source))]))
+            with self.subTest(release=wrong):
+                self.assertTrue(errors([api_entry(release=wrong)]))
+
+    def test_cli_reports_malformed_release_without_a_traceback(self):
+        records, _ = registry.load_registry(ROOT / "registry")
+        document = copy.deepcopy(catalog.load())
+        dated = next(e for e in document["entries"] if "release" in e)
+        for wrong in ([], {}):
+            dated["release"]["precision"] = wrong
+            out = io.StringIO()
+            with self.subTest(value=wrong), mock.patch.object(catalog, "load", return_value=document), \
+                    contextlib.redirect_stdout(out):
+                self.assertEqual(catalog.main([]), 1)
+            self.assertIn("release.precision: must be one of", out.getvalue())
+            self.assertIsInstance(catalog.validate_catalog(document, records), list)
+
+    def test_only_exact_api_or_open_weight_identities_carry_a_date(self):
+        self.assertTrue(errors([fixture_entry(release=release())]))    # consumer app
+        self.assertTrue(errors([api_entry(identity_kind="family", exact_identifier=None, route_ids=[],
+                                          release=release())]))
+
+
 class ProductionCatalogTests(unittest.TestCase):
     def setUp(self):
         self.document = json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))
@@ -142,6 +202,39 @@ class ProductionCatalogTests(unittest.TestCase):
         for app in apps:
             self.assertEqual((app["route_ids"], app["exact_identifier"]), ([], None), app["id"])
             self.assertIn(app["identity_kind"], ("automatic", "family"))
+
+    def test_release_dates_are_cited_and_match_the_reviewed_table(self):
+        rows = json.loads((ROOT / "catalog" / "release_dates.json").read_text(encoding="utf-8"))["rows"]
+        table = {(r["maker"], r["exact_identifier"]): r for r in rows}
+        self.assertEqual(len(table), len(rows))                         # one row per identity
+        dated = [e for e in self.document["entries"] if "release" in e]
+        self.assertTrue(dated)
+        for entry in dated:
+            row = table[(entry["maker"], entry["exact_identifier"])]
+            self.assertEqual(entry["access_kind"], "direct_api", entry["id"])
+            self.assertEqual(entry["release"], {k: row[k] for k in ("date", "precision", "source")})
+            self.assertTrue(entry["release"]["source"]["url"].startswith("https://"), entry["id"])
+        for key in table:                                               # every reviewed row is used
+            self.assertTrue(any((e["maker"], e["exact_identifier"]) == key for e in dated), key)
+        # Evidence-only entries and apps never receive a date.
+        for entry in self.document["entries"]:
+            if entry["access_kind"] != "direct_api" or all("github.com/Aider-AI" in s["url"] for s in entry["sources"]):
+                if (entry["maker"], entry["exact_identifier"]) not in table:
+                    self.assertNotIn("release", entry, entry["id"])
+
+    def test_every_maker_has_a_documented_release_date_search(self):
+        """T08 R1: each maker's search is recorded; undated identities have a stated reason."""
+        table = json.loads((ROOT / "catalog" / "release_dates.json").read_text(encoding="utf-8"))
+        research = {r["maker"]: r for r in table["research"]}
+        self.assertEqual(set(research), {e["maker"] for e in self.document["entries"]})
+        for maker, record in research.items():
+            self.assertTrue(record["pages"] and record["outcome"].strip(), maker)
+        dated = {(r["maker"], r["exact_identifier"]) for r in table["rows"]}
+        for entry in self.document["entries"]:
+            if entry["maker"] in ("Cohere", "Alibaba (Qwen)", "Moonshot AI") and entry["access_kind"] == "direct_api" \
+                    and (entry["maker"], entry["exact_identifier"]) not in dated:
+                self.assertIn(entry["exact_identifier"], research[entry["maker"]]["unresolved"], entry["id"])
+        self.assertIn(("Cohere", "command-a-plus-05-2026"), dated)
 
     def test_evidence_entries_do_not_claim_current_availability(self):
         listed = {s["url"] for e in self.document["entries"] for s in e["sources"]
