@@ -9,7 +9,9 @@ unreviewed licence before touching the output), then inspects the bundle:
 - no raw source rows, snapshot manifests, pilot drafts, simulated trial data or
   credential-like text;
 - the data keeps dates, source licences, the independent-monitoring flag and the
-  scoped missing-coverage wording.
+  scoped missing-coverage wording;
+- Baseline's own results (T12) are exactly those re-derived from the admitted
+  own_results/ dataset: no review copy, no synthetic fixture digest, nothing unadmitted.
 Exit 0 only when every check passes. --manifest writes file hashes outside dist/.
 """
 from __future__ import annotations
@@ -22,6 +24,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build_site  # noqa: E402
 import ingest  # noqa: E402
+import own_results  # noqa: E402
 import registry  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -42,7 +45,8 @@ REQUIRED_PAGE_TEXT = ("Baseline's own recurring tests have not started yet.", "N
 FIXTURE_LABEL = "FIXTURE-NOT-FOR-PUBLICATION"
 
 
-def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
+def inspect_bundle(out_dir: Path, data: dict, records: dict, own_data_path: Path | None = None,
+                   own_review_path: Path | None = None) -> list:
     """Return problems with a built bundle; an empty list means it may be published."""
     problems = []
     files = {p.relative_to(out_dir).as_posix(): p for p in out_dir.rglob("*") if p.is_file()}
@@ -76,9 +80,7 @@ def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
             problems.append(f"page makes a deployment-dependent claim {claim!r}")
     if data.get("independent_monitoring") is not False:
         problems.append("data must state that Baseline runs no independent monitoring")
-    if data.get("baseline_tests") != {"runs": 0, "entries": {}}:
-        problems.append("Baseline test results are present, but no reviewed Baseline run store exists; "
-                        "simulated or fixture results must never be published")
+    problems.extend(inspect_own_results(data, own_data_path, own_review_path))
     published = {o["id"]: o for r in data["routes"] for o in r["observations"]}
     if set(published) != {o["id"] for o in records["observations"]}:
         problems.append("published observations do not match the registry")
@@ -87,6 +89,29 @@ def inspect_bundle(out_dir: Path, data: dict, records: dict) -> list:
         if shown and (shown["observed_at"], shown["retrieved_at"]) != (obs["observed_at"], obs["retrieved_at"]):
             problems.append(f"{obs['id']}: published dates differ from the registry")
     problems.extend(inspect_catalog(data, records))
+    return problems
+
+
+def inspect_own_results(data: dict, data_path: Path | None = None, review_path: Path | None = None) -> list:
+    """Own results must be exactly what the admitted dataset gives (T12); simulated, fixture,
+    review-copy or hand-edited results never pass."""
+    problems = []
+    if data.get("own_results_preview") is not False:
+        problems.append("this is a review copy with unadmitted Baseline test results; it must never be published")
+    data_path, review_path = data_path or own_results.DATA_PATH, review_path or own_results.REVIEW_PATH
+    try:
+        dataset = own_results.load_admitted(data_path, review_path)
+        review = own_results.load_review(review_path)
+        expected = own_results.site_tests(dataset, data.get("catalog") or [])
+    except own_results.OwnResultsError as exc:
+        return problems + [f"own-results dataset is not publishable: {exc}"]
+    fixtures = own_results.fixture_digests()
+    production = Path(review_path).resolve() == own_results.REVIEW_PATH.resolve()
+    if production and fixtures & {e["sha256"] for e in review["admitted"]}:
+        problems.append("the production review manifest admits a synthetic test fixture")
+    if data.get("baseline_tests") != expected:
+        problems.append("Baseline test results in the bundle do not match the admitted own-results dataset; "
+                        "simulated, fixture or unreviewed results must never be published")
     return problems
 
 
@@ -120,14 +145,16 @@ def inspect_catalog(data: dict, records: dict) -> list:
 
 
 def check_release(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path | None = None,
-                  generated_at: str | None = None, now=None) -> dict:
+                  generated_at: str | None = None, now=None, own_data_path: Path | None = None,
+                  own_review_path: Path | None = None) -> dict:
     """Build and inspect. Raises build_site.BuildError if the build itself is refused."""
     registry_dir = registry_dir or ROOT / "registry"
     data = build_site.build(out_dir, registry_dir=registry_dir, evidence_root=evidence_root,
-                            generated_at=generated_at, now=now)
+                            generated_at=generated_at, now=now, own_data_path=own_data_path,
+                            own_review_path=own_review_path)
     records, _ = registry.load_registry(registry_dir)
     out = Path(out_dir).resolve()
-    problems = inspect_bundle(out, data, records)
+    problems = inspect_bundle(out, data, records, own_data_path, own_review_path)
     manifest = {p.relative_to(out).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in sorted(out.rglob("*")) if p.is_file()}
     return {"ok": not problems, "problems": problems, "files": manifest,

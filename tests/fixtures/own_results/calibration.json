@@ -1,0 +1,86 @@
+{
+ "as_of": "2026-09-18T05:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 1,
+ "records": [
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+   "date": "2026-09-18",
+   "evidence": "verified",
+   "first_attempt_correct": 31,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 31,
+    "empty": 0,
+    "format_error": 3,
+    "incorrect": 5,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 1,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "One-off setup test of one route, run once before daily testing. Not part of the daily history, not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "calibration",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0909090909090909090909090909090909090909090909090909090909090909",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-calibration-20260918T043000Z-cdcdcdcdcd",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--calibration--cdcdcdcdcdcd",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  }
+ ],
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series": {
+  "config_fingerprint": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "grader_version": "grader-v0",
+  "kind": "calibration",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "fixture-panel-v1",
+  "panel_items": 40,
+  "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+  "schedule": {
+   "type": "once"
+  },
+  "series_id": "gemini-api.gemini-3.5-flash-lite--calibration--cdcdcdcdcdcd",
+  "settings": {
+   "max_output_tokens": 4096,
+   "temperature": 1.0,
+   "thinking_level": "MINIMAL",
+   "timeout_seconds": 120
+  }
+ }
+}

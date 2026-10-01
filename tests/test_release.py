@@ -15,6 +15,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -303,6 +304,81 @@ class BundleTests(unittest.TestCase):
             self.assertEqual(refresh.main(["--ref"]), 2)
             for bad in ("../../users", "main;rm -rf", "-x", "a b", ""):
                 self.assertEqual(refresh.main(["--ref", bad]), 2, bad)
+
+
+OWN_FIXTURES = ROOT / "tests" / "fixtures" / "own_results"
+
+
+class OwnResultsReleaseTests(unittest.TestCase):
+    """T12: own results publish only as re-derived from the admitted dataset; refreshes keep them."""
+
+    def setUp(self):
+        self.own_results = importlib.import_module("own_results")
+        self.ws = Workspace()
+        self.addCleanup(self.ws.tmp.cleanup)
+        base = Path(self.ws.tmp.name)
+        self.data, self.review = base / "own" / "data.json", base / "own" / "review.json"
+        self.data.parent.mkdir()
+        self.review.write_bytes(self.own_results.dumps(self.own_results.empty_review()))
+        self.data.write_bytes(self.own_results.dumps(self.own_results.empty_dataset()))
+
+    def admit_and_import(self, *names):
+        o = self.own_results
+        review = json.loads(self.review.read_text(encoding="utf-8"))
+        for name in names:
+            review["admitted"].append({"sha256": o.sha256_bytes((OWN_FIXTURES / name).read_bytes()),
+                                       "reviewed_at": "2026-09-28T09:00:00Z"})
+        review["admitted"].sort(key=lambda e: e["sha256"])
+        self.review.write_bytes(o.dumps(review))
+        for name in names:
+            o.import_bundle(OWN_FIXTURES / name, self.review, self.data)
+
+    def release(self, now=LATER):
+        return release_check.check_release(self.ws.out, registry_dir=self.ws.registry, evidence_root=self.ws.evidence,
+                                           generated_at=stamp(now), now=now, own_data_path=self.data,
+                                           own_review_path=self.review)
+
+    def test_reviewed_results_publish_and_survive_a_source_refresh(self):
+        self.admit_and_import("daily-part1.json", "calibration.json")
+        first = self.release()
+        self.assertTrue(first["ok"], first["problems"])
+        tests = build_site.own_tests(json.loads(json.dumps(load_catalog_entries())), self.data, self.review)
+        self.assertEqual(tests["calibration_runs"], 1)
+        own_before = self.data.read_bytes()
+        upstream, _ = new_upstream()
+        result = self.ws.refresh(upstream, MORNING_RUN)
+        self.assertEqual((result["failed_runs"], result["registry_valid"]), ([], True))
+        second = self.release()
+        self.assertTrue(second["ok"], second["problems"])
+        self.assertEqual(self.data.read_bytes(), own_before)                       # refresh never touches own history
+        self.assertNotEqual(second["files"]["data.js"], first["files"]["data.js"])      # the registry did change
+        after = build_site.own_tests(load_catalog_entries(), self.data, self.review)
+        self.assertEqual(after, tests)
+
+    def test_unadmitted_or_hand_edited_results_are_refused(self):
+        self.admit_and_import("calibration.json")
+        self.review.write_bytes(self.own_results.dumps(self.own_results.empty_review()))   # admission withdrawn
+        with self.assertRaisesRegex(build_site.BuildError, "not admitted"):
+            self.release()
+
+    def test_a_fixture_admitted_by_the_production_manifest_is_refused(self):
+        self.admit_and_import("calibration.json")
+        data = build_site.build(self.ws.out, registry_dir=self.ws.registry, evidence_root=self.ws.evidence,
+                                generated_at=stamp(LATER), now=LATER, own_data_path=self.data, own_review_path=self.review)
+        with unittest.mock.patch.object(self.own_results, "REVIEW_PATH", self.review), \
+                unittest.mock.patch.object(self.own_results, "DATA_PATH", self.data):
+            problems = release_check.inspect_own_results(data)
+        self.assertTrue(any("admits a synthetic test fixture" in p for p in problems), problems)
+
+    def test_current_production_dataset_publishes(self):
+        problems = release_check.inspect_own_results(
+            build_site.build(self.ws.out, registry_dir=self.ws.registry, evidence_root=self.ws.evidence,
+                             generated_at=stamp(LATER), now=LATER))
+        self.assertEqual(problems, [])
+
+
+def load_catalog_entries():
+    return json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))["entries"]
 
 
 class TemplateTests(unittest.TestCase):

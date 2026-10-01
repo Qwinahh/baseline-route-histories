@@ -3,10 +3,11 @@
 Follow changes in AI model performance. A directory of AI models across providers,
 newest releases first, with other published test results shown by date and source.
 
-**Current status:** Baseline's own recurring tests have not started yet, so every model
-is marked "Not tested by Baseline". The directory lists models and apps from ten makers,
+**Current status:** Baseline publishes results of its own tests only after review, from
+`own_results/` (method and rules in `docs/OWN_RESULTS_FORMAT.md`); every model without an
+admitted result is marked "Not tested by Baseline". The directory lists models and apps from ten makers,
 taken from their official model listings; release dates are shown only where a maker's
-announcement, changelog or model page states them. The test results shown are
+announcement, changelog or model page states them. Other test results shown are
 third-party results, copied with permission and shown with their measurement dates. No
 observation here says whether a provider changed a model on purpose.
 
@@ -17,6 +18,9 @@ observation here says whether a provider changed a model on purpose.
   `catalog/release_dates.json`. How both were checked is in `docs/CATALOG_SOURCES.md`.
 - `registry/`: models, routes, sources, series, observations, ingestion runs and
   corrections. The rules are in `docs/DATA_CONTRACT.md` (schema v2).
+- `own_results/`: Baseline's own aggregate results (counts only, no prompts or
+  responses), the review manifest that admits them and the exact admitted candidates
+  they are rebuilt from; `scripts/own_results.py` checks and imports them.
 - `evidence/snapshots/`: unchanged copies of permitted source files, each stored with
   its licence and a manifest of hashes.
 - `site/`: the static directory and model pages. `scripts/build_site.py` builds them
