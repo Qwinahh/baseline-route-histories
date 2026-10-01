@@ -1,0 +1,188 @@
+{
+ "as_of": "2026-10-12T12:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 1,
+ "records": [
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+   "date": "2026-10-10",
+   "evidence": "verified",
+   "first_attempt_correct": 30,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 30,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 10,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a0a",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20261010T021700Z-b2b2b2b2b2",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--b2b2b2b2b2b2",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+   "date": "2026-10-11",
+   "evidence": "verified",
+   "first_attempt_correct": 31,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 31,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 9,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20261011T021700Z-b2b2b2b2b2",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--b2b2b2b2b2b2",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+   "date": "2026-10-12",
+   "evidence": "verified",
+   "first_attempt_correct": 29,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 29,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 11,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20261012T021700Z-b2b2b2b2b2",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--b2b2b2b2b2b2",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  }
+ ],
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series": {
+  "config_fingerprint": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "fixture-panel-v1",
+  "panel_items": 40,
+  "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+  "schedule": {
+   "end_date": "2026-10-20",
+   "start_date": "2026-10-10",
+   "type": "daily",
+   "window_minutes": 60,
+   "window_start_utc": "02:00"
+  },
+  "series_id": "gemini-api.gemini-3.5-flash-lite--daily--b2b2b2b2b2b2",
+  "settings": {
+   "max_output_tokens": 4096,
+   "temperature": 1.0,
+   "thinking_level": "LOW",
+   "timeout_seconds": 120
+  }
+ }
+}

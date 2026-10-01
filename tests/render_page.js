@@ -48,7 +48,7 @@ global.document = {
 };
 
 const dir = process.argv[2];
-for (const name of ["freshness.js", "directory.js", "data.js", "app.js"]) {
+for (const name of ["freshness.js", "directory.js", "results-chart.js", "data.js", "app.js"]) {
   vm.runInThisContext(fs.readFileSync(path.join(dir, name), "utf8"), { filename: name });
 }
 const aria = all().map((n) => n.getAttribute("aria-label")).filter(Boolean);

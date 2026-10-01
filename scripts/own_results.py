@@ -1,8 +1,10 @@
-"""Baseline's own test results: public validator, importer and site summary (T12). Stdlib only.
+"""Baseline's own test results: public validator, importer and site summary (T12, T13). Stdlib only.
 
     py -3.11 -B scripts/own_results.py check                 # validate the production dataset
     py -3.11 -B scripts/own_results.py inspect CANDIDATE     # validate a candidate, print its sha256
-    py -3.11 -B scripts/own_results.py import CANDIDATE      # admit a reviewed candidate
+    py -3.11 -B scripts/own_results.py import CANDIDATE      # admit a person-reviewed candidate
+    py -3.11 -B scripts/own_results.py check-policy POLICY   # validate a publication policy, print its sha256
+    py -3.11 -B scripts/own_results.py migrate               # dataset v1 -> v2 (content unchanged)
 
 A candidate ("bundle") is an aggregate envelope written by the private exporter. It holds
 counts, dates, the exact route, pinned settings and provenance hashes; never prompts,
@@ -12,6 +14,11 @@ Admission is explicit: a candidate is imported only if its file's sha256 is list
 the separate review manifest (own_results/review.json). A bundle cannot admit itself.
 This is an operational review gate, not a cryptographic guarantee against a dishonest
 publisher; the hashes point to private evidence that visitors cannot inspect.
+
+Since T13 a candidate can also be admitted automatically under a publication policy that
+a person approved (own_results/policy_review.json lists its digest; policies/ keeps it).
+Such sources are labelled policy-admitted, never person-reviewed, and the bundle must
+match the policy exactly. The automated publisher cannot create or change a policy.
 
 Importing is validated before anything is written, atomic and idempotent: the same
 records again change nothing; a run already published with different contents is
@@ -37,7 +44,18 @@ REVIEW_PATH = ROOT / "own_results" / "review.json"
 FIXTURE_DIR = ROOT / "tests" / "fixtures" / "own_results"
 
 BUNDLE_FORMAT, DATA_FORMAT, REVIEW_FORMAT = "baseline-own-results", "baseline-own-results-data", "baseline-own-results-review"
-FORMAT_VERSION = 1
+FORMAT_VERSION = 1                 # review manifest
+BUNDLE_VERSIONS = (1, 2)           # 2 (T13) also allows a schedule-only daily bundle
+BUNDLE_VERSION = 2                 # what the exporter writes now
+DATA_VERSION = 2                   # 2 (T13): sources may be person-reviewed or policy-admitted
+POLICY_FORMAT, POLICY_REVIEW_FORMAT = "baseline-own-results-policy", "baseline-own-results-policy-review"
+POLICY_FIELDS = ("allowed_paths", "campaign", "config_fingerprint", "enabled", "format", "format_version",
+                 "grader_version", "panel_items", "panel_sha256", "public_branch", "public_repository", "route",
+                 "series_kind", "settings")
+# The only public paths an automated publisher may write.
+PUBLICATION_PATHS = ("own_results/admitted/", "own_results/data.json")
+HUMAN_SOURCE = ("reviewed_at", "sha256")
+POLICY_SOURCE = ("admitted_at", "policy_sha256", "sha256")
 AGGREGATE_VERSION = 1
 MAX_BYTES = 1_000_000
 MAX_RECORDS = 400
@@ -86,6 +104,8 @@ SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 RUN_ID_RE = re.compile(r"^live-(daily|calibration)-(\d{8})T(\d{6})Z-([0-9a-f]{10})$")
 STAMP_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$")
 HHMM_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+REPO_RE = re.compile(r"^[A-Za-z0-9-]{1,39}/[A-Za-z0-9._-]{1,100}$")
+BRANCH_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,99}$")
 SECRETISH = re.compile(r"AIza[0-9A-Za-z_\-]{20,}|gh[pousr]_[0-9A-Za-z]{20,}|github_pat_|sk-[A-Za-z0-9]{20,}|"
                        r"-----BEGIN|x-goog-api-key|api[_-]?key|authorization", re.I)
 FIXTURE_MARK = "FIXTURE-NOT-FOR-PUBLICATION"
@@ -263,21 +283,25 @@ def check_series(series, route: dict) -> None:
         if schedule != {"type": "once"}:
             raise OwnResultsError("a calibration series is scheduled once")
         return
-    _exact(schedule, ("end_date", "start_date", "type", "window_minutes", "window_start_utc"), "schedule")
-    start, end = _day(schedule["start_date"]), _day(schedule["end_date"])
-    if schedule["type"] != "daily" or not start <= end or (end - start).days > 366 \
-            or not isinstance(schedule["window_start_utc"], str) or not HHMM_RE.match(schedule["window_start_utc"]) \
-            or not _count(schedule["window_minutes"], 1, 1440):
-        raise OwnResultsError("a daily schedule needs real start/end dates (at most a year) and a UTC window")
+    check_schedule(schedule)
 
 
 def _record_key(record: dict) -> str:
     return record["run_id"] or "gap:" + record["date"]
 
 
+BODY_FIELDS = ("as_of", "records", "route", "series")
+
+
 def check_body(body: dict, now: datetime | None = None) -> None:
-    """as_of, route, series and records, with every record bound to the route and series."""
-    _exact(body, ("as_of", "records", "route", "series"), "series entry")
+    """as_of, route, series and records, with every record bound to the route and series.
+
+    A daily body may also list `open_dates` (T13 review R2): scheduled dates whose run had
+    started but not closed when the private record was checked. They carry no score, are
+    never records, and stay unresolved until a later check closes them.
+    """
+    if not isinstance(body, dict) or set(body) not in (set(BODY_FIELDS), set(BODY_FIELDS) | {"open_dates"}):
+        raise OwnResultsError(f"series entry must have exactly the fields {list(BODY_FIELDS)} (+ open_dates if daily)")
     as_of = parse_stamp(body["as_of"])
     if now is not None and as_of > now + timedelta(minutes=5):
         raise OwnResultsError("as_of is in the future")
@@ -311,16 +335,54 @@ def check_body(body: dict, now: datetime | None = None) -> None:
         if _record_key(record) in keys:
             raise OwnResultsError(f"duplicate record {_record_key(record)}")
         keys.add(_record_key(record))
+    if "open_dates" in body:
+        _check_open_dates(body, as_of, {r["date"] for r in records})
+
+
+def _check_open_dates(body: dict, as_of: datetime, record_dates: set) -> None:
+    open_dates = body["open_dates"]
+    if body["series"]["kind"] != "daily":
+        raise OwnResultsError("only a daily series has open dates")
+    if not isinstance(open_dates, list) or len(open_dates) > MAX_RECORDS \
+            or open_dates != sorted(set(open_dates)) or not all(isinstance(d, str) for d in open_dates):
+        raise OwnResultsError("open_dates must be a sorted list of distinct dates")
+    schedule = body["series"]["schedule"]
+    for day in open_dates:
+        parsed = _day(day)
+        if not schedule["start_date"] <= day <= schedule["end_date"]:
+            raise OwnResultsError(f"open date {day} is outside the scheduled campaign")
+        if window_bounds(schedule, parsed)[1] > as_of:
+            raise OwnResultsError(f"open date {day} was not yet due at as_of; it is simply pending")
+        if day in record_dates:
+            raise OwnResultsError(f"open date {day} already has a record")
 
 
 def validate_bundle(bundle, now: datetime | None = None) -> None:
-    """Raise OwnResultsError unless `bundle` is a well-formed aggregate envelope."""
-    if not isinstance(bundle, dict) or bundle.get("format") != BUNDLE_FORMAT or bundle.get("format_version") != FORMAT_VERSION:
-        raise OwnResultsError(f"not a {BUNDLE_FORMAT} v{FORMAT_VERSION} bundle")
-    _exact(bundle, ("as_of", "format", "format_version", "records", "route", "series"), "bundle")
-    check_body({k: bundle[k] for k in ("as_of", "records", "route", "series")}, now)
-    if not bundle["records"]:
-        raise OwnResultsError("a bundle without records has nothing to publish")
+    """Raise OwnResultsError unless `bundle` is a well-formed aggregate envelope.
+
+    Version 1 (T12) always holds records. Version 2 (T13) may also be a schedule-only
+    daily bundle with no records yet: it publishes the route, series and campaign so the
+    graph can exist before the first closed run, and it never counts as a test.
+    """
+    version = bundle.get("format_version") if isinstance(bundle, dict) else None
+    if not isinstance(bundle, dict) or bundle.get("format") != BUNDLE_FORMAT or version not in BUNDLE_VERSIONS \
+            or isinstance(version, bool):
+        raise OwnResultsError(f"not a {BUNDLE_FORMAT} bundle of a known version {BUNDLE_VERSIONS}")
+    fields = BODY_FIELDS + ("format", "format_version") + (("open_dates",) if version == 2 else ())
+    _exact(bundle, fields, "bundle")
+    if version == 2 and bundle["series"]["kind"] != "daily":
+        raise OwnResultsError("a version-2 bundle is a daily bundle")
+    check_body(body_of(bundle), now)
+    if not bundle["records"] and version == 1:
+        raise OwnResultsError("only a version-2 daily bundle may be schedule-only (no records)")
+
+
+def body_of(bundle: dict) -> dict:
+    """The series entry a bundle contributes; daily entries always carry open_dates (v1: none)."""
+    body = {k: bundle[k] for k in BODY_FIELDS}
+    if bundle["series"]["kind"] == "daily":
+        body["open_dates"] = list(bundle.get("open_dates", []))
+    return body
 
 
 def _reject_constant(name):
@@ -340,23 +402,93 @@ def dumps(value) -> bytes:
     return (json.dumps(value, indent=1, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
 
 
-# ---------------------------------------------------------------- dataset and review manifest
+# ---------------------------------------------------------------- publication policy (T13)
+
+def validate_policy(policy, require_enabled: bool = True) -> None:
+    """A publication policy: exactly which daily series an automated publisher may admit, and where.
+
+    The policy itself is reviewed by a person (its digest goes in policy_review.json); an
+    automated publisher can only use an approved policy, never create or change one.
+    A disabled template may leave the panel, grader and item count unresolved (null).
+    """
+    if not isinstance(policy, dict) or policy.get("format") != POLICY_FORMAT or policy.get("format_version") != 1:
+        raise OwnResultsError(f"not a {POLICY_FORMAT} v1 policy")
+    _exact(policy, POLICY_FIELDS, "policy")
+    if not isinstance(policy["enabled"], bool):
+        raise OwnResultsError("policy enabled must be true or false")
+    if require_enabled and policy["enabled"] is not True:
+        raise OwnResultsError("the publication policy is disabled")
+    check_route(policy["route"])
+    if policy["series_kind"] != "daily" or not _sha(policy["config_fingerprint"]):
+        raise OwnResultsError("a policy covers one daily series, bound by its full configuration fingerprint")
+    unresolved = [k for k in ("panel_sha256", "panel_items", "grader_version") if policy[k] is None]
+    if unresolved and policy["enabled"]:
+        raise OwnResultsError(f"an enabled policy must resolve {unresolved} from the reviewed configuration")
+    if policy["panel_sha256"] is not None and not _sha(policy["panel_sha256"]):
+        raise OwnResultsError("policy panel_sha256 must be a sha256")
+    if policy["panel_items"] is not None and not _count(policy["panel_items"], 1):
+        raise OwnResultsError("policy panel_items must be a count")
+    if policy["grader_version"] is not None and not (isinstance(policy["grader_version"], str)
+                                                     and GRADER_RE.match(policy["grader_version"])):
+        raise OwnResultsError("policy grader_version is invalid")
+    check_settings(policy["settings"])
+    check_schedule(policy["campaign"])
+    if not isinstance(policy["public_repository"], str) or not REPO_RE.match(policy["public_repository"]) \
+            or not isinstance(policy["public_branch"], str) or not BRANCH_RE.match(policy["public_branch"]):
+        raise OwnResultsError("policy needs the public repository (owner/name) and branch")
+    if policy["allowed_paths"] != list(PUBLICATION_PATHS):
+        raise OwnResultsError(f"policy allowed_paths must be exactly {list(PUBLICATION_PATHS)}")
+    if SECRETISH.search(json.dumps(policy)):
+        raise OwnResultsError("policy contains something that looks like a credential")
+
+
+def policy_binding_problem(bundle: dict, policy: dict) -> str | None:
+    """Why a bundle falls outside an approved policy, or None when it is exactly covered."""
+    series = bundle["series"]
+    expected = {"route": policy["route"], "kind": policy["series_kind"],
+                "config_fingerprint": policy["config_fingerprint"], "panel_sha256": policy["panel_sha256"],
+                "panel_items": policy["panel_items"], "grader_version": policy["grader_version"],
+                "settings": policy["settings"], "schedule": policy["campaign"]}
+    actual = dict({k: series[k] for k in expected if k != "route"}, route=bundle["route"])
+    for key in sorted(expected):
+        if actual[key] != expected[key]:
+            return f"{key} differs from the approved policy"
+    return None
+
+
+def check_schedule(schedule) -> None:
+    _exact(schedule, ("end_date", "start_date", "type", "window_minutes", "window_start_utc"), "schedule")
+    start, end = _day(schedule["start_date"]), _day(schedule["end_date"])
+    if schedule["type"] != "daily" or not start <= end or (end - start).days > 366 \
+            or not isinstance(schedule["window_start_utc"], str) or not HHMM_RE.match(schedule["window_start_utc"]) \
+            or not _count(schedule["window_minutes"], 1, 1440):
+        raise OwnResultsError("a daily schedule needs real start/end dates (at most a year) and a UTC window")
+
+
+# ---------------------------------------------------------------- dataset, review manifests and policies
 
 def empty_dataset() -> dict:
-    return {"format": DATA_FORMAT, "format_version": FORMAT_VERSION, "series": {}, "sources": []}
+    return {"format": DATA_FORMAT, "format_version": DATA_VERSION, "series": {}, "sources": []}
 
 
 def empty_review() -> dict:
     return {"format": REVIEW_FORMAT, "format_version": FORMAT_VERSION, "admitted": []}
 
 
-def _check_sources(entries, what: str) -> None:
+def empty_policy_review() -> dict:
+    return {"format": POLICY_REVIEW_FORMAT, "format_version": 1, "approved": []}
+
+
+def _check_sources(entries, what: str, shapes=(HUMAN_SOURCE,)) -> None:
     if not isinstance(entries, list) or len(entries) > MAX_ADMITTED:
         raise OwnResultsError(f"{what} must be a list")
     seen = set()
     for entry in entries:
-        _exact(entry, ("reviewed_at", "sha256"), f"an entry of {what}")
-        parse_stamp(entry["reviewed_at"])
+        if not isinstance(entry, dict) or tuple(sorted(entry)) not in shapes:
+            raise OwnResultsError(f"an entry of {what} must have exactly one of the fields {list(shapes)}")
+        parse_stamp(entry.get("reviewed_at") or entry.get("admitted_at"))
+        if "policy_sha256" in entry and not _sha(entry["policy_sha256"]):
+            raise OwnResultsError(f"{what} policy digest must be a sha256")
         if not _sha(entry["sha256"]) or entry["sha256"] in seen:
             raise OwnResultsError(f"{what} needs distinct sha256 digests")
         seen.add(entry["sha256"])
@@ -371,18 +503,27 @@ def validate_review(review) -> None:
     _check_sources(review["admitted"], "review admitted list")
 
 
-def validate_dataset(dataset, now: datetime | None = None) -> None:
-    if not isinstance(dataset, dict) or dataset.get("format") != DATA_FORMAT or dataset.get("format_version") != FORMAT_VERSION:
-        raise OwnResultsError(f"not a {DATA_FORMAT} v{FORMAT_VERSION} dataset")
+def validate_policy_review(review) -> None:
+    if not isinstance(review, dict) or review.get("format") != POLICY_REVIEW_FORMAT or review.get("format_version") != 1:
+        raise OwnResultsError(f"not a {POLICY_REVIEW_FORMAT} v1 manifest")
+    _exact(review, ("approved", "format", "format_version"), "policy review manifest")
+    _check_sources(review["approved"], "approved policy list")
+
+
+def validate_dataset(dataset, now: datetime | None = None, version: int = DATA_VERSION) -> None:
+    if not isinstance(dataset, dict) or dataset.get("format") != DATA_FORMAT or dataset.get("format_version") != version:
+        raise OwnResultsError(f"not a {DATA_FORMAT} v{version} dataset (run `own_results.py migrate` for v1)")
     _exact(dataset, ("format", "format_version", "series", "sources"), "dataset")
-    _check_sources(dataset["sources"], "dataset sources")
+    _check_sources(dataset["sources"], "dataset sources", (HUMAN_SOURCE, POLICY_SOURCE))
     if not isinstance(dataset["series"], dict):
         raise OwnResultsError("dataset series must be an object keyed by series id")
     if bool(dataset["series"]) != bool(dataset["sources"]):
         raise OwnResultsError("published series need admitted sources, and admitted sources need series")
     for sid, body in dataset["series"].items():
         check_body(body, now)
-        if body["series"]["series_id"] != sid or not body["records"]:
+        if ("open_dates" in body) != (body["series"]["kind"] == "daily"):
+            raise OwnResultsError(f"dataset series {sid}: a daily entry lists open_dates, a calibration entry does not")
+        if body["series"]["series_id"] != sid or (not body["records"] and body["series"]["kind"] != "daily"):
             raise OwnResultsError(f"dataset series {sid} is misfiled or empty")
         if body["records"] != sorted(body["records"], key=lambda r: (r["date"], _record_key(r))):
             raise OwnResultsError(f"dataset series {sid} records are not in date order")
@@ -413,38 +554,91 @@ def admitted_dir_for(data_path: Path) -> Path:
     return Path(data_path).parent / "admitted"
 
 
-def rebuild(sources: list, review: dict, admitted_dir: Path, now: datetime | None = None) -> dict:
+def load_policies(data_path: Path) -> dict:
+    """{policy sha256: (policy, approval entry)} for every person-approved policy kept beside the dataset.
+
+    policy_review.json (person-maintained) lists approved policy digests; policies/ must
+    hold exactly those policies, each still matching its digest. Both are optional: with
+    neither there are no approved policies.
+    """
+    folder = Path(data_path).parent
+    review_path, policy_dir = folder / "policy_review.json", folder / "policies"
+    if review_path.exists():
+        review = load_json_file(review_path, "policy review manifest")
+        validate_policy_review(review)
+    else:
+        review = empty_policy_review()
+    present = {p.name for p in policy_dir.iterdir()} if policy_dir.is_dir() else set()
+    named = {f"{e['sha256']}.json" for e in review["approved"]}
+    if present != named:
+        raise OwnResultsError(f"policies/ must hold exactly the approved policies (unexpected "
+                              f"{sorted(present - named)[:3]}, missing {sorted(named - present)[:3]})")
+    out = {}
+    for entry in review["approved"]:
+        raw = (policy_dir / f"{entry['sha256']}.json").read_bytes()
+        if sha256_bytes(raw) != entry["sha256"]:
+            raise OwnResultsError(f"approved policy {entry['sha256'][:12]} was altered or substituted")
+        policy = parse_json(raw, "approved policy")
+        validate_policy(policy)
+        out[entry["sha256"]] = (policy, entry)
+    return out
+
+
+def _admitted_copy(admitted_dir: Path, digest: str) -> bytes:
+    try:
+        raw = (Path(admitted_dir) / f"{digest}.json").read_bytes()
+    except OSError:
+        raise OwnResultsError(f"the admitted copy of {digest[:12]} is missing") from None
+    if sha256_bytes(raw) != digest:
+        raise OwnResultsError(f"the admitted copy of {digest[:12]} was altered or substituted")
+    return raw
+
+
+def check_source(source: dict, bundle: dict, review: dict, policies: dict) -> None:
+    """A person reviewed this exact digest, or an approved policy covers this exact bundle."""
+    digest = source["sha256"]
+    if "reviewed_at" in source:
+        if {e["sha256"]: e for e in review["admitted"]}.get(digest) != source:
+            raise OwnResultsError(f"dataset source {digest[:12]} was not admitted by the review manifest")
+        return
+    approved = policies.get(source["policy_sha256"])
+    if approved is None:
+        raise OwnResultsError(f"dataset source {digest[:12]} names a policy that is not approved")
+    policy, approval = approved
+    problem = policy_binding_problem(bundle, policy)
+    if problem:
+        raise OwnResultsError(f"dataset source {digest[:12]} is outside its policy: {problem}")
+    if not (approval["reviewed_at"] <= source["admitted_at"] and bundle["as_of"] <= source["admitted_at"]):
+        raise OwnResultsError(f"dataset source {digest[:12]} was admitted before its policy approval or its own as_of")
+
+
+def rebuild(sources: list, review: dict, admitted_dir: Path, now: datetime | None = None,
+            policies: dict | None = None) -> dict:
     """The dataset as merged from the admitted candidate copies named by `sources`.
 
-    Every source must be in the review manifest with the same review time, and its kept
-    copy must still have that digest and pass the bundle contract.
+    Each source is either person-reviewed (its digest and time are in the review manifest)
+    or policy-admitted (an approved policy covers the bundle exactly). Its kept copy must
+    still have that digest and pass the bundle contract.
     """
-    reviewed = {e["sha256"]: e for e in review["admitted"]}
     dataset = empty_dataset()
     for source in sorted(sources, key=lambda s: s["sha256"]):
-        if reviewed.get(source["sha256"]) != source:
-            raise OwnResultsError(f"dataset source {source['sha256'][:12]} was not admitted by the review manifest")
-        try:
-            raw = (Path(admitted_dir) / f"{source['sha256']}.json").read_bytes()
-        except OSError:
-            raise OwnResultsError(f"the admitted copy of {source['sha256'][:12]} is missing") from None
-        if sha256_bytes(raw) != source["sha256"]:
-            raise OwnResultsError(f"the admitted copy of {source['sha256'][:12]} was altered or substituted")
-        bundle = parse_json(raw, "admitted copy")
+        bundle = parse_json(_admitted_copy(admitted_dir, source["sha256"]), "admitted copy")
         validate_bundle(bundle, now)
+        check_source(source, bundle, review, policies or {})
         dataset = merge(dataset, bundle, source)
     return dataset
 
 
 def load_admitted(data_path: Path = DATA_PATH, review_path: Path = REVIEW_PATH, now: datetime | None = None) -> dict:
-    """The dataset, only if it is exactly what its admitted, reviewed candidates give.
+    """The dataset, only if it is exactly what its admitted candidates give.
 
-    Binding published records to reviewed content (T12 review R1): the kept candidate
+    Binding published records to admitted content (T12 review R1): the kept candidate
     copies are re-merged and must reproduce data.json byte for byte, and the admitted
     folder holds exactly the copies the dataset names. An edited count, an added or
-    removed record, changed route or settings, or a missing or substituted copy fails.
-    This detects accidental or unreviewed edits; it is not a defence against a
-    publisher who deliberately rewrites the review manifest and copies as well.
+    removed record, changed route or settings, or a missing or substituted copy fails;
+    so does a policy-admitted copy outside its approved policy (T13). This detects
+    accidental or unreviewed edits; it is not a defence against a publisher who
+    deliberately rewrites the review manifests and copies as well.
     """
     try:
         raw = Path(data_path).read_bytes()
@@ -453,15 +647,16 @@ def load_admitted(data_path: Path = DATA_PATH, review_path: Path = REVIEW_PATH, 
     dataset = parse_json(raw, "own-results dataset")
     validate_dataset(dataset, now)
     review = load_review(review_path)
+    policies = load_policies(data_path)
     folder = admitted_dir_for(data_path)
     present = {p.name for p in folder.iterdir()} if folder.is_dir() else set()
     named = {f"{s['sha256']}.json" for s in dataset["sources"]}
     if present != named:
         raise OwnResultsError(f"{folder.name}/ must hold exactly the admitted copies the dataset names "
                               f"(unexpected {sorted(present - named)[:3]}, missing {sorted(named - present)[:3]})")
-    if dumps(rebuild(dataset["sources"], review, folder, now)) != raw:
+    if dumps(rebuild(dataset["sources"], review, folder, now, policies)) != raw:
         raise OwnResultsError("the dataset does not match a rebuild from its admitted candidates; "
-                              "re-import reviewed candidates instead of editing data.json")
+                              "re-import admitted candidates instead of editing data.json")
     return dataset
 
 
@@ -472,17 +667,40 @@ def fixture_digests(folder: Path = FIXTURE_DIR) -> set:
     return {sha256_bytes(p.read_bytes()) for p in sorted(Path(folder).rglob("*")) if p.is_file()}
 
 
+def migrate(data_path: Path = DATA_PATH, review_path: Path = REVIEW_PATH) -> str:
+    """Dataset v1 (T12) to v2 (T13). Only the version number changes, and only if the admitted
+    copies rebuild exactly the v1 content. Returns 'unchanged' or 'migrated'."""
+    data_path = Path(data_path)
+    old = parse_json(data_path.read_bytes(), "own-results dataset")
+    if isinstance(old, dict) and old.get("format_version") == DATA_VERSION:
+        load_admitted(data_path, review_path)
+        return "unchanged"
+    validate_dataset(old, version=1)
+    new = dict(old, format_version=DATA_VERSION)
+    review = load_review(review_path)
+    folder = admitted_dir_for(data_path)
+    present = {p.name for p in folder.iterdir()} if folder.is_dir() else set()
+    if present != {f"{s['sha256']}.json" for s in old["sources"]}:
+        raise OwnResultsError("admitted/ does not hold exactly the copies the v1 dataset names; not migrated")
+    if dumps(rebuild(old["sources"], review, folder, None, load_policies(data_path))) != dumps(new):
+        raise OwnResultsError("the v1 dataset does not match its admitted copies; not migrated")
+    _atomic_write(data_path, dumps(new))
+    return "migrated"
+
+
 # ---------------------------------------------------------------- merging and importing
 
 def merge(dataset: dict, bundle: dict, source: dict | None) -> dict:
     """A new dataset with `bundle` merged in. Identical records are no-ops; any conflict raises."""
     out = json.loads(json.dumps(dataset))
-    body = {k: bundle[k] for k in ("as_of", "records", "route", "series")}
+    body = body_of(bundle)
     sid = body["series"]["series_id"]
     current = out["series"].get(sid)
     if current is None:
         current = out["series"][sid] = {"as_of": body["as_of"], "route": body["route"], "series": body["series"],
                                          "records": []}
+        if "open_dates" in body:
+            current["open_dates"] = []
     elif current["route"] != body["route"] or current["series"] != body["series"]:
         raise OwnResultsError(f"series {sid} is already published with different route or series details; "
                               "a reviewed correction is required")
@@ -503,6 +721,16 @@ def merge(dataset: dict, bundle: dict, source: dict | None) -> dict:
         if daily:
             by_date[record["date"]] = record
     current["records"] = sorted(by_key.values(), key=lambda r: (r["date"], _record_key(r)))
+    if daily:
+        # Open dates come from the newest check only (ties: union), and a date with a record is never open,
+        # so the result does not depend on import order and a later closure resolves the date.
+        if body["as_of"] > current["as_of"]:
+            open_dates = set(body["open_dates"])
+        elif body["as_of"] == current["as_of"]:
+            open_dates = set(current["open_dates"]) | set(body["open_dates"])
+        else:
+            open_dates = set(current["open_dates"])
+        current["open_dates"] = sorted(open_dates - {r["date"] for r in current["records"]})
     current["as_of"] = max(current["as_of"], body["as_of"])
     if source is not None and source["sha256"] not in {s["sha256"] for s in out["sources"]}:
         out["sources"] = sorted(out["sources"] + [dict(source)], key=lambda s: s["sha256"])
@@ -520,13 +748,54 @@ def _atomic_write(path: Path, raw: bytes) -> None:
     os.replace(tmp, path)
 
 
+def _admit(raw: bytes, source: dict, review_path: Path, output_path: Path, now: datetime) -> str:
+    """Shared admission: validate everything, keep the exact bytes, then write the dataset."""
+    digest = sha256_bytes(raw)
+    bundle = parse_json(raw, "candidate")
+    validate_bundle(bundle, now)
+    review = load_review(review_path)
+    output_path = Path(output_path)
+    policies = load_policies(output_path)
+    check_source(source, bundle, review, policies)
+    folder = admitted_dir_for(output_path)
+    if output_path.exists():
+        existing_raw = output_path.read_bytes()
+        dataset = load_admitted(output_path, review_path, now)
+    else:
+        if folder.is_dir() and any(folder.iterdir()):
+            raise OwnResultsError(f"{folder.name}/ holds copies but there is no dataset; review it before importing")
+        existing_raw, dataset = None, empty_dataset()
+    if digest in {s["sha256"] for s in dataset["sources"]}:
+        return "unchanged"                                   # this exact candidate is already published
+    merged = merge(dataset, bundle, source)
+    validate_dataset(merged, now)
+    new_raw = dumps(merged)
+    copy = folder / f"{digest}.json"
+    if copy.exists() and copy.read_bytes() != raw:
+        raise OwnResultsError(f"{copy.name} exists with different bytes; review the admitted folder")
+    wrote_copy = not copy.exists()
+    if wrote_copy:
+        _atomic_write(copy, raw)
+    try:
+        if dumps(rebuild(merged["sources"], review, folder, now, policies)) != new_raw:   # the copies reproduce it
+            raise OwnResultsError("internal error: the admitted copies do not reproduce the merged dataset")
+    except OwnResultsError:
+        if wrote_copy:
+            copy.unlink()
+        raise
+    if new_raw == existing_raw:
+        return "unchanged"
+    _atomic_write(output_path, new_raw)
+    return "updated"
+
+
 def import_bundle(input_path: Path, review_path: Path = REVIEW_PATH, output_path: Path = DATA_PATH,
                   now: datetime | None = None) -> str:
-    """Admit one reviewed bundle into the dataset. Returns 'unchanged' or 'updated'.
+    """Admit one person-reviewed bundle into the dataset. Returns 'unchanged' or 'updated'.
 
-    Order: the file's digest must be admitted; the bundle, the review manifest and the
-    existing dataset (rebuilt from its admitted copies) must validate; the merge must be
-    conflict-free. Then the exact candidate bytes are kept in admitted/<sha256>.json and
+    Order: the file's digest must be in the review manifest; the bundle, the manifest and
+    the existing dataset (rebuilt from its admitted copies) must validate; the merge must
+    be conflict-free. Then the exact candidate bytes are kept in admitted/<sha256>.json and
     the new dataset is written, each atomically. Any refusal leaves both unchanged.
     If the process stops between the two writes, the next load fails closed (an
     unexpected admitted copy); remove that copy and import again.
@@ -544,74 +813,75 @@ def import_bundle(input_path: Path, review_path: Path = REVIEW_PATH, output_path
                               f"{Path(review_path).name} after reviewing it")
     if digest in fixture_digests() and Path(review_path).resolve() == REVIEW_PATH.resolve():
         raise OwnResultsError("a synthetic test fixture cannot be admitted to the production dataset")
-    bundle = parse_json(raw, "candidate")
-    validate_bundle(bundle, now)
-    output_path = Path(output_path)
-    folder = admitted_dir_for(output_path)
-    if output_path.exists():
-        existing_raw = output_path.read_bytes()
-        dataset = load_admitted(output_path, review_path, now)
-    else:
-        if folder.is_dir() and any(folder.iterdir()):
-            raise OwnResultsError(f"{folder.name}/ holds copies but there is no dataset; review it before importing")
-        existing_raw, dataset = None, empty_dataset()
-    merged = merge(dataset, bundle, entry)
-    validate_dataset(merged, now)
-    new_raw = dumps(merged)
-    if new_raw == existing_raw:
-        return "unchanged"
-    copy = folder / f"{digest}.json"
-    if copy.exists() and copy.read_bytes() != raw:
-        raise OwnResultsError(f"{copy.name} exists with different bytes; review the admitted folder")
-    wrote_copy = not copy.exists()
-    if wrote_copy:
-        _atomic_write(copy, raw)
-    try:
-        if dumps(rebuild(merged["sources"], review, folder, now)) != new_raw:   # the copies reproduce it
-            raise OwnResultsError("internal error: the admitted copies do not reproduce the merged dataset")
-    except OwnResultsError:
-        if wrote_copy:
-            copy.unlink()
-        raise
-    _atomic_write(output_path, new_raw)
-    return "updated"
+    return _admit(raw, dict(entry), review_path, output_path, now)
+
+
+def admit_by_policy(raw: bytes, policy_sha256: str, admitted_at: str, review_path: Path = REVIEW_PATH,
+                    output_path: Path = DATA_PATH, now: datetime | None = None) -> str:
+    """Admit one candidate under an approved publication policy (automated, not person-reviewed).
+
+    The policy must already be approved in policy_review.json and kept in policies/; this
+    never creates or changes either. The bundle must match the policy exactly.
+    """
+    now = now or datetime.now(timezone.utc)
+    if parse_stamp(admitted_at) > now + timedelta(minutes=5):
+        raise OwnResultsError("admitted_at is in the future")
+    if sha256_bytes(raw) in fixture_digests() and Path(review_path).resolve() == REVIEW_PATH.resolve():
+        raise OwnResultsError("a synthetic test fixture cannot be admitted to the production dataset")
+    source = {"admitted_at": admitted_at, "policy_sha256": policy_sha256, "sha256": sha256_bytes(raw)}
+    return _admit(raw, source, review_path, output_path, now)
 
 
 # ---------------------------------------------------------------- site summary
 
+def window_bounds(schedule: dict, day: date) -> tuple[datetime, datetime]:
+    hour, minute = map(int, schedule["window_start_utc"].split(":"))
+    opens = datetime(day.year, day.month, day.day, hour, minute, tzinfo=timezone.utc)
+    return opens, opens + timedelta(minutes=schedule["window_minutes"])
+
+
+def campaign_days(schedule: dict) -> list:
+    start, end = _day(schedule["start_date"]), _day(schedule["end_date"])
+    return [start + timedelta(days=i) for i in range((end - start).days + 1)]
+
+
 def expected_dates(schedule: dict, as_of: datetime) -> tuple[list, int]:
     """(campaign dates whose window had closed by as_of, count of campaign dates not yet due)."""
-    start, end = _day(schedule["start_date"]), _day(schedule["end_date"])
-    hour, minute = map(int, schedule["window_start_utc"].split(":"))
-    due, later = [], 0
-    day = start
-    while day <= end:
-        closes = datetime(day.year, day.month, day.day, hour, minute, tzinfo=timezone.utc) \
-            + timedelta(minutes=schedule["window_minutes"])
-        if closes <= as_of:
-            due.append(day.isoformat())
-        else:
-            later += 1
-        day += timedelta(days=1)
-    return due, later
+    due = [d.isoformat() for d in campaign_days(schedule) if window_bounds(schedule, d)[1] <= as_of]
+    return due, len(campaign_days(schedule)) - len(due)
 
 
 def _usable(record: dict) -> bool:
-    return record["evidence"] == "verified" and record["valid_day"] is True
+    """A graphable daily score: verified, completed, and every scheduled question attempted.
+
+    T12's 90% `valid_day` threshold is not enough: a partial run is shown, but separately.
+    """
+    return record["evidence"] == "verified" and record["status"] == "completed" \
+        and record["attempted_items"] == record["scheduled_items"]
 
 
 def daily_rows(body: dict) -> dict:
-    """Every campaign date up to as_of: a run, an explicit gap, or 'no_record' (never filled in)."""
+    """Every campaign date up to as_of: a run, an explicit gap, or 'no_record' (never filled in).
+
+    Dates after as_of are pending (not yet due, or not yet checked); they are listed, not scored.
+    An open date (run started, not closed when checked) is the row state "open": unresolved,
+    no score, and never a missed day (T13 review R2).
+    """
     as_of = parse_stamp(body["as_of"])
     due, later = expected_dates(body["series"]["schedule"], as_of)
     by_date = {r["date"]: r for r in body["records"]}
-    rows = [{"date": d, "state": by_date[d]["status"] if d in by_date else "no_record", "record": by_date.get(d)}
-            for d in due]
+    open_dates = set(body.get("open_dates", []))
+    rows = [{"date": d, "state": by_date[d]["status"] if d in by_date else "open" if d in open_dates else "no_record",
+             "record": by_date.get(d)} for d in due]
     for record in body["records"]:                       # a run published although its window closed after as_of
         if record["date"] not in due:
             rows.append({"date": record["date"], "state": record["status"], "record": record})
     rows.sort(key=lambda r: r["date"])
-    return {"rows": rows, "not_yet_due": later - sum(1 for r in body["records"] if r["date"] not in due)}
+    for row in rows:
+        row["eligible"] = row["record"] is not None and _usable(row["record"])
+    shown = {r["date"] for r in rows}
+    pending = [d.isoformat() for d in campaign_days(body["series"]["schedule"]) if d.isoformat() not in shown]
+    return {"rows": rows, "not_yet_due": len(pending), "pending_dates": pending}
 
 
 def map_entry(route: dict, catalog_entries: list) -> str:
@@ -624,15 +894,31 @@ def map_entry(route: dict, catalog_entries: list) -> str:
     return hits[0]
 
 
+def daily_view(sid: str, body: dict) -> dict:
+    """One daily series as the page draws it. Counts are never combined across series."""
+    series = body["series"]
+    rows = daily_rows(body)
+    return {"series_id": sid, "as_of": body["as_of"], "schedule": series["schedule"], "rows": rows["rows"],
+            "not_yet_due": rows["not_yet_due"], "pending_dates": rows["pending_dates"],
+            "open_dates": list(body.get("open_dates", [])),
+            "panel_items": series["panel_items"], "panel_id": series["panel_id"], "settings": series["settings"],
+            "grader_version": series["grader_version"], "config_fingerprint": series["config_fingerprint"]}
+
+
 def site_tests(dataset: dict, catalog_entries: list) -> dict:
-    """The page's baseline_tests record. Calibration and daily evidence stay separate."""
+    """The page's baseline_tests record. Calibration and daily evidence stay separate.
+
+    Each entry's `daily_series` lists its daily series, newest schedule first; a changed
+    setup is a separate series and is never joined to another. `daily` is the first of
+    them (kept for older consumers), and the status counts come from it alone.
+    """
     entries, methods = {}, []
     for sid in sorted(dataset["series"]):
         body = dataset["series"][sid]
         entry_id = map_entry(body["route"], catalog_entries)
         rec = entries.setdefault(entry_id, {"route_id": body["route"]["route_id"], "runs": 0, "latest_run": None,
                                             "latest_attempt": None, "baseline_complete": False, "daily": None,
-                                            "calibration": []})
+                                            "daily_series": [], "calibration": []})
         if rec["route_id"] != body["route"]["route_id"]:
             raise OwnResultsError(f"catalogue entry {entry_id} would mix two routes")
         series = body["series"]
@@ -642,17 +928,18 @@ def site_tests(dataset: dict, catalog_entries: list) -> dict:
         if series["kind"] == "calibration":
             rec["calibration"] = sorted(rec["calibration"] + body["records"], key=lambda r: (r["date"], r["run_id"]))
             continue
-        if rec["daily"] is not None:
-            raise OwnResultsError(f"catalogue entry {entry_id} has more than one daily series; not supported yet")
-        rows = daily_rows(body)
-        usable = [r["record"] for r in rows["rows"] if r["record"] is not None and _usable(r["record"])]
-        last = rows["rows"][-1] if rows["rows"] else None
-        rec["daily"] = {"series_id": sid, "as_of": body["as_of"], "schedule": series["schedule"],
-                        "rows": rows["rows"], "not_yet_due": rows["not_yet_due"]}
+        rec["daily_series"].append(daily_view(sid, body))
+    for rec in entries.values():
+        rec["daily_series"].sort(key=lambda s: (s["schedule"]["start_date"], s["schedule"]["end_date"], s["series_id"]),
+                                 reverse=True)
+        if not rec["daily_series"]:
+            continue
+        latest = rec["daily"] = rec["daily_series"][0]
+        usable = [r["record"] for r in latest["rows"] if r["eligible"]]
         rec["runs"] = len(usable)
         rec["latest_run"] = usable[-1]["date"] if usable else None
-        if last is not None:
-            rec["latest_attempt"] = "ok" if last["record"] is not None and _usable(last["record"]) else "failed"
+        if latest["rows"]:
+            rec["latest_attempt"] = "ok" if latest["rows"][-1]["eligible"] else "failed"
     return {"runs": sum(r["runs"] for r in entries.values()),
             "calibration_runs": sum(len(r["calibration"]) for r in entries.values()),
             "entries": entries, "methods": methods}
@@ -665,7 +952,7 @@ EMPTY_TESTS = {"runs": 0, "calibration_runs": 0, "entries": {}, "methods": []}
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("command", choices=("check", "inspect", "import"))
+    parser.add_argument("command", choices=("check", "inspect", "import", "migrate", "check-policy"))
     parser.add_argument("candidate", nargs="?")
     parser.add_argument("--data", default=str(DATA_PATH))
     parser.add_argument("--review", default=str(REVIEW_PATH))
@@ -676,14 +963,24 @@ def main(argv=None) -> int:
             count = sum(len(b["records"]) for b in dataset["series"].values())
             print(f"OK: {len(dataset['series'])} series, {count} records, {len(dataset['sources'])} admitted sources")
             return 0
+        if args.command == "migrate":
+            print(migrate(Path(args.data), Path(args.review)))
+            return 0
         if not args.candidate:
             parser.error("a candidate file is required")
+        raw = Path(args.candidate).read_bytes()
+        if args.command == "check-policy":
+            policy = parse_json(raw, "policy")
+            validate_policy(policy, require_enabled=False)
+            print(f"{'enabled' if policy['enabled'] else 'DISABLED'} policy sha256 {sha256_bytes(raw)}")
+            return 0
         if args.command == "inspect":
-            raw = Path(args.candidate).read_bytes()
             bundle = parse_json(raw, "candidate")
             validate_bundle(bundle, datetime.now(timezone.utc))
             print(f"valid candidate sha256 {sha256_bytes(raw)}")
             print(f"series {bundle['series']['series_id']} ({bundle['series']['kind']}), as of {bundle['as_of']}")
+            if not bundle["records"]:
+                print("  schedule only: no closed runs yet")
             for r in sorted(bundle["records"], key=lambda r: (r["date"], _record_key(r))):
                 score = (f"{r['first_attempt_correct']} of {r['scheduled_items']} first attempts correct"
                          if r["evidence"] == "verified" else "no counts")

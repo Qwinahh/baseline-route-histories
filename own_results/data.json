@@ -1,6 +1,6 @@
 {
  "format": "baseline-own-results-data",
- "format_version": 1,
+ "format_version": 2,
  "series": {
   "gemini-api.gemini-3.5-flash-lite--calibration--57364482caf0": {
    "as_of": "2026-10-01T04:41:37Z",
@@ -85,12 +85,55 @@
      "timeout_seconds": 120
     }
    }
+  },
+  "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d": {
+   "as_of": "2026-10-01T14:17:55Z",
+   "open_dates": [],
+   "records": [],
+   "route": {
+    "access_kind": "direct_api",
+    "exact_identifier": "gemini-3.5-flash-lite",
+    "maker": "Google",
+    "route_id": "gemini-api.gemini-3.5-flash-lite"
+   },
+   "series": {
+    "config_fingerprint": "fabceaf0aa9dfecd9e620670a49a2a53788880f3ca835c0c31463e6e15433f88",
+    "grader_version": "grader-v0",
+    "kind": "daily",
+    "panel_categories": [
+     "structured_extraction",
+     "constraint_following",
+     "evidence_bound",
+     "bounded_reasoning"
+    ],
+    "panel_id": "calibration-v1",
+    "panel_items": 40,
+    "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+    "schedule": {
+     "end_date": "2026-10-29",
+     "start_date": "2026-10-02",
+     "type": "daily",
+     "window_minutes": 60,
+     "window_start_utc": "02:00"
+    },
+    "series_id": "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d",
+    "settings": {
+     "max_output_tokens": 4096,
+     "temperature": 1.0,
+     "thinking_level": "MINIMAL",
+     "timeout_seconds": 120
+    }
+   }
   }
  },
  "sources": [
   {
    "reviewed_at": "2026-10-01T09:31:50Z",
    "sha256": "82beec7b625058d53f200bbbf5b6ee65d8c6574479b6b60f7f17dd2bb40f7c8d"
+  },
+  {
+   "reviewed_at": "2026-10-01T14:17:55Z",
+   "sha256": "c0b8bad235a79a5a395d8f653c87ae6d1800dbdbaf543e436d1974b0a5998234"
   }
  ]
 }
