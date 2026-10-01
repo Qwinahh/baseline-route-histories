@@ -22,7 +22,7 @@ class Node {
   querySelector() { return null; }
   get classList() { const cls = (this.attrs["class"] || "").split(/\s+/); return { contains: (c) => cls.includes(c) }; }
   set textContent(v) { this.children = []; this.ownText = String(v); }
-  get textContent() { return this.ownText + this.children.map((c) => c.textContent).join(""); }
+  get textContent() { return "hidden" in this.attrs ? "" : this.ownText + this.children.map((c) => c.textContent).join(""); }
   walk(fn) { fn(this); this.children.forEach((c) => c.walk && c.walk(fn)); }
 }
 class Text { constructor(s) { this.textContent = s; } }

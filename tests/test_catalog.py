@@ -177,6 +177,48 @@ class ReleaseDateTests(unittest.TestCase):
                                           release=release())]))
 
 
+class FeaturedListTests(unittest.TestCase):
+    """T14: the editorial Featured list holds only known ids and written reasons, no ranks or scores."""
+
+    def setUp(self):
+        self.entries = catalog.load()["entries"]
+        self.doc = json.loads((ROOT / "catalog" / "featured.json").read_text(encoding="utf-8"))
+
+    def test_production_featured_list_validates(self):
+        self.assertEqual(catalog.validate_featured(self.doc, self.entries, NOW.replace(day=30, hour=23)
+                                                  .replace(month=10)), [])
+        families = [g["family"] for g in self.doc["groups"]]
+        for family in ("OpenAI and ChatGPT", "Claude", "Gemini", "DeepSeek", "Qwen", "Llama", "Grok"):
+            self.assertIn(family, families)
+        self.assertIn("not a measured popularity ranking", self.doc["explanation"])
+        groq = next(e for e in self.entries if e["id"] == "openai-groq.gpt-oss-120b")
+        self.assertEqual((groq["access_kind"], groq["service_provider"]), ("intermediary", "Groq"))
+        self.assertIn("not ChatGPT", groq["notes"])
+
+    def test_refusals(self):
+        later = datetime(2026, 10, 30, tzinfo=timezone.utc)
+
+        def changed(mutate):
+            doc = copy.deepcopy(self.doc)
+            mutate(doc)
+            return doc
+        cases = {
+            "rank field": changed(lambda d: d["groups"][0].update(rank=1)),
+            "popularity number": changed(lambda d: d.update(popularity={"chatgpt": 1})),
+            "unknown id": changed(lambda d: d["groups"][0]["entries"].append("openai-api.gpt-99")),
+            "featured twice": changed(lambda d: d["groups"][1]["entries"].append(d["groups"][0]["entries"][0])),
+            "no reason": changed(lambda d: d["groups"][0].update(reason="")),
+            "too many in a group": changed(lambda d: d["groups"][0].update(entries=[e["id"] for e in self.entries[:7]])),
+            "future check": changed(lambda d: d.update(checked_at="2027-01-01T00:00:00Z")),
+            "no explanation": changed(lambda d: d.update(explanation="list")),
+            "non-text id (review P3)": changed(lambda d: d["groups"][0].update(entries=[{}])),
+            "numeric id": changed(lambda d: d["groups"][0].update(entries=[7])),
+        }
+        for label, doc in cases.items():
+            with self.subTest(case=label):
+                self.assertTrue(catalog.validate_featured(doc, self.entries, later))
+
+
 class ProductionCatalogTests(unittest.TestCase):
     def setUp(self):
         self.document = json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))

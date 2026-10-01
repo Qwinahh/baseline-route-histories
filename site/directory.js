@@ -143,6 +143,28 @@
              not_sent: o.not_sent || 0 };
   }
 
+  // What evidence an entry has (T14): Baseline's own results, a Baseline schedule still waiting
+  // for its first result, other published tests only, or nothing. Never a quality label.
+  var EVIDENCE_KINDS = {
+    ours: "Tested by Baseline", scheduled: "Baseline test scheduled, no result yet",
+    external: "Other published tests only", none: "No measurements yet"
+  };
+  function evidenceKind(entry, tests, nowMs) {
+    var rec = tests && tests.entries ? tests.entries[entry.id] : null;
+    var key;
+    if (rec && ((rec.runs || 0) > 0 || (rec.calibration || []).length)) key = "ours";
+    else if (rec && (rec.daily_series || []).length) key = "scheduled";
+    else key = coverage(entry, nowMs === undefined ? Date.now() : nowMs).kind !== "none" ? "external" : "none";
+    return { key: key, label: EVIDENCE_KINDS[key] };
+  }
+
+  // The newest cited releases across every maker (T14), in the directory's own release order
+  // (T08): dated entries only, never grouped by provider.
+  function newReleases(entries, count) {
+    var state = emptyState();
+    return filterEntries(entries, state).filter(function (e) { return releaseDate(e) !== null; }).slice(0, count);
+  }
+
   function matches(entry, q) {
     if (!q) return true;
     var haystack = fold([entry.name, entry.id, entry.exact_identifier, entry.family, entry.maker,
@@ -201,6 +223,7 @@
   return { parseState: parseState, encodeState: encodeState, filterEntries: filterEntries,
            coverage: coverage, newestObservation: newestObservation, distinct: distinct,
            releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS, STALE_DAYS: STALE_DAYS,
-           outcomeGroups: outcomeGroups,
+           outcomeGroups: outcomeGroups, evidenceKind: evidenceKind, EVIDENCE_KINDS: EVIDENCE_KINDS,
+           newReleases: newReleases,
            ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState, DEFAULT_SORT: DEFAULT_SORT };
 });

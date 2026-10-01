@@ -214,3 +214,17 @@ figure.own-chart { margin: 12px 0; }
 ul.chart-legend { list-style: none; padding: 0; margin: 6px 0 12px; color: var(--muted); font-size: 0.85rem; }
 ul.chart-legend li { margin: 2px 0; }
 .chart-empty { border: 1px dashed var(--divider); border-radius: 10px; padding: 12px 16px; margin: 8px 0; }
+
+/* Featured and New releases (T14) */
+.highlights { margin: 8px 0 24px; }
+.highlights h2 { margin-top: 24px; }
+ul.feature-groups { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.feature-group { background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; padding: 10px 14px; }
+.feature-group h3 { margin: 0 0 4px; font-size: 1rem; }
+.feature-list { list-style: none; padding: 0; margin: 8px 0 0; }
+ol.feature-list { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.feature-card { display: flex; flex-direction: column; gap: 2px; padding: 6px 0; border-top: 1px solid var(--divider); }
+.feature-group .feature-card:first-child { border-top: 0; }
+.feature-card a { font-weight: 600; overflow-wrap: anywhere; }
+.tag[data-evidence="none"], .tag[data-evidence="scheduled"] { color: var(--muted); }
+.highlights h2.all-models { border-top: 1px solid var(--divider); padding-top: 16px; }

@@ -187,6 +187,19 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
     if problems:
         raise BuildError("reconciled catalogue does not validate: " + "; ".join(problems[:10]))
     data["catalog"] = entries  # routes are joined in the browser by id; no copies
+    # Editorial Featured shortlist (T14): catalogue ids and written reasons only, validated.
+    featured_path = (Path(catalog_path).parent if catalog_path else catalog.CATALOG_PATH.parent) / "featured.json"
+    if featured_path.exists():
+        try:
+            featured = json.loads(featured_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise BuildError(f"featured list unreadable: {exc}") from exc
+        problems = catalog.validate_featured(featured, entries, now)
+        if problems:
+            raise BuildError("featured list does not validate: " + "; ".join(problems[:10]))
+        data["featured"] = featured
+    else:
+        data["featured"] = None
     data["catalog_evidence_only"] = added
     data["catalog_checked_at"] = document.get("checked_at")
     data["baseline_tests"] = own_tests(entries, own_data_path, own_review_path, tuple(own_preview), now)

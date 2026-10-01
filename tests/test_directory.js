@@ -147,4 +147,22 @@ const groups = D.outcomeGroups({ correct: 30, incorrect: 2, format_error: 1, ref
 assert.deepEqual(groups, { correct: 30, incorrect: 2, format_error: 1, refusal: 1, answer_problems: 3, request_errors: 2, not_sent: 1 });
 assert.equal(Object.values(groups).reduce((a, b) => a + b, 0), 40);
 
+// T14: evidence kinds and the global new-releases list.
+const ev = (rec, entry) => D.evidenceKind(entry || { id: "x", routes: [] }, { entries: rec ? { x: rec } : {} }, NOW).key;
+assert.equal(ev(null), "none");
+assert.equal(ev(null, { id: "x", routes: [{ observations: [obs("2026-09-01")] }] }), "external");
+assert.equal(ev({ runs: 0, calibration: [{}], daily_series: [] }), "ours");                 // a setup test counts
+assert.equal(ev({ runs: 3, calibration: [], daily_series: [{}] }), "ours");
+assert.equal(ev({ runs: 0, calibration: [], daily_series: [{ rows: [] }] }), "scheduled");  // schedule only: not tested
+assert.equal(D.EVIDENCE_KINDS.none, "No measurements yet");
+const dated = [
+  { id: "a", name: "Alpha", maker: "M1", release: { date: "2026-09-03" }, routes: [] },
+  { id: "b", name: "Beta", maker: "M2", release: { date: "2026-09-29" }, routes: [] },
+  { id: "c", name: "Gamma", maker: "M1", routes: [] },
+  { id: "d", name: "Delta", maker: "M3", release: { date: "2026-09" }, routes: [] },
+  { id: "e", name: "Epsilon", maker: "M2", release: { date: "2026-09-22" }, routes: [] },
+];
+assert.deepEqual(D.newReleases(dated, 3).map((e) => e.id), ["b", "e", "a"]);              // global, not by maker
+assert.deepEqual(D.newReleases(dated, 10).map((e) => e.id), ["b", "e", "a", "d"]);       // undated never listed
+
 process.stdout.write("directory.js: all assertions passed\n");

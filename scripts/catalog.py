@@ -159,6 +159,57 @@ def validate_catalog(document: dict, records: dict, now: datetime | None = None)
     return problems
 
 
+FEATURED_PATH = ROOT / "catalog" / "featured.json"
+FEATURED_FIELDS = ("checked_at", "explanation", "groups", "schema_version")
+FEATURED_GROUP_FIELDS = ("entries", "family", "reason")
+
+
+def validate_featured(document, entries: list, now: datetime | None = None) -> list:
+    """The editorial Featured shortlist (T14): exact fields, known catalogue ids, no duplicates.
+
+    It holds only ids, family labels and short written reasons: no ranks, counts or scores,
+    so it cannot carry an invented popularity statistic.
+    """
+    now = now or datetime.now(timezone.utc)
+    if not isinstance(document, dict) or tuple(sorted(document)) != FEATURED_FIELDS \
+            or document.get("schema_version") != 1:
+        return [f"featured list must have exactly the fields {list(FEATURED_FIELDS)} (schema_version 1)"]
+    problems = []
+    moment = registry._instant(document["checked_at"])
+    if moment is None or moment > now:
+        problems.append("featured.checked_at must be a past UTC timestamp")
+    if not isinstance(document["explanation"], str) or not 20 <= len(document["explanation"].strip()) <= 600:
+        problems.append("featured.explanation must say in 20-600 characters how the list was chosen")
+    groups = document["groups"]
+    if not isinstance(groups, list) or not 1 <= len(groups) <= 10:
+        return problems + ["featured.groups must be a list of 1-10 groups"]
+    known = {e["id"] for e in entries if isinstance(e, dict)}
+    seen = set()
+    for i, group in enumerate(groups):
+        where = f"featured.groups[{i}]"
+        if not isinstance(group, dict) or tuple(sorted(group)) != FEATURED_GROUP_FIELDS:
+            problems.append(f"{where}: must have exactly the fields {list(FEATURED_GROUP_FIELDS)}")
+            continue
+        if not isinstance(group["family"], str) or not 1 <= len(group["family"].strip()) <= 60:
+            problems.append(f"{where}.family: must be a short label")
+        if not isinstance(group["reason"], str) or not 10 <= len(group["reason"].strip()) <= 400:
+            problems.append(f"{where}.reason: must give a short written reason (10-400 characters)")
+        ids = group["entries"]
+        if not isinstance(ids, list) or not 1 <= len(ids) <= 6:
+            problems.append(f"{where}.entries: must list 1-6 catalogue ids")
+            continue
+        for entry_id in ids:
+            if not isinstance(entry_id, str):
+                problems.append(f"{where}: catalogue ids must be text, not {type(entry_id).__name__}")
+                continue
+            if entry_id not in known:
+                problems.append(f"{where}: unknown catalogue id {entry_id!r}")
+            elif entry_id in seen:
+                problems.append(f"{where}: {entry_id} is featured twice")
+            seen.add(entry_id)
+    return problems
+
+
 MAKER_KEYS = {"OpenAI": "openai", "Anthropic": "anthropic", "Google": "google", "DeepSeek": "deepseek",
               "xAI": "xai", "Mistral AI": "mistral", "Alibaba (Qwen)": "qwen", "Moonshot AI": "moonshot",
               "Cohere": "cohere", "Meta": "meta"}
