@@ -494,5 +494,319 @@ class CliTests(unittest.TestCase):
             self.assertIn("not admitted", text)
 
 
+# ============================================================ T13: daily series, migration, policy admission
+
+GRAPH = FIXTURES / "graph"
+
+
+def graph(name: str) -> dict:
+    return json.loads((GRAPH / name).read_text(encoding="utf-8"))
+
+
+def merged(*bundles) -> dict:
+    dataset = own_results.empty_dataset()
+    for i, b in enumerate(bundles):
+        dataset = own_results.merge(dataset, b, {"sha256": f"{i:064x}", "reviewed_at": "2026-10-13T00:00:00Z"})
+    return dataset
+
+
+class DailySeriesTests(unittest.TestCase):
+    """Graph data: real dates, gaps without scores, partial runs apart, setups never joined."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.entries = catalog_entries()
+
+    def entry(self, *bundles):
+        return own_results.site_tests(merged(*bundles), self.entries)["entries"][GEMINI]
+
+    def test_graph_fixtures_are_valid_and_labelled(self):
+        for name in ("schedule-only.json", "one-point.json", "several-points.json", "second-setup.json"):
+            with self.subTest(fixture=name):
+                own_results.validate_bundle(graph(name))
+                self.assertIn(own_results.sha256_bytes((GRAPH / name).read_bytes()), own_results.fixture_digests())
+        self.assertIn("FIXTURE-NOT-FOR-PUBLICATION", (GRAPH / "README.md").read_text(encoding="utf-8"))
+
+    def test_schedule_only_series_has_dates_but_no_scores_or_runs(self):
+        rec = self.entry(graph("schedule-only.json"))
+        (series,) = rec["daily_series"]
+        self.assertEqual((series["rows"], series["not_yet_due"], series["panel_items"]), ([], 28, 40))
+        self.assertEqual((series["pending_dates"][0], series["pending_dates"][-1]), ("2026-10-02", "2026-10-29"))
+        self.assertEqual((rec["runs"], rec["latest_run"], rec["latest_attempt"]), (0, None, None))
+        self.assertIs(rec["daily"], series)
+
+    def test_several_points_keep_zero_gap_missing_and_partial_distinct(self):
+        rec = self.entry(graph("several-points.json"))
+        rows = {r["date"]: r for r in rec["daily"]["rows"]}
+        self.assertEqual(sorted(rows), [f"2026-10-0{d}" for d in range(2, 10)])
+        self.assertEqual({d: r["eligible"] for d, r in rows.items()}, {
+            "2026-10-02": True, "2026-10-03": True, "2026-10-04": False, "2026-10-05": False,
+            "2026-10-06": False, "2026-10-07": False, "2026-10-08": True, "2026-10-09": True})
+        self.assertEqual(rows["2026-10-03"]["record"]["first_attempt_correct"], 0)        # a real zero is a point
+        self.assertEqual((rows["2026-10-04"]["state"], rows["2026-10-04"]["record"]["first_attempt_correct"]),
+                         ("gap", None))                                                 # a gap has no score
+        self.assertEqual((rows["2026-10-05"]["state"], rows["2026-10-05"]["record"]), ("no_record", None))
+        partial = rows["2026-10-06"]["record"]
+        self.assertTrue(partial["valid_day"])                                             # 37 of 40 attempted...
+        self.assertFalse(rows["2026-10-06"]["eligible"])                                  # ...is still not a point
+        self.assertEqual((rec["runs"], rec["latest_run"], rec["latest_attempt"]), (4, "2026-10-09", "ok"))
+        self.assertEqual(rec["daily"]["not_yet_due"], 20)
+
+    def test_one_point_then_more_merge_into_the_same_series(self):
+        rec = self.entry(graph("one-point.json"), graph("several-points.json"))
+        self.assertEqual(len(rec["daily_series"]), 1)
+        self.assertEqual(rec["runs"], 4)
+        self.assertEqual(self.entry(graph("one-point.json"))["runs"], 1)
+
+    def test_a_changed_setup_is_a_separate_history_newest_first(self):
+        rec = self.entry(graph("several-points.json"), graph("second-setup.json"))
+        ids = [s["series_id"] for s in rec["daily_series"]]
+        self.assertEqual(len(ids), 2)
+        self.assertTrue(ids[0].endswith("b2b2b2b2b2b2") and ids[1].endswith("a1a1a1a1a1a1"))
+        newest, older = rec["daily_series"]
+        self.assertEqual(newest["settings"]["thinking_level"], "LOW")
+        self.assertEqual([r["date"] for r in newest["rows"]], ["2026-10-10", "2026-10-11", "2026-10-12"])
+        self.assertNotIn("2026-10-10", [r["date"] for r in older["rows"]])               # never combined
+        self.assertEqual((rec["runs"], rec["latest_run"]), (3, "2026-10-12"))           # status from the newest only
+        self.assertIs(rec["daily"], newest)
+
+    def test_invalid_empty_data_is_refused(self):
+        v1_empty = dict(graph("schedule-only.json"), format_version=1)
+        cal_empty = dict(fixture("calibration.json"), format_version=2, records=[])
+        for label, bundle in (("version 1 without records", v1_empty), ("schedule-only calibration", cal_empty),
+                              ("version as bool", dict(graph("schedule-only.json"), format_version=True)),
+                              ("unknown version", dict(graph("schedule-only.json"), format_version=3))):
+            with self.subTest(case=label), self.assertRaises(own_results.OwnResultsError):
+                own_results.validate_bundle(bundle)
+        dataset = merged(fixture("calibration.json"))
+        next(iter(dataset["series"].values()))["records"] = []
+        with self.assertRaisesRegex(own_results.OwnResultsError, "misfiled or empty"):
+            own_results.validate_dataset(dataset)
+
+    def test_changed_series_settings_cannot_merge_into_a_published_series(self):
+        changed = graph("several-points.json")
+        changed["series"]["settings"] = dict(changed["series"]["settings"], timeout_seconds=60)
+        for r in changed["records"]:
+            r["settings"] = changed["series"]["settings"]
+        with self.assertRaisesRegex(own_results.OwnResultsError, "different route or series details"):
+            merged(graph("one-point.json"), changed)
+
+
+class OpenDatesTests(unittest.TestCase):
+    """T13 review R2: an unresolved day is shown as open, never as a score, a gap or a missed day."""
+
+    def test_open_day_fixture_rows(self):
+        bundle = graph("open-day.json")
+        own_results.validate_bundle(bundle)
+        rows = own_results.daily_rows(own_results.body_of(bundle))["rows"]
+        self.assertEqual([(r["date"], r["state"], r["eligible"], r["record"] is None) for r in rows], [
+            ("2026-10-02", "completed", True, False), ("2026-10-03", "open", False, True),
+            ("2026-10-04", "gap", False, False), ("2026-10-05", "no_record", False, True)])
+        rec = own_results.site_tests(merged(bundle), catalog_entries())["entries"][GEMINI]
+        self.assertEqual(rec["daily"]["open_dates"], ["2026-10-03"])
+        self.assertEqual((rec["runs"], rec["latest_run"]), (1, "2026-10-02"))
+
+    def test_open_dates_contract(self):
+        good = graph("open-day.json")
+
+        def with_open(value, **changes):
+            return dict(good, open_dates=value, **changes)
+        cases = {
+            "unsorted": with_open(["2026-10-05", "2026-10-03"]),
+            "duplicate": with_open(["2026-10-03", "2026-10-03"]),
+            "not a date": with_open(["2026-10-3"]),
+            "outside campaign": with_open(["2026-09-30"]),
+            "not yet due": with_open(["2026-10-06"]),
+            "has a record": with_open(["2026-10-02"]),
+            "missing in v2": {k: v for k, v in good.items() if k != "open_dates"},
+            "present in v1": with_open([], format_version=1),
+            "v2 calibration": dict(fixture("calibration.json"), format_version=2, open_dates=[]),
+        }
+        for label, bundle in cases.items():
+            with self.subTest(case=label), self.assertRaises(own_results.OwnResultsError):
+                own_results.validate_bundle(bundle)
+        dataset = merged(fixture("calibration.json"))
+        next(iter(dataset["series"].values()))["open_dates"] = []
+        with self.assertRaisesRegex(own_results.OwnResultsError, "open.dates"):
+            own_results.validate_dataset(dataset)
+
+    def test_newest_check_decides_open_dates_in_any_order_and_closure_resolves(self):
+        opened = graph("open-day.json")                               # as of 5 Oct: 3 Oct open
+        later = graph("several-points.json")                          # as of 9 Oct: 3 Oct closed with a score
+        older = graph("one-point.json")                               # as of 2 Oct
+        for order in ((older, opened), (opened, older)):
+            body = next(iter(merged(*order)["series"].values()))
+            self.assertEqual(body["open_dates"], ["2026-10-03"])
+        for order in ((opened, later), (later, opened), (older, later, opened)):
+            body = next(iter(merged(*order)["series"].values()))
+            self.assertEqual(body["open_dates"], [])
+            self.assertEqual(next(r for r in body["records"] if r["date"] == "2026-10-03")["first_attempt_correct"], 0)
+        newer_not_open = dict(opened, as_of="2026-10-06T12:00:00Z", open_dates=[])
+        for order in ((opened, newer_not_open), (newer_not_open, opened)):
+            body = next(iter(merged(*order)["series"].values()))
+            self.assertEqual(body["open_dates"], [])                  # the newest check decides
+            rows = {r["date"]: r["state"] for r in own_results.daily_rows(body)["rows"]}
+            self.assertEqual(rows["2026-10-03"], "no_record")
+        same_time_closed = dict(graph("open-day.json"), open_dates=[], records=opened["records"])
+        body = next(iter(merged(opened, same_time_closed)["series"].values()))
+        self.assertEqual(body["open_dates"], ["2026-10-03"])         # a tie keeps the date open (union)
+
+
+class MigrationTests(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.ws = Workspace(Path(self.tmpdir.name))
+        path = self.ws.candidate("c.json", fixture("calibration.json"))
+        self.ws.admit(path)
+        self.ws.run(path)
+        self.v2 = self.ws.data.read_bytes()
+        self.v1 = own_results.dumps(dict(json.loads(self.v2), format_version=1))
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def test_v1_migrates_by_version_number_only(self):
+        self.ws.data.write_bytes(self.v1)
+        with self.assertRaisesRegex(own_results.OwnResultsError, "migrate"):
+            own_results.load_admitted(self.ws.data, self.ws.review)
+        self.assertEqual(own_results.migrate(self.ws.data, self.ws.review), "migrated")
+        self.assertEqual(self.ws.data.read_bytes(), self.v2)
+        self.assertEqual(own_results.migrate(self.ws.data, self.ws.review), "unchanged")
+
+    def test_an_edited_v1_dataset_is_not_migrated(self):
+        data = json.loads(self.v1)
+        rec = next(iter(data["series"].values()))["records"][0]
+        rec["first_attempt_correct"] -= 1
+        rec["first_attempt_outcomes"]["correct"] -= 1
+        rec["first_attempt_outcomes"]["incorrect"] += 1
+        self.ws.data.write_bytes(own_results.dumps(data))
+        before = self.ws.data.read_bytes()
+        with self.assertRaisesRegex(own_results.OwnResultsError, "not migrated"):
+            own_results.migrate(self.ws.data, self.ws.review)
+        self.assertEqual(self.ws.data.read_bytes(), before)
+
+    def test_production_dataset_is_v2_and_keeps_the_admitted_calibration(self):
+        dataset = own_results.load_admitted()
+        self.assertEqual(dataset["format_version"], own_results.DATA_VERSION)
+        for source in dataset["sources"]:
+            raw = (own_results.admitted_dir_for(own_results.DATA_PATH) / f"{source['sha256']}.json").read_bytes()
+            self.assertEqual(own_results.sha256_bytes(raw), source["sha256"])
+
+
+def approved_policy(**changes) -> dict:
+    series = graph("several-points.json")["series"]
+    policy = {"format": own_results.POLICY_FORMAT, "format_version": 1, "enabled": True,
+              "route": graph("several-points.json")["route"], "series_kind": "daily",
+              "config_fingerprint": series["config_fingerprint"], "panel_sha256": series["panel_sha256"],
+              "panel_items": series["panel_items"], "grader_version": series["grader_version"],
+              "settings": series["settings"], "campaign": series["schedule"],
+              "public_repository": "example-owner/example-public", "public_branch": "main",
+              "allowed_paths": list(own_results.PUBLICATION_PATHS)}
+    policy.update(changes)
+    return policy
+
+
+class PolicyWorkspace(Workspace):
+    def approve_policy(self, policy: dict, at="2026-10-01T00:00:00Z") -> str:
+        raw = own_results.dumps(policy)
+        digest = own_results.sha256_bytes(raw)
+        (self.tmp / "policies").mkdir(exist_ok=True)
+        (self.tmp / "policies" / f"{digest}.json").write_bytes(raw)
+        path = self.tmp / "policy_review.json"
+        review = json.loads(path.read_text(encoding="utf-8")) if path.exists() else own_results.empty_policy_review()
+        review["approved"] = sorted(review["approved"] + [{"sha256": digest, "reviewed_at": at}], key=lambda e: e["sha256"])
+        path.write_bytes(own_results.dumps(review))
+        return digest
+
+    def auto(self, bundle, policy_sha, at="2026-10-13T03:20:00Z"):
+        return own_results.admit_by_policy(own_results.dumps(bundle), policy_sha, at, self.review, self.data,
+                                           now=own_results.parse_stamp("2026-10-13T03:30:00Z"))
+
+
+class PolicyAdmissionTests(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.ws = PolicyWorkspace(Path(self.tmpdir.name))
+        self.policy_sha = self.ws.approve_policy(approved_policy())
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def test_policy_contract(self):
+        own_results.validate_policy(approved_policy())
+        template = json.loads((ROOT / "ops" / "cloud" / "own-results-publication.json").read_text(encoding="utf-8")) \
+            if (ROOT / "ops" / "cloud" / "own-results-publication.json").exists() else None
+        if template is not None:                                   # private working copy only
+            own_results.validate_policy(template, require_enabled=False)
+            self.assertFalse(template["enabled"])
+            with self.assertRaisesRegex(own_results.OwnResultsError, "disabled"):
+                own_results.validate_policy(template)
+        bad = {
+            "disabled": approved_policy(enabled=False),
+            "unexpected field": dict(approved_policy(), note="trust me"),
+            "extra writable path": approved_policy(allowed_paths=["own_results/"]),
+            "review manifest writable": approved_policy(allowed_paths=list(own_results.PUBLICATION_PATHS)
+                                                        + ["own_results/review.json"]),
+            "destination as URL": approved_policy(public_repository="https://github.com/a/b"),
+            "short fingerprint": approved_policy(config_fingerprint="ab" * 10),
+            "calibration kind": approved_policy(series_kind="calibration"),
+            "unresolved panel while enabled": approved_policy(panel_sha256=None),
+            "token-shaped text": approved_policy(public_branch="ghp_" + "A" * 30),
+        }
+        for label, policy in bad.items():
+            with self.subTest(case=label), self.assertRaises(own_results.OwnResultsError):
+                own_results.validate_policy(policy)
+
+    def test_policy_admission_is_labelled_and_rebuilds(self):
+        self.assertEqual(self.ws.auto(graph("schedule-only.json"), self.policy_sha), "updated")
+        self.assertEqual(self.ws.auto(graph("several-points.json"), self.policy_sha), "updated")
+        self.assertEqual(self.ws.auto(graph("several-points.json"), self.policy_sha), "unchanged")
+        dataset = own_results.load_admitted(self.ws.data, self.ws.review)
+        self.assertTrue(all(set(s) == {"admitted_at", "policy_sha256", "sha256"} for s in dataset["sources"]))
+        self.assertEqual(json.loads(self.ws.review.read_text(encoding="utf-8"))["admitted"], [])   # no person review claimed
+        release_check = importlib.import_module("release_check")
+        page = {"catalog": catalog_entries(), "own_results_preview": False,
+                "baseline_tests": own_results.site_tests(dataset, catalog_entries())}
+        self.assertEqual(release_check.inspect_own_results(page, self.ws.data, self.ws.review), [])
+
+    def test_bundles_outside_the_policy_are_refused(self):
+        other_setup = graph("second-setup.json")
+        before = self.ws.data.read_bytes() if self.ws.data.exists() else None
+        with self.assertRaisesRegex(own_results.OwnResultsError, "outside its policy"):
+            self.ws.auto(other_setup, self.policy_sha)
+        with self.assertRaisesRegex(own_results.OwnResultsError, "not approved"):
+            self.ws.auto(graph("several-points.json"), "e" * 64)
+        early = dict(graph("several-points.json"))
+        with self.assertRaisesRegex(own_results.OwnResultsError, "before its policy approval or its own as_of"):
+            self.ws.auto(early, self.policy_sha, at="2026-10-09T11:00:00Z")      # admitted before its own as_of
+        self.assertEqual(self.ws.data.read_bytes() if self.ws.data.exists() else None, before)
+        self.assertFalse((self.ws.tmp / "admitted").exists() and any((self.ws.tmp / "admitted").iterdir()))
+
+    def test_policy_changes_after_admission_fail_closed(self):
+        self.ws.auto(graph("several-points.json"), self.policy_sha)
+        own_results.load_admitted(self.ws.data, self.ws.review)
+        policy_file = self.ws.tmp / "policies" / f"{self.policy_sha}.json"
+        original = policy_file.read_bytes()
+        policy_file.write_bytes(own_results.dumps(approved_policy(public_branch="other")))
+        with self.assertRaisesRegex(own_results.OwnResultsError, "altered or substituted"):
+            own_results.load_admitted(self.ws.data, self.ws.review)
+        policy_file.write_bytes(original)
+        (self.ws.tmp / "policies" / ("f" * 64 + ".json")).write_bytes(original)       # an unapproved policy copy
+        with self.assertRaisesRegex(own_results.OwnResultsError, "exactly the approved policies"):
+            own_results.load_admitted(self.ws.data, self.ws.review)
+        (self.ws.tmp / "policies" / ("f" * 64 + ".json")).unlink()
+        (self.ws.tmp / "policy_review.json").write_bytes(own_results.dumps(own_results.empty_policy_review()))
+        policy_file.unlink()
+        with self.assertRaisesRegex(own_results.OwnResultsError, "not approved"):
+            own_results.load_admitted(self.ws.data, self.ws.review)
+
+    def test_policy_admission_never_writes_review_or_policy_files(self):
+        watched = [self.ws.review, self.ws.tmp / "policy_review.json", self.ws.tmp / "policies"]
+        before = {p: (p.read_bytes() if p.is_file() else sorted(x.name for x in p.iterdir())) for p in watched}
+        self.ws.auto(graph("several-points.json"), self.policy_sha)
+        after = {p: (p.read_bytes() if p.is_file() else sorted(x.name for x in p.iterdir())) for p in watched}
+        self.assertEqual(before, after)
+
+
 if __name__ == "__main__":
     unittest.main()

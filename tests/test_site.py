@@ -533,6 +533,8 @@ class RenderedCoverageWordingTests(unittest.TestCase):
 
 
 OWN_FIXTURES = ROOT / "tests" / "fixtures" / "own_results"
+# The synthetic graph fixtures are dated October 2026; validate them as of a fixed later time.
+FIXTURE_NOW = datetime(2026, 11, 30, tzinfo=timezone.utc)
 GEMINI = "google-api.gemini-3.5-flash-lite"
 
 
@@ -573,15 +575,19 @@ class OwnResultsPageTests(unittest.TestCase):
         review["admitted"].sort(key=lambda e: e["sha256"])
         own["own_review_path"].write_bytes(own_results.dumps(review))
         for path in paths:
-            own_results.import_bundle(path, own["own_review_path"], own["own_data_path"])
+            own_results.import_bundle(path, own["own_review_path"], own["own_data_path"], now=FIXTURE_NOW)
         out = folder / "dist"
-        data = build_site.build(out, generated_at=GENERATED, own_preview=tuple(preview), **own)
+        data = build_site.build(out, generated_at=GENERATED, own_preview=tuple(preview), now=FIXTURE_NOW, **own)
 
-        def render(hash_):
+        def page(hash_):
             result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), hash_],
                                     capture_output=True, text=True, timeout=60, encoding="utf-8")
             self.assertEqual(result.returncode, 0, result.stderr)
-            return json.loads(result.stdout)["text"]
+            return json.loads(result.stdout)
+
+        def render(hash_):
+            return page(hash_)["text"]
+        render.page = page
         records, _ = registry.load_registry(ROOT / "registry")
         render.problems = lambda: release_check.inspect_bundle(out.resolve(), data, records, **own)
         render.data = data
@@ -621,7 +627,7 @@ class OwnResultsPageTests(unittest.TestCase):
         render = self.site([self.fixture("daily-part1.json"), self.fixture("daily-part2.json"),
                             self.fixture("calibration.json")])
         page = render(f"#model/{GEMINI}")
-        for text in ("Daily tests", "Daily results by date", "rows are not joined into a trend",
+        for text in ("Daily test scores", "Daily results by date", "rows are not joined into a trend",
                      "Missed (recorded gap) — no run took place", "No record — nothing was recorded for this date",
                      "Stopped early — fewer than 90% attempted; not a usable day", "Interrupted — evidence unavailable",
                      "38 of 40", "37 of 40", "1 refused", "3 later scheduled dates were not yet due",
@@ -664,6 +670,93 @@ class OwnResultsPageTests(unittest.TestCase):
                 with self.subTest(target=str(target)), contextlib.redirect_stdout(io.StringIO()) as out:
                     self.assertEqual(build_site.main(["--own-results-preview", candidate, str(target)]), 1)
                 self.assertIn("outside the project", out.getvalue())
+
+
+GRAPH_FIXTURES = OWN_FIXTURES / "graph"
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class DailyGraphPageTests(OwnResultsPageTests):
+    """T13: the daily score graph from labelled fixtures; never a zero for a missing day, never a verdict."""
+
+    def graph(self, name):
+        return json.loads((GRAPH_FIXTURES / name).read_text(encoding="utf-8"))
+
+    def test_several_points_render_with_gaps_marks_and_details(self):
+        render = self.site([self.graph("several-points.json")])
+        result = render.page(f"#model/{GEMINI}")
+        text, aria = result["text"], result["aria"]
+        for phrase in ("Daily test scores", "Correct answers out of 40 (first attempts), by test date (UTC)",
+                       "Lines join consecutive days only", "x a missed day", "~ an incomplete run",
+                       "These scores describe this fixed test. A rise or fall alone does not establish an overall "
+                       "change in model quality.", "Results checked up to 2026-10-09 12:00:00 UTC.",
+                       "Daily results as a table", "Daily results by date"):
+            self.assertIn(phrase, text)
+        graph = [a for a in aria if a.startswith("Daily test scores:")]
+        self.assertEqual(graph, ["Daily test scores: correct answers out of 40 by test date. 4 daily scores and "
+                                 "4 dates without a score."])
+        points = [a for a in aria if " correct on the first attempt" in a]
+        self.assertEqual(len(points), 4)
+        self.assertTrue(any(a.startswith("3 Oct 2026: 0 of 40 correct") for a in points))      # a real zero
+        marks = [a for a in aria if a.startswith(("4 Oct", "5 Oct", "6 Oct", "7 Oct"))]
+        self.assertEqual(len(marks), 4)
+        self.assertTrue(any("recorded gap" in a for a in marks))
+        self.assertTrue(any("nothing was recorded" in a for a in marks))
+        self.assertTrue(any("37 of 40 questions attempted" in a and "Not plotted" in a for a in marks))
+        self.assertTrue(any("evidence unavailable" in a for a in marks))
+        ours = text[text.index("Our tests"):text.index("Other published tests")].lower()   # catalogue notes excluded
+        for word in ("stable", "nerf", "significan", "confidence interval", "declin", "improv"):
+            self.assertNotIn(word, ours)
+
+    def test_an_open_day_is_shown_unresolved_not_missed(self):
+        render = self.site([self.graph("open-day.json")])
+        result = render.page(f"#model/{GEMINI}")
+        self.assertIn("Still open — run not yet resolved when last checked; no score", result["text"])
+        self.assertIn("o a run still open or unresolved when last checked", result["text"])
+        self.assertTrue(any(a.startswith("3 Oct 2026: Run still open or unresolved") for a in result["aria"]))
+        self.assertTrue(any(a.startswith("4 Oct 2026: Missed: no run took place") for a in result["aria"]))
+        self.assertEqual(render.problems(), [])
+
+    def test_schedule_only_and_one_point_messages(self):
+        render = self.site([self.graph("schedule-only.json")])
+        text = render(f"#model/{GEMINI}")
+        self.assertIn("Waiting for daily results.", text)
+        self.assertIn("Results checked up to 2026-10-01 12:00:00 UTC.", text)
+        self.assertIn("28 later scheduled dates were not yet due", text)
+        self.assertNotIn("Collecting baseline", text)                     # schedule only is not a test
+        self.assertEqual(render.data["baseline_tests"]["runs"], 0)
+        self.assertEqual(render.problems(), [])
+        one = self.site([self.graph("one-point.json")])(f"#model/{GEMINI}")
+        self.assertIn("One daily test; more days are needed to show a pattern.", one)
+
+    def test_two_setups_are_separate_histories_newest_first(self):
+        render = self.site([self.graph("several-points.json"), self.graph("second-setup.json")])
+        text = render(f"#model/{GEMINI}")
+        self.assertIn("each setup has its own history below, newest first", text)
+        current = text.index("Current setup: temperature 1, thinking level LOW")
+        earlier = text.index("Earlier setup: temperature 1, thinking level MINIMAL")
+        self.assertLess(current, earlier)
+        self.assertEqual(text.count("Correct answers out of 40 (first attempts)"), 2)
+
+    def test_calibration_and_daily_stay_apart_and_entries_without_results_unchanged(self):
+        render = self.site([self.fixture("calibration.json"), self.graph("several-points.json")])
+        text = render(f"#model/{GEMINI}")
+        self.assertLess(text.index("Daily test scores"), text.index("One-off setup test"))
+        self.assertIn("31 of 40 correct on this test", text)
+        self.assertNotIn("31 of 40", text[text.index("Daily test scores"):text.index("One-off setup test")])
+        other = render("#model/google-app.gemini")
+        self.assertNotIn("Daily test scores", other)
+        self.assertIn("No Baseline test history yet.", other)
+
+    def test_genuine_production_entry_waits_for_daily_results(self):
+        out = Path(tempfile.mkdtemp(dir=self.tmp.name)) / "dist"
+        build_site.build(out, generated_at=GENERATED)
+        result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), f"#model/{GEMINI}"],
+                                capture_output=True, text=True, timeout=60, encoding="utf-8")
+        text = json.loads(result.stdout)["text"]
+        self.assertIn("Waiting for daily results.", text)
+        self.assertIn("No daily test results have been published for this model yet.", text)
+        self.assertIn("One-off setup test", text)
 
 
 class PageSourceTests(unittest.TestCase):

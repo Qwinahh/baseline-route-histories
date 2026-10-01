@@ -1,0 +1,41 @@
+{
+ "as_of": "2026-10-01T12:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 2,
+ "open_dates": [],
+ "records": [],
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series": {
+  "config_fingerprint": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "fixture-panel-v1",
+  "panel_items": 40,
+  "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+  "schedule": {
+   "end_date": "2026-10-29",
+   "start_date": "2026-10-02",
+   "type": "daily",
+   "window_minutes": 60,
+   "window_start_utc": "02:00"
+  },
+  "series_id": "gemini-api.gemini-3.5-flash-lite--daily--a1a1a1a1a1a1",
+  "settings": {
+   "max_output_tokens": 4096,
+   "temperature": 1.0,
+   "thinking_level": "MINIMAL",
+   "timeout_seconds": 120
+  }
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "approved": [
+  {
+   "reviewed_at": "2026-10-01T14:17:55Z",
+   "sha256": "b34da88a52ef845b72df5dd8f4c2ec4d1173ba5b21a2f2d2812cdbde3401c391"
+  }
+ ],
+ "format": "baseline-own-results-policy-review",
+ "format_version": 1
+}

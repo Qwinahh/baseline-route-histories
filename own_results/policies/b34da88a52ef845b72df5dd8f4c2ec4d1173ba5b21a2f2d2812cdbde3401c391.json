@@ -1,0 +1,35 @@
+{
+ "allowed_paths": [
+  "own_results/admitted/",
+  "own_results/data.json"
+ ],
+ "campaign": {
+  "end_date": "2026-10-29",
+  "start_date": "2026-10-02",
+  "type": "daily",
+  "window_minutes": 60,
+  "window_start_utc": "02:00"
+ },
+ "config_fingerprint": "fabceaf0aa9dfecd9e620670a49a2a53788880f3ca835c0c31463e6e15433f88",
+ "enabled": true,
+ "format": "baseline-own-results-policy",
+ "format_version": 1,
+ "grader_version": "grader-v0",
+ "panel_items": 40,
+ "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+ "public_branch": "main",
+ "public_repository": "Qwinahh/baseline-route-histories",
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series_kind": "daily",
+ "settings": {
+  "max_output_tokens": 4096,
+  "temperature": 1.0,
+  "thinking_level": "MINIMAL",
+  "timeout_seconds": 120
+ }
+}

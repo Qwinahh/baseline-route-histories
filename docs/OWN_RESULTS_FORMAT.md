@@ -87,7 +87,7 @@ only). It is used by the site build and the release check.
 A candidate (a bundle) has exactly these fields:
 
 - `format`, which is `baseline-own-results`;
-- `format_version`, which is `1`;
+- `format_version`: `1`, or `2` for a daily bundle (see below);
 - `as_of`: a canonical UTC time, `YYYY-MM-DDTHH:MM:SSZ`;
 - `route`: `route_id`, `maker`, `exact_identifier` and `access_kind` (`direct_api`,
   `intermediary` or `cloud_platform`);
@@ -129,6 +129,83 @@ The checker refuses:
 - non-finite numbers;
 - credential-shaped text and free text;
 - files over 1 MB and records later than `as_of`.
+
+### Schedule-only daily bundles and versions (T13)
+
+- **Version 2** of the bundle is daily-only. It adds a required `open_dates` list, and it
+  may be *schedule-only*: route, series and campaign with `records: []`, so the page can
+  draw the campaign's dates before the first closed run. A schedule-only bundle never
+  counts as a test or a run. Calibration bundles stay version 1, so the admitted setup
+  test re-exports byte for byte. Earlier version 1 daily bundles remain valid and mean
+  "no open dates".
+- **`open_dates`** (T13 review R2) lists scheduled dates whose run had started but not
+  closed when the private record was checked:
+  - the list is sorted and distinct, within the campaign, and the window had closed by
+    `as_of`;
+  - an open date never has a record;
+  - such a date carries no score, and it is neither a gap nor a missed day;
+  - `as_of` stays the true check time, so later closed records and gaps still publish.
+
+  In the dataset, each daily series keeps `open_dates` from its newest check (a tie
+  keeps the union) minus any date that now has a record. The result therefore does not
+  depend on import order, and a later check that closes the date resolves it without
+  changing published records.
+- **Dataset version 2** (`data.json`) allows two kinds of source:
+  - person-reviewed, `{sha256, reviewed_at}`;
+  - policy-admitted, `{sha256, admitted_at, policy_sha256}`.
+
+  To convert a version 1 dataset, run `py -3.11 -B scripts/own_results.py migrate`. It
+  changes only the version number, and only if the admitted copies rebuild the existing
+  content exactly.
+
+### Graph data and eligibility
+
+- Each entry has a `daily_series` list, newest schedule first. Each item holds:
+  - `series_id`, `as_of`, `schedule`, `rows`, `not_yet_due`, `pending_dates` and
+    `open_dates`;
+  - `panel_items` (the score scale), `panel_id`, `settings`, `grader_version` and
+    `config_fingerprint`.
+
+  A changed setup is a different series and is never joined to another. `daily` is the
+  first item, and the status counts come from it alone.
+- Each row has a `date`, a `state` (`completed`, `stopped`, `interrupted`, `gap`, `open`
+  or `no_record`), its `record` (null for `open` and `no_record`) and an `eligible` flag.
+  The graph shows an `open` day as an unresolved mark (o) in the no-score lane.
+- **Eligible:** only verified, completed runs in which every scheduled question was
+  attempted become graph points. A stopped run that reached the 90% `valid_day` threshold
+  is shown separately with its attempted count, but it is not a point.
+- **No invented scores:** a recorded gap, a date with no record and unavailable evidence
+  carry no score. A verified completed run with zero correct answers is a real point at
+  zero.
+- **Pending dates:** campaign dates after `as_of` are pending. `as_of` is the time up to
+  which the private record was checked, not a measurement date.
+
+## Policy admission (automated publication, T13)
+
+An automated publisher may admit daily candidates without a person reviewing each one,
+but only under a **publication policy that a person approved**.
+
+- `own_results/policy_review.json` is person-maintained. Its format is
+  `baseline-own-results-policy-review` v1, with `approved: [{sha256, reviewed_at}]`.
+- `own_results/policies/<sha256>.json` keeps the exact bytes of each approved policy.
+- **A policy names** (format `baseline-own-results-policy` v1, exact fields):
+  - `enabled` and `route`;
+  - `series_kind` (`daily`) and the full `config_fingerprint`;
+  - `panel_sha256`, `panel_items`, `grader_version` and `settings`;
+  - the `campaign` schedule;
+  - `public_repository` and `public_branch`;
+  - `allowed_paths`, which must be exactly `own_results/admitted/` and
+    `own_results/data.json`.
+- **Admission:** a policy-admitted source must name an approved, enabled policy, and its
+  bundle's route, fingerprint, panel, grader, settings and schedule must equal the
+  policy's. The admission time (`admitted_at`) must not be before the policy's approval
+  or before the bundle's `as_of`.
+- **Labelling:** such sources are policy-verified, not individually person-reviewed. The
+  review manifest is never changed by them.
+- **Failing closed:** removing an approval, altering a kept policy, or keeping an
+  unapproved policy file fails the build and the release check.
+- **Limits:** the publisher can write only the two allowed paths. It cannot create or
+  change a policy, and it cannot touch `review.json`.
 
 ## Admission and import
 

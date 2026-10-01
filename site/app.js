@@ -7,6 +7,7 @@
   var D = window.BASELINE_DATA;
   var F = window.BaselineFreshness;
   var Dir = window.BaselineDirectory;
+  var Chart = window.BaselineResultsChart;
   var app = document.getElementById("app");
   var SVGNS = "http://www.w3.org/2000/svg";
   var REPO = "https://github.com/Qwinahh/baseline-route-histories/blob/main/";
@@ -36,7 +37,7 @@
     "          ."
   ].join("\n");
 
-  if (!D || !F || !Dir) {
+  if (!D || !F || !Dir || !Chart) {
     app.appendChild(el("p", { class: "notice" }, "The page data could not be loaded. Reload the page to try again."));
     return;
   }
@@ -360,12 +361,13 @@
     ]);
   }
   var ROW_STATE = { completed: "Completed", stopped: "Stopped early", interrupted: "Interrupted",
-                    gap: "Missed (recorded gap)", no_record: "No record" };
+                    gap: "Missed (recorded gap)", no_record: "No record", open: "Still open" };
   function dailyRow(row) {
     var r = row.record;
     var state = ROW_STATE[row.state] || row.state;
     if (!r || r.evidence !== "verified") {
-      var why = !r ? "nothing was recorded for this date" : r.status === "gap" ? "no run took place" : "evidence unavailable";
+      var why = row.state === "open" ? "run not yet resolved when last checked; no score"
+        : !r ? "nothing was recorded for this date" : r.status === "gap" ? "no run took place" : "evidence unavailable";
       return el("tr", {}, [el("th", { scope: "row" }, dayText(row.date)), el("td", { "data-label": "Result" }, state + " — " + why),
                            el("td", { colspan: "4", "data-label": "Counts" }, "no counts")]);
     }
@@ -380,9 +382,106 @@
       el("td", { "data-label": "Correct on retry" }, String(r.retry_recovered.correct))
     ]);
   }
+  // One daily series as an SVG graph (T13). Layout comes from site/results-chart.js; this only draws it.
+  var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·" };
+  function dailyChart(series) {
+    var lay = Chart.layout(series, { width: 720, height: 250 });
+    var detail = el("p", { class: "point-detail", "aria-live": "polite" },
+      lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
+    var svg = s("svg", { class: "chart daily-chart", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
+      "aria-label": "Daily test scores: correct answers out of " + lay.max + " by test date. " + lay.points.length +
+        (lay.points.length === 1 ? " daily score" : " daily scores") + " and " +
+        lay.marks.filter(function (m) { return m.kind !== "pending"; }).length + " dates without a score." });
+    lay.yTicks.forEach(function (t) {
+      svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: t.y, y2: t.y, class: "gridline" }));
+      svg.appendChild(s("text", { x: lay.left - 6, y: t.y + 4, "text-anchor": "end" }, String(t.value)));
+    });
+    svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: lay.plotBottom, y2: lay.plotBottom, class: "axis" }));
+    lay.xTicks.forEach(function (t) {
+      svg.appendChild(s("line", { x1: t.x, x2: t.x, y1: lay.plotBottom, y2: lay.plotBottom + 5, class: "axis" }));
+      svg.appendChild(s("text", { x: t.x, y: lay.plotBottom + 17, "text-anchor": "middle" }, t.label));
+    });
+    svg.appendChild(s("text", { x: 4, y: lay.laneY + 4, "text-anchor": "start", class: "lane-label" }, "no score"));
+    svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: lay.laneY - 11, y2: lay.laneY - 11, class: "lane" }));
+    lay.segments.forEach(function (seg) {
+      svg.appendChild(s("polyline", { class: "score-line", fill: "none",
+        points: seg.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") }));
+    });
+    function selectable(node, label) {
+      node.setAttribute("tabindex", "0");
+      node.setAttribute("role", "button");
+      node.setAttribute("aria-label", label);
+      node.appendChild(s("title", {}, label));
+      function show() { detail.textContent = label; }
+      node.addEventListener("click", show);
+      node.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); show(); }
+      });
+      return node;
+    }
+    lay.marks.forEach(function (m) {
+      var g = s("g", { class: "mark", "data-kind": m.kind });
+      g.appendChild(s("text", { x: m.x, y: lay.laneY + 4, "text-anchor": "middle" }, MARK_GLYPHS[m.kind]));
+      svg.appendChild(m.kind === "pending" ? g : selectable(g, m.label));
+    });
+    lay.points.forEach(function (p) {
+      var g = s("g", { class: "score-point" });
+      g.appendChild(s("circle", { cx: p.x, cy: p.y, r: 5, class: "point" }));
+      svg.appendChild(selectable(g, p.label));
+    });
+    if (lay.message) {
+      svg.appendChild(s("text", { x: (lay.left + lay.right) / 2, y: (lay.top + lay.plotBottom) / 2, "text-anchor": "middle",
+                                  class: "chart-message" }, lay.message));
+    }
+    var legend = el("ul", { class: "chart-legend" }, [
+      el("li", {}, "● a daily score: every question attempted. Lines join consecutive days only."),
+      el("li", {}, "x a missed day: no run, or nothing recorded."),
+      el("li", {}, "~ an incomplete run: shown with its attempted count, not as a score."),
+      el("li", {}, "? run evidence unavailable: no score shown."),
+      el("li", {}, "o a run still open or unresolved when last checked: no score yet, not counted as missed."),
+      el("li", {}, "· a later date: not yet tested or not yet published.")
+    ]);
+    return el("figure", { class: "own-chart" }, [
+      el("p", { class: "axis-title" }, "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
+      el("div", { class: "chart-scroll" }, svg),
+      lay.message ? el("p", { class: "chart-note" }, lay.message + ".") : null,
+      detail, legend]);
+  }
+
+  function checkedNote(d) {
+    var ageDays = Math.floor((Date.now() - Date.parse(d.as_of)) / 86400000);
+    var ended = Date.now() > Date.parse(d.schedule.end_date + "T23:59:59Z");
+    return el("p", { class: "sub" }, "Results checked up to " + utc(d.as_of) + "." +
+      (ageDays > Dir.STALE_DAYS && !ended
+        ? " Nothing newer has been published since then; later dates are not yet known, not confirmed as missed." : ""));
+  }
+
+  function dailyBlock(rec) {
+    var list = rec.daily_series || (rec.daily ? [rec.daily] : []);
+    var parts = [el("h3", {}, "Daily test scores")];
+    if (!list.length) {
+      return parts.concat(el("div", { class: "chart-empty" }, [
+        el("p", {}, "Waiting for daily results."),
+        el("p", {}, "No daily test results have been published for this model yet.")]));
+    }
+    if (list.length > 1) {
+      parts.push(el("p", {}, "The test setup changed, so each setup has its own history below, newest first. " +
+        "Different setups are never joined or compared as one trend."));
+    }
+    list.forEach(function (d, i) {
+      if (list.length > 1) {
+        parts.push(el("h4", {}, (i === 0 ? "Current setup" : "Earlier setup") + ": " + ownSettingsText(d.settings) +
+          " · " + dayText(d.schedule.start_date) + " to " + dayText(d.schedule.end_date)));
+      }
+      parts.push(dailyChart(d), checkedNote(d), dailySection(d));
+    });
+    parts.push(el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an overall " +
+      "change in model quality. Not enough repeated tests to judge a change."));
+    return parts;
+  }
+
   function dailySection(d) {
-    var parts = [el("h3", {}, "Daily tests")];
-    if (!d) return parts.concat(el("p", {}, "No daily test results have been published for this model yet."));
+    var parts = [];
     var sch = d.schedule;
     var end = sch.window_start_utc.split(":").map(Number);
     var closes = end[0] * 60 + end[1] + sch.window_minutes;
@@ -392,18 +491,18 @@
       dayText(sch.start_date) + " to " + dayText(sch.end_date) + ". Published results cover scheduled dates up to " +
       dayText(d.as_of) + "." + (last ? " Latest scheduled date: " + dayText(last.date) + " — " + (ROW_STATE[last.state] || last.state) + "." : "")));
     if (d.rows.length) {
-      parts.push(el("div", { class: "table-scroll" }, el("table", { class: "log own" }, [
+      parts.push(el("details", { class: "evidence own-table" }, [el("summary", {}, "Daily results as a table"),
+        el("div", { class: "table-scroll" }, el("table", { class: "log own" }, [
         el("caption", {}, "Daily results by date. Each row is a separate day; rows are not joined into a trend."),
         el("thead", {}, el("tr", {}, ["Date", "Result", "First-attempt correct", "Sent", "Errors and refusals",
                                        "Correct on retry"].map(function (h) { return el("th", { scope: "col" }, h); }))),
         el("tbody", {}, d.rows.slice().reverse().map(dailyRow))
-      ])));
+      ]))]));
     }
     if (d.not_yet_due) {
       parts.push(el("p", { class: "sub" }, d.not_yet_due + (d.not_yet_due === 1 ? " later scheduled date was" : " later scheduled dates were") +
         " not yet due when these results were prepared; they are not counted as missed."));
     }
-    parts.push(el("p", {}, "Not enough repeated tests to judge a change."));
     return parts;
   }
   function setupSection(list) {
@@ -429,11 +528,12 @@
       body = el("p", {}, st.runs + (st.runs === 1 ? " Baseline run" : " Baseline runs") + (st.latest ? "; latest test " + dayText(st.latest) + "." : "."));
     } else {
       body = [
-        dailySection(rec.daily),
+        dailyBlock(rec),
         setupSection(rec.calibration || []),
         el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
-          "checked against stored file hashes. Prompts and raw responses stay private, so individual answers " +
-          "cannot be checked from this page. ", link("#how-we-test", "How we test")])
+          "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
+          "approved. Prompts and raw responses stay private, so individual answers cannot be checked from this page. ",
+          link("#how-we-test", "How we test")])
       ];
     }
     return el("section", { class: "part", "aria-labelledby": "our-tests" }, [el("h2", { id: "our-tests" }, "Our tests"), body]);
