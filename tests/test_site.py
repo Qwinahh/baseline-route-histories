@@ -607,6 +607,7 @@ class OwnResultsPageTests(unittest.TestCase):
         page = render(f"#model/{GEMINI}")
         for text in ("One-off setup test", "31 of 40 correct on this test", "measured 18 Sep 2026",
                      "Not enough repeated tests to judge a change", "not part of the daily history",
+                     "Waiting for daily results.",
                      "No daily test results have been published for this model yet.", "Refused: 1",
                      "Wrong answer format: 3", "Technical details", "live-calibration-20260918T043000Z-cdcdcdcdcd",
                      "Prompts and raw responses stay private"):
@@ -748,15 +749,74 @@ class DailyGraphPageTests(OwnResultsPageTests):
         self.assertNotIn("Daily test scores", other)
         self.assertIn("No Baseline test history yet.", other)
 
-    def test_genuine_production_entry_waits_for_daily_results(self):
-        out = Path(tempfile.mkdtemp(dir=self.tmp.name)) / "dist"
-        build_site.build(out, generated_at=GENERATED)
-        result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), f"#model/{GEMINI}"],
-                                capture_output=True, text=True, timeout=60, encoding="utf-8")
-        text = json.loads(result.stdout)["text"]
+    def test_release_shape_setup_test_plus_schedule_only(self):
+        """The first daily release: the setup test plus a schedule with no closed run yet (labelled fixtures)."""
+        render = self.site([self.fixture("calibration.json"), self.graph("schedule-only.json")])
+        text = render(f"#model/{GEMINI}")
         self.assertIn("Waiting for daily results.", text)
-        self.assertIn("No daily test results have been published for this model yet.", text)
+        self.assertIn("28 later scheduled dates were not yet due", text)
+        self.assertNotIn("No daily test results have been published", text)      # a schedule is published
         self.assertIn("One-off setup test", text)
+        self.assertIn("31 of 40 correct on this test", text)
+        self.assertEqual(render.data["baseline_tests"]["runs"], 0)
+        self.assertEqual(render.problems(), [])
+
+    def test_states_across_a_daily_campaign(self):
+        """Calibration-only, schedule-only, first point, later gap and open day, each from a temporary
+        admitted fixture dataset (never production)."""
+        cal = self.fixture("calibration.json")
+        stages = {
+            "calibration only": ([cal], ["Waiting for daily results.",
+                                         "No daily test results have been published for this model yet."]),
+            "schedule only": ([cal, self.graph("schedule-only.json")], ["Waiting for daily results."]),
+            "first daily point": ([cal, self.graph("schedule-only.json"), self.graph("one-point.json")],
+                                  ["One daily test; more days are needed to show a pattern."]),
+            "later gap": ([cal, self.graph("one-point.json"), self.graph("several-points.json")],
+                          ["Missed (recorded gap) — no run took place"]),
+            "open day": ([cal, self.graph("one-point.json"), self.graph("open-day.json")],
+                         ["Still open — run not yet resolved when last checked; no score",
+                          "One daily test; more days are needed to show a pattern."]),
+        }
+        for label, (bundles, expected) in stages.items():
+            with self.subTest(stage=label):
+                render = self.site(bundles)
+                text = render(f"#model/{GEMINI}")
+                for phrase in expected:
+                    self.assertIn(phrase, text)
+                self.assertIn("31 of 40 correct on this test", text)                  # the setup card stays
+                if label not in ("calibration only", "schedule only"):
+                    self.assertNotIn("Waiting for daily results", text)
+                self.assertEqual(render.problems(), [])
+
+    def test_production_entry_matches_its_admitted_data(self):
+        """Integration with the real admitted dataset: expectations are derived from it, never frozen,
+        so legitimate daily publication cannot break this test."""
+        out = Path(tempfile.mkdtemp(dir=self.tmp.name)) / "dist"
+        data = build_site.build(out, generated_at=GENERATED)
+        self.assertEqual(data["baseline_tests"], own_results.site_tests(own_results.load_admitted(), data["catalog"]))
+        self.assertEqual(release_check.inspect_own_results(data), [])
+        for entry_id, rec in data["baseline_tests"]["entries"].items():
+            with self.subTest(entry=entry_id):
+                result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), f"#model/{entry_id}"],
+                                        capture_output=True, text=True, timeout=60, encoding="utf-8")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                text = json.loads(result.stdout)["text"]
+                for cal in rec["calibration"]:
+                    if cal["evidence"] == "verified":
+                        self.assertIn(f"{cal['first_attempt_correct']} of {cal['scheduled_items']} correct on this test",
+                                      text)
+                if not rec["daily_series"]:
+                    self.assertIn("No daily test results have been published for this model yet.", text)
+                for series in rec["daily_series"]:
+                    points = sum(1 for row in series["rows"] if row["eligible"])
+                    message = {0: "Waiting for daily results.", 1: "One daily test; more days are needed to show a pattern."}
+                    if points in message:
+                        self.assertIn(message[points], text)
+                    if any(row["state"] == "open" for row in series["rows"]):
+                        self.assertIn("Still open", text)
+                    if any(row["state"] == "gap" for row in series["rows"]):
+                        self.assertIn("Missed (recorded gap)", text)
+                self.assertIn("Daily test scores", text)
 
 
 class PageSourceTests(unittest.TestCase):
