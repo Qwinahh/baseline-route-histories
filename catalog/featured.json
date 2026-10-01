@@ -1,0 +1,42 @@
+{
+ "schema_version": 1,
+ "checked_at": "2026-10-01T19:28:34Z",
+ "explanation": "An editorial shortlist chosen by Baseline: widely used model families, each with its app, a current general-purpose model and its newest public release. It is not a measured popularity ranking, and it is not a list of models Baseline has tested. Every other model stays in the full directory below.",
+ "groups": [
+  {
+   "family": "OpenAI and ChatGPT",
+   "reason": "OpenAI's model page lists GPT-6 Astra as its flagship; GPT-6.1 Sol is its newest release (29 Sep 2026). gpt-oss-120b is OpenAI's open-weight model as served by Groq, a separate host: not ChatGPT and not OpenAI's own API.",
+   "entries": ["openai-app.chatgpt", "openai-api.gpt-6-astra", "openai-api.gpt-6.1-sol", "openai-groq.gpt-oss-120b"]
+  },
+  {
+   "family": "Claude",
+   "reason": "Claude Sonnet 5.5 (28 Sep 2026) and Claude Opus 5.5 (22 Sep 2026) are Anthropic's newest models on its models overview.",
+   "entries": ["anthropic-app.claude", "anthropic-api.claude-sonnet-5-5", "anthropic-api.claude-opus-5-5"]
+  },
+  {
+   "family": "Gemini",
+   "reason": "Gemini 3.8 Flash (2 Sep 2026) is Google's newest listed Flash model; Gemini 3.5 Flash-Lite is the route Baseline already tests.",
+   "entries": ["google-app.gemini", "google-api.gemini-3.8-flash", "google-api.gemini-3.5-flash-lite"]
+  },
+  {
+   "family": "DeepSeek",
+   "reason": "deepseek-v4-pro and deepseek-flash are the two model IDs on DeepSeek's current pricing page.",
+   "entries": ["deepseek-app.deepseek", "deepseek-api.deepseek-v4-pro", "deepseek-api.deepseek-flash"]
+  },
+  {
+   "family": "Qwen",
+   "reason": "Qwen3.8-Max and Qwen3.8-Flash are the newest entries in Alibaba Model Studio's release table.",
+   "entries": ["qwen-app.qwen", "qwen-api.qwen3.8-max", "qwen-api.qwen3.8-flash"]
+  },
+  {
+   "family": "Llama",
+   "reason": "Llama 4 is Meta's current open-weight family; Meta AI is Meta's app. No exact Llama API version is verified here.",
+   "entries": ["meta-app.meta-ai", "meta-local.llama-4-open-weights"]
+  },
+  {
+   "family": "Grok",
+   "reason": "grok-4.7 (21 Sep 2026) is the newest model on xAI's developer model list.",
+   "entries": ["xai-app.grok", "xai-api.grok-4.7"]
+  }
+ ]
+}

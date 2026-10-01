@@ -310,6 +310,33 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                         self.assertIn(obs["observed_at"] + (" (date only)" if obs["precision"] == "day" else ""),
                                       page["text"])
 
+    def test_featured_and_new_releases_on_the_unfiltered_directory(self):
+        """T14: editorial shortlist with reasons, global newest releases, evidence tags; hidden when filtering."""
+        text = self.render("#models")["text"]
+        featured = self.data["featured"]
+        self.assertIn("Featured", text)
+        self.assertIn(featured["explanation"], text)
+        for group in featured["groups"]:
+            self.assertIn(group["family"], text)
+            self.assertIn(group["reason"], text)
+        self.assertIn("Third-party host (Groq)", text)                       # the hosted entry is labelled as hosted
+        dated = sorted((e for e in self.data["catalog"] if e.get("release")),
+                       key=lambda e: (e["release"]["date"], e["name"].lower()), reverse=True)
+        section = text[text.index("New releases"):text.index("All models")]
+        self.assertIn("not when anyone tested it", section)
+        positions = [section.index(e["name"]) for e in dated[:3]]
+        self.assertEqual(positions, sorted(positions))                        # newest first, across makers
+        tested = {k for k, r in self.data["baseline_tests"]["entries"].items() if r["runs"] or r["calibration"]}
+        self.assertEqual(text.count("Tested by Baseline"),
+                         sum(1 for g in featured["groups"] for i in g["entries"] if i in tested) +
+                         sum(1 for e in dated[:8] if e["id"] in tested))
+        self.assertEqual(text.count("Not tested by Baseline"), len(self.data["catalog"]))   # list statuses unchanged
+        for hash_ in ("#models?q=claude", "#models?sort=name", "#models?access=consumer_app"):
+            with self.subTest(view=hash_):
+                filtered = self.render(hash_)["text"]
+                self.assertNotIn("New releases", filtered)
+                self.assertNotIn(featured["explanation"], filtered)
+
     def test_no_unscoped_absence_or_deployment_claims(self):
         for hash_ in ("#models", "#sources", "#about", "#how-we-test", "#model/openai-app.chatgpt",
                       f"#model/{self.measured_entries()[0]['id']}"):
@@ -708,6 +735,27 @@ class DailyGraphPageTests(OwnResultsPageTests):
         ours = text[text.index("Our tests"):text.index("Other published tests")].lower()   # catalogue notes excluded
         for word in ("stable", "nerf", "significan", "confidence interval", "declin", "improv"):
             self.assertNotIn(word, ours)
+
+    def test_two_makers_have_separate_graphs_on_their_own_pages(self):
+        """T14: Gemini (Google API) and gpt-oss (OpenAI, hosted by Groq) never share a page or a line."""
+        groq = copy.deepcopy(self.graph("second-setup.json"))
+        route_id = "groq.openai.gpt-oss-120b"
+        groq["route"] = {"route_id": route_id, "maker": "OpenAI", "exact_identifier": "gpt-oss-120b",
+                         "access_kind": "intermediary", "service_provider": "Groq"}
+        groq["series"]["series_id"] = f"{route_id}--daily--{groq['series']['config_fingerprint'][:12]}"
+        for r in groq["records"]:
+            r.update(route_id=route_id, requested_model="gpt-oss-120b", series_id=groq["series"]["series_id"])
+        render = self.site([self.graph("several-points.json"), groq])
+        gemini_page = render(f"#model/{GEMINI}")
+        groq_page = render("#model/openai-groq.gpt-oss-120b")
+        self.assertIn("Daily test scores", groq_page)
+        self.assertIn("Third-party host (Groq)", groq_page)
+        self.assertIn("Results checked up to 2026-10-12 12:00:00 UTC.", groq_page)
+        self.assertNotIn("Results checked up to 2026-10-12", gemini_page)
+        self.assertIn("Results checked up to 2026-10-09 12:00:00 UTC.", gemini_page)
+        for other in ("openai-app.chatgpt", "openai-openrouter.gpt-oss-120b"):
+            self.assertNotIn("Daily test scores", render(f"#model/{other}"))      # not ChatGPT, not another host
+        self.assertEqual(render.problems(), [])
 
     def test_an_open_day_is_shown_unresolved_not_missed(self):
         render = self.site([self.graph("open-day.json")])

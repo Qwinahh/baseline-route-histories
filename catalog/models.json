@@ -3297,6 +3297,26 @@
   },
   {
    "route_ids": [],
+   "notes": "Open-weight model made by OpenAI and served by Groq as 'openai/gpt-oss-120b'. A hosted run, separate from the maker's own API and app: it is not ChatGPT and not an OpenAI API result.",
+   "id": "openai-groq.gpt-oss-120b",
+   "name": "gpt-oss-120b",
+   "maker": "OpenAI",
+   "family": "gpt-oss",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-oss-120b",
+   "service_provider": "Groq",
+   "access_kind": "intermediary",
+   "availability": "available",
+   "sources": [
+    {
+     "url": "https://console.groq.com/docs/models",
+     "checked_at": "2026-10-01T19:28:34Z",
+     "claim": "Groq's supported-models page lists 'openai/gpt-oss-120b' by OpenAI with status Production"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
    "notes": "Open-weight model; runs wherever it is deployed. Hosted runs are separate entries.",
    "id": "openai-local.gpt-oss-120b",
    "name": "gpt-oss-120b",

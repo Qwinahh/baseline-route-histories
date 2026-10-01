@@ -257,10 +257,16 @@ def _check_counts(record: dict) -> None:
 # ---------------------------------------------------------------- route, series and bundle
 
 def check_route(route) -> None:
-    _exact(route, ROUTE_FIELDS, "route")
+    """Maker API routes have exactly ROUTE_FIELDS; a hosted route (T14) also names its host as
+    `service_provider`, so its results attach only to that host's catalogue entry."""
+    hosted = isinstance(route, dict) and route.get("access_kind") in ("intermediary", "cloud_platform")
+    _exact(route, ROUTE_FIELDS + (("service_provider",) if hosted else ()), "route")
     if not ID_RE.match(str(route["route_id"])) or not MODEL_RE.match(str(route["exact_identifier"])) \
             or not MAKER_RE.match(str(route["maker"])) or route["access_kind"] not in ACCESS_KINDS:
         raise OwnResultsError("route needs an id, maker, exact identifier and API access kind")
+    if hosted and (not isinstance(route["service_provider"], str) or not MAKER_RE.match(route["service_provider"])
+                   or route["service_provider"] == route["maker"]):
+        raise OwnResultsError("a hosted route names its host (service_provider), which is not the maker")
 
 
 def check_series(series, route: dict) -> None:
@@ -885,9 +891,12 @@ def daily_rows(body: dict) -> dict:
 
 
 def map_entry(route: dict, catalog_entries: list) -> str:
-    """The one catalogue entry with the same maker, exact identifier and access kind."""
+    """The one catalogue entry with the same maker, exact identifier, access kind and service provider
+    (the maker itself for its own API, the named host otherwise)."""
+    service = route.get("service_provider", route["maker"])
     hits = [e["id"] for e in catalog_entries if e.get("identity_kind") == "exact" and e.get("maker") == route["maker"]
-            and e.get("exact_identifier") == route["exact_identifier"] and e.get("access_kind") == route["access_kind"]]
+            and e.get("exact_identifier") == route["exact_identifier"] and e.get("access_kind") == route["access_kind"]
+            and e.get("service_provider") == service]
     if len(hits) != 1:
         raise OwnResultsError(f"route {route['route_id']} matches {len(hits)} catalogue entries (expected exactly one "
                               "exact entry with the same maker, identifier and access)")

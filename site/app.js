@@ -192,11 +192,13 @@
                                                 ["retired", "Retired"], ["unknown", "Unknown"]])
       ])
     ]);
+    var highlights = highlightsView();
+    if (highlights && !pristine()) highlights.setAttribute("hidden", "");
     controls.addEventListener("submit", function (ev) { ev.preventDefault(); });
     search.addEventListener("input", function () { update({ q: search.value }); });
     var status = el("p", { class: "result-count", role: "status", "aria-live": "polite" });
     var results = el("div", { class: "results" });
-    append(wrap, [controls, status, results]);
+    append(wrap, [controls, highlights, status, results]);   // search first, then Featured / New releases
     var sortNote = el("span", { class: "sort-note" }, SORT_NOTES[state.sort] || SORT_NOTES.release);
     append(wrap, el("p", { class: "fine" }, [
       sortNote,
@@ -232,8 +234,63 @@
       go(state, true);
       sortNote.textContent = SORT_NOTES[state.sort] || SORT_NOTES.release;
       drawResults(results, status);
+      if (highlights) {
+        if (pristine()) highlights.removeAttribute("hidden"); else highlights.setAttribute("hidden", "");
+      }
     }
     return wrap;
+  }
+
+  // Featured and New releases (T14) appear only on the unfiltered directory; any search,
+  // filter or other sort shows the full matching list alone.
+  function pristine() {
+    return !state.q && !state.provider && !state.access && !state.evidence && !state.availability &&
+      (!state.sort || state.sort === Dir.DEFAULT_SORT);
+  }
+
+  function entryLink(e) {
+    return Dir.encodeState({ view: "model", id: e.id, route: "", q: "", provider: "", access: "", evidence: "",
+                             availability: "", sort: Dir.DEFAULT_SORT });
+  }
+
+  function highlightCard(e) {
+    var ev = Dir.evidenceKind(e, TESTS, Date.now());
+    return el("li", { class: "feature-card" }, [
+      link(entryLink(e), e.name),
+      el("span", { class: "sub" }, e.maker + " · " + accessText(e) + (Dir.releaseDate(e) ? " · released " + releaseText(e.release) : "")),
+      el("span", { class: "tag", "data-evidence": ev.key }, ev.label)
+    ]);
+  }
+
+  function highlightsView() {
+    var featured = D.featured;
+    var newest = Dir.newReleases(entries, 8);
+    if (!featured && !newest.length) return null;
+    var parts = [];
+    if (featured) {
+      parts.push(el("section", { class: "featured", "aria-labelledby": "featured-title" }, [
+        el("h2", { id: "featured-title" }, "Featured"),
+        el("p", { class: "sub" }, featured.explanation),
+        el("ul", { class: "feature-groups" }, featured.groups.map(function (g) {
+          return el("li", { class: "feature-group" }, [
+            el("h3", {}, g.family),
+            el("p", { class: "sub" }, g.reason),
+            el("ul", { class: "feature-list" }, g.entries.map(function (id) { return entryById[id]; })
+              .filter(Boolean).map(highlightCard))
+          ]);
+        }))
+      ]));
+    }
+    if (newest.length) {
+      parts.push(el("section", { class: "new-releases", "aria-labelledby": "new-releases-title" }, [
+        el("h2", { id: "new-releases-title" }, "New releases"),
+        el("p", { class: "sub" }, "The newest cited release dates across all makers, newest first. A release date is " +
+          "when the maker released the model, not when anyone tested it."),
+        el("ol", { class: "feature-list" }, newest.map(highlightCard))
+      ]));
+    }
+    parts.push(el("h2", { class: "all-models" }, "All models"));
+    return el("div", { class: "highlights" }, parts);
   }
 
   function accessText(e) {

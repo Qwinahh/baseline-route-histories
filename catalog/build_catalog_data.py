@@ -173,6 +173,14 @@ FAMILY_ENTRIES = [
     ("Meta", "direct_api", "Muse Spark", "Muse", "unknown"),
 ]
 OPEN_WEIGHT_EXACT = [("OpenAI", i, OPENAI_ALL) for i in ("gpt-oss-120b", "gpt-oss-20b")]
+# Hosted open-weight models a third party serves under its own API (T14). Each is a separate
+# entry for that host; it is never the maker's own API or app. Read from the host's model
+# page on GROQ_CHECKED: (maker, maker identifier, host, host model ID, host status).
+GROQ_MODELS = "https://console.groq.com/docs/models"
+GROQ_CHECKED = "2026-10-01T19:28:34Z"
+HOSTED_ENTRIES = [
+    ("OpenAI", "gpt-oss-120b", "Groq", "openai/gpt-oss-120b", "Production"),
+]
 LOCAL_ENTRIES = [
     ("Meta", "Llama 4 (open weights)", "Llama", "Open-weight model family; runs wherever it is deployed. "
      "Local and self-hosted runs have no approved evidence representation yet, so no measurements link here."),
@@ -240,6 +248,15 @@ def build(records: dict) -> dict:
             availability="unknown", sources=[{"url": page, "checked_at": RECHECKED,
                                                 "claim": f"'{identifier}' appears in the official model listing"}],
             notes="Open-weight model; runs wherever it is deployed. Hosted runs are separate entries."))
+    for maker, identifier, host, host_id, status in HOSTED_ENTRIES:
+        entries.append(entry(
+            id=f"{MAKER_KEYS[maker]}-{slug(host)}.{identifier}", name=identifier, maker=maker,
+            family=family_of(identifier), identity_kind="exact", exact_identifier=identifier, service_provider=host,
+            access_kind="intermediary", availability="available",
+            sources=[{"url": GROQ_MODELS, "checked_at": GROQ_CHECKED,
+                      "claim": f"Groq's supported-models page lists '{host_id}' by {maker} with status {status}"}],
+            notes=f"Open-weight model made by {maker} and served by {host} as '{host_id}'. A hosted run, separate "
+                  f"from the maker's own API and app: it is not ChatGPT and not an {maker} API result."))
     for maker, name, family, note in LOCAL_ENTRIES:
         entries.append(entry(
             id=f"{MAKER_KEYS[maker]}-local.{slug(name)}", name=name, maker=maker, family=family, identity_kind="family",
