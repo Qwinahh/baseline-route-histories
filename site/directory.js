@@ -99,25 +99,48 @@
     return entry.release && entry.release.date ? entry.release.date : null;
   }
 
-  // Baseline's own test status. `tests` is the bundle's baseline_tests record; with no
-  // Baseline runs for an entry the answer is always "Not tested by Baseline". Change
-  // wording needs a reviewed analysis; anything else stays in a non-judging state.
+  // Baseline's own test status: the one derivation used by the directory and the model
+  // page (T12). `tests` is the bundle's baseline_tests record. With no Baseline results
+  // for an entry the answer is "Not tested by Baseline". A one-off setup test is never
+  // daily evidence. A failed or missing latest scheduled day, or no usable daily result
+  // in the last STALE_DAYS days, is never shown as current monitoring. Change wording
+  // needs a reviewed analysis; anything else stays in a non-judging state.
+  var STALE_DAYS = 2;
   var STATUS = {
-    not_tested: "Not tested by Baseline", collecting: "Collecting baseline",
-    insufficient: "Not enough evidence to judge a change", lower: "Lower on our tests",
+    not_tested: "Not tested by Baseline", calibration: "One-off setup test", collecting: "Collecting baseline",
+    stale: "No recent test", insufficient: "Not enough evidence to judge a change", lower: "Lower on our tests",
     higher: "Higher on our tests", no_change: "No meaningful change detected", unavailable: "Test unavailable"
   };
-  function baselineStatus(entry, tests) {
+  var JUDGED = ["insufficient", "lower", "higher", "no_change"];
+  function baselineStatus(entry, tests, nowMs) {
     var rec = tests && tests.entries ? tests.entries[entry.id] : null;
     var runs = rec && typeof rec.runs === "number" ? rec.runs : 0;
     var latest = rec && rec.latest_run ? rec.latest_run : null;
+    var setups = rec && Array.isArray(rec.calibration) ? rec.calibration : [];
+    var calibration = setups.length ? setups[setups.length - 1] : null;
     var key;
-    if (!runs) key = "not_tested";
+    if (!rec) key = "not_tested";
     else if (rec.latest_attempt === "failed") key = "unavailable";
-    else if (rec.analysis && rec.analysis.reviewed === true && STATUS[rec.analysis.verdict] &&
-             rec.analysis.verdict !== "not_tested" && rec.analysis.verdict !== "collecting") key = rec.analysis.verdict;
+    else if (!runs) key = calibration ? "calibration" : "not_tested";
+    else if (nowMs !== undefined && (!latest || ageDays(latest, nowMs) > STALE_DAYS)) key = "stale";
+    else if (rec.analysis && rec.analysis.reviewed === true && JUDGED.indexOf(rec.analysis.verdict) !== -1) key = rec.analysis.verdict;
     else key = rec.baseline_complete === true ? "insufficient" : "collecting";
-    return { key: key, label: STATUS[key], runs: runs, latest: latest };
+    return { key: key, label: STATUS[key], runs: runs, latest: latest, calibration: calibration };
+  }
+  function ageDays(day, nowMs) {
+    return Math.floor((nowMs - Date.parse(String(day).slice(0, 10) + "T00:00:00Z")) / DAY_MS);
+  }
+
+  // First-attempt outcome counts grouped for display. Every scheduled item lands in exactly
+  // one group, so the groups always add up to the scheduled count.
+  var ANSWER_PROBLEMS = ["truncated", "empty", "malformed", "answered_identity_mismatch", "answered_identity_unknown"];
+  var REQUEST_ERRORS = ["timeout", "provider_error", "rate_limited", "auth_error", "client_error"];
+  function outcomeGroups(outcomes) {
+    var o = outcomes || {};
+    var sum = function (keys) { return keys.reduce(function (n, k) { return n + (o[k] || 0); }, 0); };
+    return { correct: o.correct || 0, incorrect: o.incorrect || 0, format_error: o.format_error || 0,
+             refusal: o.refusal || 0, answer_problems: sum(ANSWER_PROBLEMS), request_errors: sum(REQUEST_ERRORS),
+             not_sent: o.not_sent || 0 };
   }
 
   function matches(entry, q) {
@@ -177,6 +200,7 @@
 
   return { parseState: parseState, encodeState: encodeState, filterEntries: filterEntries,
            coverage: coverage, newestObservation: newestObservation, distinct: distinct,
-           releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS,
+           releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS, STALE_DAYS: STALE_DAYS,
+           outcomeGroups: outcomeGroups,
            ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState, DEFAULT_SORT: DEFAULT_SORT };
 });

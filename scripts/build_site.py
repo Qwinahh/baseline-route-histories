@@ -2,6 +2,11 @@
 
     py -3.11 -B scripts/build_site.py            # writes dist/ (takes no arguments)
     py -3.11 -B -m http.server 8123 -d dist      # then open http://localhost:8123/
+    py -3.11 -B scripts/build_site.py --own-results-preview CANDIDATE OUT_FOLDER
+
+The preview form shows one unadmitted own-results candidate (T12) for review. It writes
+only to a folder outside the project, marks the page as a review copy, and the release
+check refuses its output. The default build reads only the admitted own_results/ dataset.
 
 The builder only replaces files it wrote itself and never deletes folders
 recursively; see check_output_dir for which output folders are accepted.
@@ -23,6 +28,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import catalog  # noqa: E402
 import ingest  # noqa: E402
+import own_results  # noqa: E402
 import registry  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -116,10 +122,10 @@ def build_data(records: dict, generated_at: str) -> dict:
     return {
         "generated_at": generated_at, "schema_version": registry.SCHEMA_VERSION,
         "independent_monitoring": False,
-        # Baseline's own test record (T08). No Baseline run store exists yet: the T04
-        # collector is simulated-only and never publishes, so every entry is "Not tested
-        # by Baseline". The release check refuses anything else until live runs exist.
-        "baseline_tests": {"runs": 0, "entries": {}},
+        # Baseline's own test record (T08), filled by build() from the admitted own-results
+        # dataset (T12). Empty means every entry is "Not tested by Baseline".
+        "baseline_tests": json.loads(json.dumps(own_results.EMPTY_TESTS)),
+        "own_results_preview": False,
         "routes": routes,
         "sources": [{k: s.get(k) for k in (
             "id", "author", "url", "method", "access_method", "reuse_decision", "reuse_evidence",
@@ -137,8 +143,24 @@ def _licence_info(source: dict) -> dict | None:
             "upstream_url": f"https://github.com/{adapter.REPO}/blob/{source['revision']}/{adapter.LICENSE_PATH}"}
 
 
+def own_tests(entries: list, data_path: Path | None = None, review_path: Path | None = None,
+              preview: tuple = (), now: datetime | None = None) -> dict:
+    """baseline_tests from the admitted dataset; `preview` candidates are added unadmitted (review copies only)."""
+    try:
+        dataset = own_results.load_admitted(data_path or own_results.DATA_PATH, review_path or own_results.REVIEW_PATH,
+                                            now)
+        for candidate in preview:
+            bundle = own_results.parse_json(Path(candidate).read_bytes(), "preview candidate")
+            own_results.validate_bundle(bundle, now)
+            dataset = own_results.merge(dataset, bundle, None)
+        return own_results.site_tests(dataset, entries)
+    except (own_results.OwnResultsError, OSError) as exc:
+        raise BuildError(f"own results: {exc}") from None
+
+
 def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path | None = None,
-          generated_at: str | None = None, now: datetime | None = None, catalog_path: Path | None = None) -> dict:
+          generated_at: str | None = None, now: datetime | None = None, catalog_path: Path | None = None,
+          own_data_path: Path | None = None, own_review_path: Path | None = None, own_preview: tuple = ()) -> dict:
     registry_dir = registry_dir or ROOT / "registry"
     evidence_root = evidence_root or ROOT / "evidence" / "snapshots"
     errors = registry.validate_registry(registry_dir, now=now)  # now: tests simulating later dates
@@ -167,6 +189,8 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
     data["catalog"] = entries  # routes are joined in the browser by id; no copies
     data["catalog_evidence_only"] = added
     data["catalog_checked_at"] = document.get("checked_at")
+    data["baseline_tests"] = own_tests(entries, own_data_path, own_review_path, tuple(own_preview), now)
+    data["own_results_preview"] = bool(own_preview)
 
     # Prepare every output file in memory before touching the output folder.
     files = {name: (ROOT / "site" / name).read_bytes() for name in SITE_FILES}
@@ -254,18 +278,29 @@ def _clear_owned_output(out_dir: Path) -> None:
 
 
 def main(argv: list) -> int:
-    if argv:
+    preview = len(argv) == 3 and argv[0] == "--own-results-preview"
+    if argv and not preview:
         print("usage: py -3.11 -B scripts/build_site.py   (always writes the project's dist/ folder)")
+        print("       py -3.11 -B scripts/build_site.py --own-results-preview CANDIDATE OUT_FOLDER")
         return 2
     out_dir = ROOT / "dist"
     try:
-        data = build(out_dir)
+        if preview:
+            out_dir = Path(os.path.abspath(argv[2]))
+            root = ROOT.resolve()
+            if out_dir.resolve() == root or root in out_dir.resolve().parents or out_dir.resolve() in root.parents:
+                raise BuildError("a review copy is written outside the project, never to dist/")
+            data = build(out_dir, own_preview=(Path(argv[1]),))
+        else:
+            data = build(out_dir)
     except BuildError as exc:
         print(f"FAIL: {exc}")
         return 1
     count = sum(len(r["observations"]) for r in data["routes"])
     print(f"OK: wrote {out_dir} ({len(data['routes'])} routes, {count} observations, "
           f"generated {data['generated_at']})")
+    if preview:
+        print("REVIEW COPY: includes an unadmitted own-results candidate; do not publish this folder.")
     return 0
 
 

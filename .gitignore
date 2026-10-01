@@ -16,3 +16,7 @@ raw-private/
 .DS_Store
 Thumbs.db
 pilot/trials/
+pilot/live/
+pilot/ledger/
+pilot/daily/
+pilot/publication/

@@ -22,8 +22,17 @@ registry = importlib.import_module("registry")
 build_site = importlib.import_module("build_site")
 release_check = importlib.import_module("release_check")
 aider_polyglot = importlib.import_module("aider_polyglot")
+own_results = importlib.import_module("own_results")
 
 GENERATED = "2026-09-29T00:00:00Z"
+
+
+def empty_own_results(folder: Path) -> dict:
+    """An isolated, empty own-results dataset, so wording tests do not depend on what has been admitted."""
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "data.json").write_bytes(own_results.dumps(own_results.empty_dataset()))
+    (folder / "review.json").write_bytes(own_results.dumps(own_results.empty_review()))
+    return {"own_data_path": folder / "data.json", "own_review_path": folder / "review.json"}
 
 
 def load_data(folder: Path) -> dict:
@@ -249,7 +258,8 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     def setUpClass(cls):
         cls.tmp = tempfile.TemporaryDirectory()
         cls.out = Path(cls.tmp.name) / "dist"
-        cls.data = build_site.build(cls.out, generated_at=GENERATED)
+        cls.own = empty_own_results(Path(cls.tmp.name) / "own")
+        cls.data = build_site.build(cls.out, generated_at=GENERATED, **cls.own)
         cls.pages = {}
 
     @classmethod
@@ -427,7 +437,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     # ---------------------------------------------------------------- T08 monitoring-first
     def test_zero_baseline_runs_never_show_a_trend(self):
         """With no Baseline runs every page says "Not tested by Baseline" and nothing more."""
-        self.assertEqual(self.data["baseline_tests"], {"runs": 0, "entries": {}})
+        self.assertEqual(self.data["baseline_tests"], own_results.EMPTY_TESTS)
         hashes = ["#models", "#model/openai-app.chatgpt", f"#model/{self.measured_entries()[0]['id']}",
                   "#model/anthropic-api.claude-opus-5-5"]
         judged = ("Collecting baseline", "Not enough evidence to judge", "Lower on our tests", "Higher on our tests",
@@ -494,10 +504,12 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     def test_status_states_render_only_from_labelled_fixtures_and_never_ship(self):
         """Fixture data reaches every non-default state; the release gate refuses it."""
         target = self.measured_entries()[0]["id"]
+        today = datetime.now(timezone.utc).date().isoformat()
         cases = {
-            "Collecting baseline": {"runs": 3, "latest_run": "2026-09-29"},
-            "Not enough evidence to judge a change": {"runs": 40, "baseline_complete": True},
-            "Lower on our tests": {"runs": 40, "baseline_complete": True,
+            "Collecting baseline": {"runs": 3, "latest_run": today},
+            "No recent test": {"runs": 3, "latest_run": "2026-09-01"},
+            "Not enough evidence to judge a change": {"runs": 40, "latest_run": today, "baseline_complete": True},
+            "Lower on our tests": {"runs": 40, "latest_run": today, "baseline_complete": True,
                                    "analysis": {"reviewed": True, "verdict": "lower"}},
             "Test unavailable": {"runs": 40, "latest_attempt": "failed"},
         }
@@ -515,9 +527,143 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                 folder = render.folder
                 data = json.loads((folder / "data.js").read_text(encoding="utf-8")[len("window.BASELINE_DATA = "):]
                                   .rstrip().rstrip(";"))
-                problems = release_check.inspect_bundle(folder.resolve(), data, records)
-                self.assertTrue(any("Baseline test results are present" in p for p in problems), problems)
+                problems = release_check.inspect_bundle(folder.resolve(), data, records, **self.own)
+                self.assertTrue(any("do not match the admitted own-results dataset" in p for p in problems), problems)
                 self.assertTrue(any("FIXTURE-NOT-FOR-PUBLICATION" in p for p in problems), problems)
+
+
+OWN_FIXTURES = ROOT / "tests" / "fixtures" / "own_results"
+GEMINI = "google-api.gemini-3.5-flash-lite"
+
+
+def retarget(bundle: dict, entry: dict) -> dict:
+    """The same synthetic bundle on another exact API entry (for the mixed external/own case)."""
+    b = copy.deepcopy(bundle)
+    route_id = entry["route_ids"][0] if entry["route_ids"] else entry["id"]
+    b["route"].update(route_id=route_id, maker=entry["maker"], exact_identifier=entry["exact_identifier"])
+    b["series"]["series_id"] = f"{route_id}--{b['series']['kind']}--{b['series']['config_fingerprint'][:12]}"
+    for r in b["records"]:
+        r.update(route_id=route_id, requested_model=entry["exact_identifier"], series_id=b["series"]["series_id"])
+    return b
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class OwnResultsPageTests(unittest.TestCase):
+    """T12: Baseline's own results render from the admitted dataset only, calibration apart from daily."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def site(self, bundles, preview=()):
+        """Build into a fresh folder with these bundles imported through a temporary review manifest."""
+        folder = Path(tempfile.mkdtemp(dir=self.tmp.name))
+        own = empty_own_results(folder / "own")
+        review = json.loads(own["own_review_path"].read_text(encoding="utf-8"))
+        paths = []
+        for i, bundle in enumerate(bundles):
+            path = folder / f"candidate-{i}.json"
+            path.write_bytes(own_results.dumps(bundle))
+            review["admitted"].append({"sha256": own_results.sha256_bytes(path.read_bytes()), "reviewed_at": "2026-09-28T09:00:00Z"})
+            paths.append(path)
+        review["admitted"].sort(key=lambda e: e["sha256"])
+        own["own_review_path"].write_bytes(own_results.dumps(review))
+        for path in paths:
+            own_results.import_bundle(path, own["own_review_path"], own["own_data_path"])
+        out = folder / "dist"
+        data = build_site.build(out, generated_at=GENERATED, own_preview=tuple(preview), **own)
+
+        def render(hash_):
+            result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), hash_],
+                                    capture_output=True, text=True, timeout=60, encoding="utf-8")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            return json.loads(result.stdout)["text"]
+        records, _ = registry.load_registry(ROOT / "registry")
+        render.problems = lambda: release_check.inspect_bundle(out.resolve(), data, records, **own)
+        render.data = data
+        return render
+
+    def fixture(self, name):
+        return json.loads((OWN_FIXTURES / name).read_text(encoding="utf-8"))
+
+    def test_calibration_only_is_a_one_off_setup_test_not_monitoring(self):
+        render = self.site([self.fixture("calibration.json")])
+        directory = render("#models")
+        self.assertIn("One-off setup test", directory)
+        self.assertIn("31 of 40 correct on this test, 18 Sep 2026", directory)
+        self.assertIn("Baseline has published a one-off setup test of its own", directory)
+        self.assertNotIn("Baseline's own recurring tests have not started yet.", directory)
+        self.assertEqual(directory.count("Not tested by Baseline"), len(render.data["catalog"]) - 1)
+        page = render(f"#model/{GEMINI}")
+        for text in ("One-off setup test", "31 of 40 correct on this test", "measured 18 Sep 2026",
+                     "Not enough repeated tests to judge a change", "not part of the daily history",
+                     "No daily test results have been published for this model yet.", "Refused: 1",
+                     "Wrong answer format: 3", "Technical details", "live-calibration-20260918T043000Z-cdcdcdcdcd",
+                     "Prompts and raw responses stay private"):
+            self.assertIn(text, page)
+        for judged in ("Collecting baseline", "Lower on our tests", "Higher on our tests", "No meaningful change",
+                       "Daily results by date"):
+            self.assertNotIn(judged, page)
+        for other in ("google-app.gemini", "google-openrouter.gemma-3-27b-it"):     # same maker, app or other host
+            self.assertIn("Not tested by Baseline", render(f"#model/{other}"))
+        how = render("#how-we-test")
+        for text in ("Our test method", "40 short questions written for Baseline", "structured extraction",
+                     "not publicly preregistered", "No formal plan for judging changes exists yet", "grader-v0"):
+            self.assertIn(text, how)
+        self.assertNotIn("published before any result is shown", how)
+        self.assertEqual(render.problems(), [])                       # reviewed in its own isolated manifest
+
+    def test_daily_history_keeps_every_kind_of_missing_day_visible(self):
+        render = self.site([self.fixture("daily-part1.json"), self.fixture("daily-part2.json"),
+                            self.fixture("calibration.json")])
+        page = render(f"#model/{GEMINI}")
+        for text in ("Daily tests", "Daily results by date", "rows are not joined into a trend",
+                     "Missed (recorded gap) — no run took place", "No record — nothing was recorded for this date",
+                     "Stopped early — fewer than 90% attempted; not a usable day", "Interrupted — evidence unavailable",
+                     "38 of 40", "37 of 40", "1 refused", "3 later scheduled dates were not yet due",
+                     "Scheduled once a day between 02:00 and 03:00 UTC, 20 Sep 2026 to 30 Sep 2026",
+                     "Latest scheduled date: 27 Sep 2026 — Completed", "One-off setup test", "31 of 40 correct on this test"):
+            self.assertIn(text, page)
+        # The newest usable day is days old by now: never presented as current monitoring.
+        self.assertIn("No recent test", page)
+        self.assertIn("this is not current monitoring", page)
+        self.assertNotIn("Collecting baseline", page)
+        directory = render("#models")
+        self.assertIn("latest daily test 27 Sep 2026", directory)
+        self.assertIn("Baseline publishes results from its own repeated tests for some models", directory)
+
+    def test_own_and_outside_results_stay_in_separate_sections(self):
+        build = self.site([])
+        measured = next(e for e in build.data["catalog"] if e["route_ids"] and e["identity_kind"] == "exact"
+                        and e["access_kind"] == "direct_api")
+        render = self.site([retarget(self.fixture("calibration.json"), measured)])
+        page = render(f"#model/{measured['id']}")
+        section = page.index("31 of 40 correct on this test · measured")
+        self.assertLess(page.index("Our tests"), section)
+        self.assertLess(section, page.index("Other published tests"))
+        self.assertIn("Aider coding results", page)
+        self.assertIn("not run by Baseline", page)
+
+    def test_a_review_copy_never_passes_the_release_gate(self):
+        render = self.site([], preview=[OWN_FIXTURES / "calibration.json"])
+        self.assertIn("Review copy: this page includes Baseline test results that have not yet been approved",
+                      render(f"#model/{GEMINI}"))
+        self.assertTrue(render.data["own_results_preview"])
+        problems = render.problems()
+        self.assertTrue(any("review copy" in p for p in problems), problems)
+        self.assertTrue(any("do not match the admitted own-results dataset" in p for p in problems), problems)
+
+    def test_cli_review_copy_is_refused_inside_the_project(self):
+        candidate = str(OWN_FIXTURES / "calibration.json")
+        with unittest.mock.patch.object(build_site, "build", side_effect=AssertionError("build called")):
+            for target in (ROOT / "dist", ROOT, ROOT / "site"):
+                with self.subTest(target=str(target)), contextlib.redirect_stdout(io.StringIO()) as out:
+                    self.assertEqual(build_site.main(["--own-results-preview", candidate, str(target)]), 1)
+                self.assertIn("outside the project", out.getvalue())
 
 
 class PageSourceTests(unittest.TestCase):

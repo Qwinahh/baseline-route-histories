@@ -104,8 +104,11 @@
   entries.forEach(function (e) { entryById[e.id] = e; });
   var makers = Dir.distinct(entries, "maker");
   var measured = entries.filter(function (e) { return e.routes.length; });
-  // Baseline's own tests. Zero runs means every entry is "Not tested by Baseline".
-  var TESTS = D.baseline_tests || { runs: 0, entries: {} };
+  // Baseline's own tests (T12): admitted daily results and one-off setup tests, kept apart.
+  // No entry record means "Not tested by Baseline".
+  var TESTS = D.baseline_tests || { runs: 0, calibration_runs: 0, entries: {}, methods: [] };
+  var METHODS = TESTS.methods || [];
+  function ownStatus(e) { return Dir.baselineStatus(e, TESTS, Date.now()); }
   var lastRuns = {};
   D.runs.forEach(function (run) { if (!run.superseded) lastRuns[run.source_id] = run; });
 
@@ -161,8 +164,10 @@
       el("div", { class: "hero-text" }, [
         el("h1", { id: "directory-title" }, "Follow changes in AI model performance."),
         el("p", { class: "lede" }, TESTS.runs
-          ? "Baseline runs its own recurring tests on some models; each entry shows its status. Browse models and other published results below."
-          : "Baseline's own recurring tests have not started yet. Browse models and other published results below.")
+          ? "Baseline publishes results from its own repeated tests for some models; each entry shows its status. Browse models and other published results below."
+          : TESTS.calibration_runs
+            ? "Baseline has published a one-off setup test of its own; no repeated daily results are published yet. Browse models and other published results below."
+            : "Baseline's own recurring tests have not started yet. Browse models and other published results below.")
       ]),
       el("pre", { class: "ascii", "aria-hidden": "true" }, ASCII)
     ]));
@@ -256,7 +261,7 @@
     var ul = el("ul", { class: "rows", "aria-label": "Models" });
     list.forEach(function (e) {
       var cov = Dir.coverage(e, Date.now());
-      var st = Dir.baselineStatus(e, TESTS);
+      var st = ownStatus(e);
       var target = Dir.encodeState({ view: "model", id: e.id, route: "", q: state.q, provider: state.provider,
                                      access: state.access, evidence: state.evidence,
                                      availability: state.availability, sort: state.sort });
@@ -270,7 +275,8 @@
           ? releaseText(e.release) : el("span", { class: "muted" }, "No verified date")),
         el("span", { class: "cell", "data-label": "Baseline tests" }, [
           el("span", { class: "status", "data-status": st.key }, st.label),
-          st.latest ? el("span", { class: "sub" }, "latest test " + dayText(st.latest)) : null]),
+          st.key === "calibration" ? el("span", { class: "sub" }, setupScore(st.calibration))
+            : st.latest ? el("span", { class: "sub" }, "latest daily test " + dayText(st.latest)) : null]),
         el("span", { class: "cell", "data-label": "Other published tests" }, cov.kind === "none"
           ? el("span", { class: "muted" }, "None recorded")
           : [el("span", { class: "tag", "data-kind": cov.kind }, "Other published tests available"),
@@ -297,15 +303,140 @@
   function statusBlock(st) {
     var detail = {
       not_tested: "We don't yet have our own repeated tests for this model.",
+      calibration: st.calibration ? setupScore(st.calibration) + ". Not enough repeated tests to judge a change." : "",
       collecting: "Baseline has started repeated tests; there are not yet enough runs to compare against.",
+      stale: "Baseline's newest usable daily result is " + (st.latest ? "from " + dayText(st.latest) : "missing") +
+             "; nothing newer has been published, so this is not current monitoring.",
       insufficient: "Baseline's runs so far cannot tell a real change from normal variation.",
       lower: "A reviewed analysis of Baseline's repeated tests found lower results than its baseline.",
       higher: "A reviewed analysis of Baseline's repeated tests found higher results than its baseline.",
       no_change: "A reviewed analysis of Baseline's repeated tests found no meaningful change.",
-      unavailable: "Baseline's most recent test attempt failed, so no new result was recorded."
+      unavailable: "Baseline's most recent scheduled test did not produce a usable result, so no new result was recorded."
     }[st.key];
     return el("div", { class: "status-block", "data-status": st.key }, [
       el("p", { class: "status-label" }, st.label), el("p", {}, detail)]);
+  }
+
+  // ------------------------------------------------------------------ Baseline's own results
+  function words(name) { return String(name).split("_").join(" "); }
+  function ownSettingsText(x) {
+    return "temperature " + x.temperature + ", thinking level " + x.thinking_level + ", output limit " +
+      x.max_output_tokens + " tokens, " + x.timeout_seconds + "-second timeout";
+  }
+  // "38 of 40 correct on this test, 1 Oct 2026" — always from the published record.
+  function setupScore(rec) {
+    if (!rec || rec.evidence !== "verified") return "Setup test " + (rec ? dayText(rec.date) : "") + ": evidence unavailable, so no counts are shown";
+    return rec.first_attempt_correct + " of " + rec.scheduled_items + " correct on this test, " + dayText(rec.date);
+  }
+  function recovered(rec) {
+    var r = rec.retry_recovered;
+    return r.correct + r.incorrect + r.format_error + r.other;
+  }
+  function outcomeList(rec) {
+    var g = Dir.outcomeGroups(rec.first_attempt_outcomes);
+    return el("ul", { class: "counts" }, [
+      el("li", {}, "Correct on the first attempt: " + g.correct + " of " + rec.scheduled_items),
+      el("li", {}, "Incorrect: " + g.incorrect),
+      el("li", {}, "Wrong answer format: " + g.format_error),
+      el("li", {}, "Refused: " + g.refusal),
+      el("li", {}, "Cut off, empty, unreadable or from another model version: " + g.answer_problems),
+      el("li", {}, "Request errors or timeouts: " + g.request_errors),
+      el("li", {}, "Not sent: " + g.not_sent),
+      el("li", {}, "Answered on a retry after a request error (shown separately, never added to the first-attempt count): " +
+        recovered(rec) + (recovered(rec) ? ", of which " + rec.retry_recovered.correct + " correct" : ""))
+    ]);
+  }
+  function techDetails(rec) {
+    return el("details", { class: "tech" }, [
+      el("summary", {}, "Technical details"),
+      el("dl", { class: "facts" }, [
+        el("dt", {}, "Run"), el("dd", {}, rec.run_id ? el("code", {}, rec.run_id) : "none"),
+        el("dt", {}, "Route"), el("dd", {}, [el("code", {}, rec.route_id), " · model ", el("code", {}, rec.requested_model)]),
+        el("dt", {}, "Settings"), el("dd", {}, ownSettingsText(rec.settings)),
+        el("dt", {}, "Question set"), el("dd", {}, [rec.panel_id + " · sha256 ", el("code", { class: "hash" }, rec.panel_sha256)]),
+        el("dt", {}, "Configuration"), el("dd", {}, el("code", { class: "hash" }, rec.config_fingerprint)),
+        el("dt", {}, "Report sha256"), el("dd", {}, rec.report_sha256 ? el("code", { class: "hash" }, rec.report_sha256) : "not available")
+      ])
+    ]);
+  }
+  var ROW_STATE = { completed: "Completed", stopped: "Stopped early", interrupted: "Interrupted",
+                    gap: "Missed (recorded gap)", no_record: "No record" };
+  function dailyRow(row) {
+    var r = row.record;
+    var state = ROW_STATE[row.state] || row.state;
+    if (!r || r.evidence !== "verified") {
+      var why = !r ? "nothing was recorded for this date" : r.status === "gap" ? "no run took place" : "evidence unavailable";
+      return el("tr", {}, [el("th", { scope: "row" }, dayText(row.date)), el("td", { "data-label": "Result" }, state + " — " + why),
+                           el("td", { colspan: "4", "data-label": "Counts" }, "no counts")]);
+    }
+    var g = Dir.outcomeGroups(r.first_attempt_outcomes);
+    return el("tr", {}, [
+      el("th", { scope: "row" }, dayText(row.date)),
+      el("td", { "data-label": "Result" }, state + (r.valid_day ? "" : " — fewer than 90% attempted; not a usable day")),
+      el("td", { "data-label": "First-attempt correct" }, r.first_attempt_correct + " of " + r.scheduled_items),
+      el("td", { "data-label": "Sent" }, r.attempted_items + " attempted, " + g.not_sent + " not sent"),
+      el("td", { "data-label": "Errors and refusals" }, (g.refusal + g.answer_problems + g.request_errors) + " (" + g.refusal + " refused, " +
+        g.request_errors + " request errors)"),
+      el("td", { "data-label": "Correct on retry" }, String(r.retry_recovered.correct))
+    ]);
+  }
+  function dailySection(d) {
+    var parts = [el("h3", {}, "Daily tests")];
+    if (!d) return parts.concat(el("p", {}, "No daily test results have been published for this model yet."));
+    var sch = d.schedule;
+    var end = sch.window_start_utc.split(":").map(Number);
+    var closes = end[0] * 60 + end[1] + sch.window_minutes;
+    var hhmm = ("0" + Math.floor(closes / 60) % 24).slice(-2) + ":" + ("0" + closes % 60).slice(-2);
+    var last = d.rows.length ? d.rows[d.rows.length - 1] : null;
+    parts.push(el("p", {}, "Scheduled once a day between " + sch.window_start_utc + " and " + hhmm + " UTC, " +
+      dayText(sch.start_date) + " to " + dayText(sch.end_date) + ". Published results cover scheduled dates up to " +
+      dayText(d.as_of) + "." + (last ? " Latest scheduled date: " + dayText(last.date) + " — " + (ROW_STATE[last.state] || last.state) + "." : "")));
+    if (d.rows.length) {
+      parts.push(el("div", { class: "table-scroll" }, el("table", { class: "log own" }, [
+        el("caption", {}, "Daily results by date. Each row is a separate day; rows are not joined into a trend."),
+        el("thead", {}, el("tr", {}, ["Date", "Result", "First-attempt correct", "Sent", "Errors and refusals",
+                                       "Correct on retry"].map(function (h) { return el("th", { scope: "col" }, h); }))),
+        el("tbody", {}, d.rows.slice().reverse().map(dailyRow))
+      ])));
+    }
+    if (d.not_yet_due) {
+      parts.push(el("p", { class: "sub" }, d.not_yet_due + (d.not_yet_due === 1 ? " later scheduled date was" : " later scheduled dates were") +
+        " not yet due when these results were prepared; they are not counted as missed."));
+    }
+    parts.push(el("p", {}, "Not enough repeated tests to judge a change."));
+    return parts;
+  }
+  function setupSection(list) {
+    if (!list.length) return [];
+    var parts = [el("h3", {}, "One-off setup test")];
+    list.slice().reverse().forEach(function (rec) {
+      parts.push(el("p", { class: "summary" }, [el("strong", {}, rec.evidence === "verified"
+        ? rec.first_attempt_correct + " of " + rec.scheduled_items + " correct on this test" : "Evidence unavailable"),
+        " · measured " + dayText(rec.date) + " (UTC date)"]));
+      parts.push(el("p", {}, "A single run, made once to check the questions and settings before daily testing. " +
+        "It is not part of the daily history, and one run cannot show a change. Not enough repeated tests to judge a change."));
+      if (rec.evidence === "verified") parts.push(outcomeList(rec));
+      parts.push(techDetails(rec));
+    });
+    return parts;
+  }
+  function ownTestsSection(e, st) {
+    var rec = TESTS.entries ? TESTS.entries[e.id] : null;
+    var body;
+    if (!rec) {
+      body = el("p", {}, ["No Baseline test history yet. ", link("#how-we-test", "How we test")]);
+    } else if (rec.daily === undefined && rec.calibration === undefined) {
+      body = el("p", {}, st.runs + (st.runs === 1 ? " Baseline run" : " Baseline runs") + (st.latest ? "; latest test " + dayText(st.latest) + "." : "."));
+    } else {
+      body = [
+        dailySection(rec.daily),
+        setupSection(rec.calibration || []),
+        el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
+          "checked against stored file hashes. Prompts and raw responses stay private, so individual answers " +
+          "cannot be checked from this page. ", link("#how-we-test", "How we test")])
+      ];
+    }
+    return el("section", { class: "part", "aria-labelledby": "our-tests" }, [el("h2", { id: "our-tests" }, "Our tests"), body]);
   }
 
   function modelView() {
@@ -313,7 +444,7 @@
     if (!e) return notFound("There is no entry with the id “" + state.id + "”. It may have been renamed.");
     var routes = e.routes.slice().sort(function (a, b) { return settingsText(a.settings) < settingsText(b.settings) ? -1 : 1; });
     var route = routes.filter(function (r) { return r.id === state.route; })[0] || routes[0];
-    var st = Dir.baselineStatus(e, TESTS);
+    var st = ownStatus(e);
     var wrap = el("article", { class: "detail", "aria-labelledby": "model-title" }, backLink());
     append(wrap, el("header", { class: "identity" }, [
       el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
@@ -325,12 +456,7 @@
       statusBlock(st)
     ]));
 
-    append(wrap, el("section", { class: "part", "aria-labelledby": "our-tests" }, [
-      el("h2", { id: "our-tests" }, "Our tests"),
-      st.runs
-        ? el("p", {}, st.runs + (st.runs === 1 ? " Baseline run" : " Baseline runs") + (st.latest ? "; latest test " + dayText(st.latest) + "." : "."))
-        : el("p", {}, ["No Baseline test history yet. ", link("#how-we-test", "How we test")])
-    ]));
+    append(wrap, ownTestsSection(e, st));
 
     var other = el("section", { class: "part", "aria-labelledby": "other-tests" }, el("h2", { id: "other-tests" }, "Other published tests"));
     if (!route) {
@@ -576,10 +702,30 @@
     ]);
   }
 
+  // The published method, described from the admitted data rather than fixed copy (T12).
+  function methodSection() {
+    return [el("h2", {}, "Our test method")].concat(METHODS.map(function (m) {
+      var cats = m.panel_categories.map(words);
+      return el("ul", {}, [
+        el("li", {}, m.panel_items + " short questions written for Baseline (set " + m.panel_id + "), in " + cats.length +
+          " categories: " + cats.join(", ") + "."),
+        el("li", {}, "Each question is sent through the model's API with fixed settings: " + ownSettingsText(m.settings) +
+          ". The first attempt is what counts. If a request fails, one retry may be made; an answer recovered that way is shown separately and never added to the first-attempt count."),
+        el("li", {}, "Answers are graded automatically against a fixed answer key (" + m.grader_version + "): an exact answer, a JSON object, a whole number or one of the listed choices. Grading is strict, so a right answer in the wrong format counts as a format error."),
+        el("li", {}, "A daily run counts as usable only if at least 90% of its questions were attempted. Missed, failed or interrupted days stay listed; nothing is filled in."),
+        el("li", {}, "Results apply only to the exact API route tested. An app, or another version of the model, is a separate entry and is not covered."),
+        el("li", {}, "The questions were written and first run as a one-off setup test before this description was published, so the method was not publicly preregistered. No formal plan for judging changes exists yet, so no change verdict is shown."),
+        el("li", {}, "Prompts and raw responses stay private. The counts come from Baseline's private run records, which were checked against stored file hashes before publication; visitors cannot check individual answers.")
+      ]);
+    }));
+  }
+
   function howView() {
     var statuses = [
       ["not_tested", "We have no repeated tests of our own for this model. Nothing about its performance over time is claimed."],
+      ["calibration", "Only a single setup run has been published. It is not part of the daily history, and one run cannot show a change."],
       ["collecting", "Our repeated tests have started, but there are not yet enough runs to compare against."],
+      ["stale", "Daily results exist, but no usable result from the last " + Dir.STALE_DAYS + " days has been published, so the page does not show current monitoring."],
       ["insufficient", "We have runs, but they cannot separate a real change from normal run-to-run variation."],
       ["lower", "Shown only after a reviewed analysis finds results below the model's own baseline, beyond a threshold declared in advance."],
       ["higher", "Shown only after a reviewed analysis finds results above the model's own baseline, beyond a threshold declared in advance."],
@@ -589,18 +735,21 @@
     return el("section", { class: "page", "aria-labelledby": "how-title" }, [
       el("h1", { id: "how-title" }, "How we test"),
       el("p", { class: "lede" }, TESTS.runs
-        ? "Baseline runs its own recurring tests on some models. Each model page shows the status below."
-        : "Baseline's own recurring tests have not started yet. Until they do, every model is marked “Not tested by Baseline”, and no Baseline score, trend or change is shown."),
+        ? "Baseline publishes results from its own repeated tests for some models. Each model page shows the status below. Models without an entry of their own are not tested by Baseline."
+        : TESTS.calibration_runs
+          ? "Baseline has published a one-off setup test of its own; no repeated daily results are published yet. Every other model is marked “Not tested by Baseline”, and no Baseline trend or change is shown."
+          : "Baseline's own recurring tests have not started yet. Until they do, every model is marked “Not tested by Baseline”, and no Baseline score, trend or change is shown."),
       el("h2", {}, "What each status means"),
       el("dl", { class: "statuses" }, statuses.map(function (s) {
         return [el("dt", {}, el("span", { class: "status", "data-status": s[0] }, Dir.STATUS[s[0]])), el("dd", {}, s[1])];
       })),
-      el("h2", {}, "What our tests will be"),
-      el("ul", {}, [
-        el("li", {}, "A fixed set of test prompts, run through each model's API on a declared timetable, with every attempt and failure kept."),
-        el("li", {}, "The prompt set, timetable and analysis plan are published before any result is shown. Results are only ever from real runs."),
-        el("li", {}, "An app is tested only as an app. API results are never shown as app results.")
-      ]),
+      METHODS.length ? methodSection() : [
+        el("h2", {}, "What our tests will be"),
+        el("ul", {}, [
+          el("li", {}, "A fixed set of test prompts, run through each model's API on a declared timetable, with every attempt and failure kept."),
+          el("li", {}, "Results are only ever from real runs. A scheduled day that fails or is missed stays visible; nothing is filled in."),
+          el("li", {}, "An app is tested only as an app. API results are never shown as app results.")
+        ])],
       el("h2", {}, "Other published tests"),
       el("p", {}, "Some models have results published by others. They are shown by their measurement date, linked to their source, and kept separate from Baseline's own tests."),
       el("ul", {}, [
@@ -620,12 +769,18 @@
         el("li", {}, link(REPO + "docs/AIDER_ROUTE_REVIEW.md", "Which benchmark rows are included, and why others are excluded")),
         el("li", {}, link(REPO + "docs/CATALOG_SOURCES.md", "How the model list and release dates were checked")),
         el("li", {}, link(REPO + "docs/SOURCES.md", "Source reuse permissions")),
-        el("li", {}, link(REPO + "docs/DATA_CONTRACT.md", "Data rules"))
+        el("li", {}, link(REPO + "docs/DATA_CONTRACT.md", "Data rules")),
+        el("li", {}, link(REPO + "docs/OWN_RESULTS_FORMAT.md", "How Baseline's own results are checked and admitted"))
       ])
     ]);
   }
 
   // ------------------------------------------------------------------ start
+  if (D.own_results_preview) {
+    document.body.insertBefore(el("p", { class: "notice review-copy", role: "note" },
+      "Review copy: this page includes Baseline test results that have not yet been approved for publication."),
+      document.body.firstChild);
+  }
   document.body.appendChild(el("footer", {}, [
     "Data built " + utc(D.generated_at) + " from registry schema v" + D.schema_version + ". ",
     "Ages are worked out from your device clock each minute, so they stay current without a rebuild."

@@ -1,0 +1,216 @@
+{
+ "as_of": "2026-09-24T12:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 1,
+ "records": [
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "abababababababababababababababababababababababababababababababab",
+   "date": "2026-09-20",
+   "evidence": "verified",
+   "first_attempt_correct": 36,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 36,
+    "empty": 0,
+    "format_error": 1,
+    "incorrect": 3,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0101010101010101010101010101010101010101010101010101010101010101",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20260920T021700Z-ababababab",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--abababababab",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "abababababababababababababababababababababababababababababababab",
+   "date": "2026-09-21",
+   "evidence": "verified",
+   "first_attempt_correct": 37,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 37,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 1,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 1,
+    "refusal": 1,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0202020202020202020202020202020202020202020202020202020202020202",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 1,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20260921T021700Z-ababababab",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--abababababab",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": null,
+   "config_fingerprint": "abababababababababababababababababababababababababababababababab",
+   "date": "2026-09-22",
+   "evidence": "none",
+   "first_attempt_correct": null,
+   "first_attempt_outcomes": null,
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": null,
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": null,
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": null,
+   "scheduled_items": null,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--abababababab",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "gap",
+   "valid_day": null
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 30,
+   "config_fingerprint": "abababababababababababababababababababababababababababababababab",
+   "date": "2026-09-24",
+   "evidence": "verified",
+   "first_attempt_correct": 27,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 27,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 3,
+    "malformed": 0,
+    "not_sent": 10,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "fixture-panel-v1",
+   "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+   "report_sha256": "0404040404040404040404040404040404040404040404040404040404040404",
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": "live-daily-20260924T021700Z-ababababab",
+   "scheduled_items": 40,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--abababababab",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "stopped",
+   "valid_day": false
+  }
+ ],
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series": {
+  "config_fingerprint": "abababababababababababababababababababababababababababababababab",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "fixture-panel-v1",
+  "panel_items": 40,
+  "panel_sha256": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+  "schedule": {
+   "end_date": "2026-09-30",
+   "start_date": "2026-09-20",
+   "type": "daily",
+   "window_minutes": 60,
+   "window_start_utc": "02:00"
+  },
+  "series_id": "gemini-api.gemini-3.5-flash-lite--daily--abababababab",
+  "settings": {
+   "max_output_tokens": 4096,
+   "temperature": 1.0,
+   "thinking_level": "MINIMAL",
+   "timeout_seconds": 120
+  }
+ }
+}

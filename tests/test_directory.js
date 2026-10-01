@@ -119,6 +119,32 @@ assert.equal(status({ runs: 30, baseline_complete: true, analysis: { reviewed: t
 assert.equal(status({ runs: 30, baseline_complete: true, analysis: { reviewed: true, verdict: "no_change" } }).label, "No meaningful change detected");
 assert.equal(status({ runs: 30, baseline_complete: true, analysis: { reviewed: true, verdict: "0% change" } }).key, "insufficient");
 assert.equal(status({ runs: 30, latest_attempt: "failed", analysis: { reviewed: true, verdict: "lower" } }).label, "Test unavailable");
-assert.deepEqual(Object.keys(D.STATUS).sort(), ["collecting", "higher", "insufficient", "lower", "no_change", "not_tested", "unavailable"]);
+assert.deepEqual(Object.keys(D.STATUS).sort(), ["calibration", "collecting", "higher", "insufficient", "lower", "no_change",
+                                              "not_tested", "stale", "unavailable"]);
+
+// T12: one derivation for the directory and the model page. A setup test is never daily
+// evidence; a failed latest day or an old newest result is never current monitoring.
+const at = (day) => Date.parse(day + "T12:00:00Z");
+const setup = { kind: "calibration", date: "2026-09-18", evidence: "verified", first_attempt_correct: 31, scheduled_items: 40 };
+const tests = (rec) => ({ runs: rec.runs, entries: { x: rec } });
+const calOnly = { runs: 0, latest_run: null, latest_attempt: null, daily: null, calibration: [setup] };
+assert.equal(D.baselineStatus(one, tests(calOnly), at("2026-12-01")).key, "calibration");     // no staleness for a one-off
+assert.equal(D.baselineStatus(one, tests(calOnly), at("2026-12-01")).label, "One-off setup test");
+assert.equal(D.baselineStatus(one, tests(calOnly)).calibration, setup);
+assert.equal(D.baselineStatus(one, tests({ runs: 0, latest_attempt: null, calibration: [] })).key, "not_tested");
+const daily = { runs: 4, latest_run: "2026-09-27", latest_attempt: "ok", calibration: [setup], daily: {} };
+assert.equal(D.baselineStatus(one, tests(daily), at("2026-09-27")).key, "collecting");
+assert.equal(D.baselineStatus(one, tests(daily), at("2026-09-29")).key, "collecting");          // two days: still current
+assert.equal(D.baselineStatus(one, tests(daily), at("2026-09-30")).key, "stale");
+assert.equal(D.baselineStatus(one, tests(daily), at("2026-09-30")).label, "No recent test");
+assert.equal(D.baselineStatus(one, tests(Object.assign({}, daily, { latest_attempt: "failed" })), at("2026-09-27")).key, "unavailable");
+assert.equal(D.baselineStatus(one, tests({ runs: 0, latest_attempt: "failed", calibration: [setup] })).key, "unavailable");
+assert.equal(D.baselineStatus(one, tests(Object.assign({}, daily, { baseline_complete: true,
+  analysis: { reviewed: true, verdict: "lower" } })), at("2026-10-15")).key, "stale");      // an old verdict is not current
+assert.equal(D.STALE_DAYS, 2);
+const groups = D.outcomeGroups({ correct: 30, incorrect: 2, format_error: 1, refusal: 1, truncated: 1, empty: 1,
+                                 answered_identity_unknown: 1, timeout: 1, rate_limited: 1, not_sent: 1 });
+assert.deepEqual(groups, { correct: 30, incorrect: 2, format_error: 1, refusal: 1, answer_problems: 3, request_errors: 2, not_sent: 1 });
+assert.equal(Object.values(groups).reduce((a, b) => a + b, 0), 40);
 
 process.stdout.write("directory.js: all assertions passed\n");

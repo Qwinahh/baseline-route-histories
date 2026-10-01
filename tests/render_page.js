@@ -13,6 +13,7 @@ class Node {
   getAttribute(k) { return k in this.attrs ? this.attrs[k] : null; }
   removeAttribute(k) { delete this.attrs[k]; }
   appendChild(c) { this.children.push(c); c.parentNode = this; return c; }
+  insertBefore(c, ref) { const i = ref ? this.children.indexOf(ref) : -1; if (i < 0) this.children.push(c); else this.children.splice(i, 0, c); c.parentNode = this; return c; }
   removeChild(c) { this.children.splice(this.children.indexOf(c), 1); return c; }
   replaceChild(n, o) { const i = this.children.indexOf(o); this.children[i] = n; n.parentNode = this; return o; }
   get firstChild() { return this.children[0] || null; }
