@@ -1,0 +1,70 @@
+{
+ "as_of": "2026-10-02T03:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 2,
+ "open_dates": [],
+ "records": [
+  {
+   "aggregate_version": 1,
+   "attempted_items": null,
+   "config_fingerprint": "fabceaf0aa9dfecd9e620670a49a2a53788880f3ca835c0c31463e6e15433f88",
+   "date": "2026-10-02",
+   "evidence": "none",
+   "first_attempt_correct": null,
+   "first_attempt_outcomes": null,
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "calibration-v1",
+   "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+   "report_sha256": null,
+   "requested_model": "gemini-3.5-flash-lite",
+   "retry_recovered": null,
+   "route_id": "gemini-api.gemini-3.5-flash-lite",
+   "run_id": null,
+   "scheduled_items": null,
+   "series_id": "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d",
+   "settings": {
+    "max_output_tokens": 4096,
+    "temperature": 1.0,
+    "thinking_level": "MINIMAL",
+    "timeout_seconds": 120
+   },
+   "status": "gap",
+   "valid_day": null
+  }
+ ],
+ "route": {
+  "access_kind": "direct_api",
+  "exact_identifier": "gemini-3.5-flash-lite",
+  "maker": "Google",
+  "route_id": "gemini-api.gemini-3.5-flash-lite"
+ },
+ "series": {
+  "config_fingerprint": "fabceaf0aa9dfecd9e620670a49a2a53788880f3ca835c0c31463e6e15433f88",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "calibration-v1",
+  "panel_items": 40,
+  "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+  "schedule": {
+   "end_date": "2026-10-29",
+   "start_date": "2026-10-02",
+   "type": "daily",
+   "window_minutes": 60,
+   "window_start_utc": "02:00"
+  },
+  "series_id": "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d",
+  "settings": {
+   "max_output_tokens": 4096,
+   "temperature": 1.0,
+   "thinking_level": "MINIMAL",
+   "timeout_seconds": 120
+  }
+ }
+}

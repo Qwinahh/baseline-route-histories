@@ -87,9 +87,38 @@
    }
   },
   "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d": {
-   "as_of": "2026-10-01T14:17:55Z",
+   "as_of": "2026-10-02T03:00:00Z",
    "open_dates": [],
-   "records": [],
+   "records": [
+    {
+     "aggregate_version": 1,
+     "attempted_items": null,
+     "config_fingerprint": "fabceaf0aa9dfecd9e620670a49a2a53788880f3ca835c0c31463e6e15433f88",
+     "date": "2026-10-02",
+     "evidence": "none",
+     "first_attempt_correct": null,
+     "first_attempt_outcomes": null,
+     "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+     "kind": "daily",
+     "panel_id": "calibration-v1",
+     "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+     "report_sha256": null,
+     "requested_model": "gemini-3.5-flash-lite",
+     "retry_recovered": null,
+     "route_id": "gemini-api.gemini-3.5-flash-lite",
+     "run_id": null,
+     "scheduled_items": null,
+     "series_id": "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d",
+     "settings": {
+      "max_output_tokens": 4096,
+      "temperature": 1.0,
+      "thinking_level": "MINIMAL",
+      "timeout_seconds": 120
+     },
+     "status": "gap",
+     "valid_day": null
+    }
+   ],
    "route": {
     "access_kind": "direct_api",
     "exact_identifier": "gemini-3.5-flash-lite",
@@ -127,6 +156,11 @@
   }
  },
  "sources": [
+  {
+   "admitted_at": "2026-10-02T09:43:45Z",
+   "policy_sha256": "b34da88a52ef845b72df5dd8f4c2ec4d1173ba5b21a2f2d2812cdbde3401c391",
+   "sha256": "1b2ad8973d0b910838a2b188f48f071da3f60677f5adf7bf7d5a2782fc18a562"
+  },
   {
    "reviewed_at": "2026-10-01T09:31:50Z",
    "sha256": "82beec7b625058d53f200bbbf5b6ee65d8c6574479b6b60f7f17dd2bb40f7c8d"
