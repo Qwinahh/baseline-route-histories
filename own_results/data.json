@@ -86,6 +86,45 @@
     }
    }
   },
+  "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082": {
+   "as_of": "2026-10-03T00:00:00Z",
+   "open_dates": [],
+   "records": [],
+   "route": {
+    "access_kind": "direct_api",
+    "exact_identifier": "gemini-3.5-flash-lite",
+    "maker": "Google",
+    "route_id": "gemini-api.gemini-3.5-flash-lite"
+   },
+   "series": {
+    "config_fingerprint": "da4668c71082324fa3272e5582851d02810e36ad5889615f4e3d8ccfa724ae11",
+    "grader_version": "grader-v0",
+    "kind": "daily",
+    "panel_categories": [
+     "structured_extraction",
+     "constraint_following",
+     "evidence_bound",
+     "bounded_reasoning"
+    ],
+    "panel_id": "calibration-v1",
+    "panel_items": 40,
+    "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+    "schedule": {
+     "end_date": "2026-10-29",
+     "start_date": "2026-10-03",
+     "type": "daily",
+     "window_minutes": 1200,
+     "window_start_utc": "02:00"
+    },
+    "series_id": "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082",
+    "settings": {
+     "max_output_tokens": 4096,
+     "temperature": 1.0,
+     "thinking_level": "MINIMAL",
+     "timeout_seconds": 120
+    }
+   }
+  },
   "gemini-api.gemini-3.5-flash-lite--daily--fabceaf0aa9d": {
    "as_of": "2026-10-02T03:00:00Z",
    "open_dates": [],
@@ -168,6 +207,11 @@
   {
    "reviewed_at": "2026-10-01T14:17:55Z",
    "sha256": "c0b8bad235a79a5a395d8f653c87ae6d1800dbdbaf543e436d1974b0a5998234"
+  },
+  {
+   "admitted_at": "2026-10-03T02:03:57Z",
+   "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
+   "sha256": "cbd04bfcc687041946c4a88667d841751e5e7809d614fab631cee05a095dfcc9"
   }
  ]
 }
