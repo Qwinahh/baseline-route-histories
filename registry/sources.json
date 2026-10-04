@@ -26,7 +26,7 @@
       "revision": "5dc9490bb35f9729ef2c95d00a19ccd30c26339c",
       "retrieved_at": "2026-09-28T22:32:48Z",
       "expected_update_cadence": null,
-      "last_successful_check": "2026-10-04T12:26:12Z",
+      "last_successful_check": "2026-10-04T21:31:23Z",
       "notes": "Update cadence is irregular and not stated. At the checked commit the latest row is dated 2025-10-03 and the repository was last pushed 2026-05-22, so these are old measurements, not current monitoring. Numeric reuse was accepted for pinned commit 5dc9490b in docs/T02_REVIEW.md (attribution, retained licence and provenance; no exercise content). Ingestion refuses any licence whose sha256 differs from the reviewed one until a new review is done."
     }
   ]
