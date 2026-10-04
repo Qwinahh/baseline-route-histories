@@ -87,9 +87,59 @@
    }
   },
   "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082": {
-   "as_of": "2026-10-03T00:00:00Z",
+   "as_of": "2026-10-03T22:00:00Z",
    "open_dates": [],
-   "records": [],
+   "records": [
+    {
+     "aggregate_version": 1,
+     "attempted_items": 40,
+     "config_fingerprint": "da4668c71082324fa3272e5582851d02810e36ad5889615f4e3d8ccfa724ae11",
+     "date": "2026-10-03",
+     "evidence": "verified",
+     "first_attempt_correct": 37,
+     "first_attempt_outcomes": {
+      "answered_identity_mismatch": 0,
+      "answered_identity_unknown": 0,
+      "auth_error": 0,
+      "client_error": 0,
+      "correct": 37,
+      "empty": 0,
+      "format_error": 1,
+      "incorrect": 2,
+      "malformed": 0,
+      "not_sent": 0,
+      "provider_error": 0,
+      "rate_limited": 0,
+      "refusal": 0,
+      "timeout": 0,
+      "truncated": 0
+     },
+     "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+     "kind": "daily",
+     "panel_id": "calibration-v1",
+     "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+     "report_sha256": "9fb12c20fc6fd64975b3c4013ab88b2bda58dc939cda661c1009d536aa8278d3",
+     "requested_model": "gemini-3.5-flash-lite",
+     "retry_recovered": {
+      "correct": 0,
+      "format_error": 0,
+      "incorrect": 0,
+      "other": 0
+     },
+     "route_id": "gemini-api.gemini-3.5-flash-lite",
+     "run_id": "live-daily-20261003T081512Z-da4668c710",
+     "scheduled_items": 40,
+     "series_id": "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082",
+     "settings": {
+      "max_output_tokens": 4096,
+      "temperature": 1.0,
+      "thinking_level": "MINIMAL",
+      "timeout_seconds": 120
+     },
+     "status": "completed",
+     "valid_day": true
+    }
+   ],
    "route": {
     "access_kind": "direct_api",
     "exact_identifier": "gemini-3.5-flash-lite",
@@ -203,6 +253,11 @@
   {
    "reviewed_at": "2026-10-01T09:31:50Z",
    "sha256": "82beec7b625058d53f200bbbf5b6ee65d8c6574479b6b60f7f17dd2bb40f7c8d"
+  },
+  {
+   "admitted_at": "2026-10-04T02:43:33Z",
+   "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
+   "sha256": "8fa58cf6bc280578893d8cee744a41197c01ac8e50e2dbeaed618bb2c9e9c03a"
   },
   {
    "reviewed_at": "2026-10-01T14:17:55Z",
