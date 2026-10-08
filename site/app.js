@@ -510,12 +510,14 @@
   var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·" };
   function dailyChart(series) {
     var lay = Chart.layout(series, { width: 720, height: 250 });
-    var puter = isPuter(series);
+    var puter = isPuter(series), reference = isReference(series);
     var detail = el("p", { class: "point-detail", "aria-live": "polite" },
       lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
     var svg = s("svg", { class: "chart daily-chart", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
-      "aria-label": (puter ? series.route.label + ", small sample of " + lay.max + " questions. Model identity not " +
-        "confirmed unless stated per day. " : "") +
+      "aria-label": reference ? series.route.label + ", reference evaluations: correct answers out of " + lay.max +
+        " by finish date. " + lay.points.length + (lay.points.length === 1 ? " complete evaluation" : " complete evaluations") +
+        " and " + lay.marks.length + " without a score." : (puter ? series.route.label + ", small sample of " + lay.max +
+        " questions. Model identity not confirmed unless stated per day. " : "") +
         "Daily test scores: correct answers out of " + lay.max + " by test date. " + lay.points.length +
         (lay.points.length === 1 ? " daily score" : " daily scores") + " and " +
         lay.marks.filter(function (m) { return m.kind !== "pending"; }).length + " dates without a score." });
@@ -560,7 +562,11 @@
       svg.appendChild(s("text", { x: (lay.left + lay.right) / 2, y: (lay.top + lay.plotBottom) / 2, "text-anchor": "middle",
                                   class: "chart-message" }, lay.message));
     }
-    var legend = el("ul", { class: "chart-legend" }, [
+    var legend = reference ? el("ul", { class: "chart-legend" }, [
+      el("li", {}, "● a complete evaluation: all " + lay.max + " questions answered and gradeable, with no model mismatch, " +
+        "placed at its finish date. Separate evaluations are never joined into a line."),
+      el("li", {}, "~ a partial, stopped or expired evaluation: shown with its counts, not as a score.")
+    ]) : el("ul", { class: "chart-legend" }, [
       el("li", {}, puter ? "● a daily score: all " + lay.max + " questions attempted and gradeable, with no model mismatch. " +
         "Lines join consecutive days only." : "● a daily score: every question attempted. Lines join consecutive days only."),
       el("li", {}, "x a missed day: no run, or nothing recorded."),
@@ -571,7 +577,8 @@
       el("li", {}, "· a later date: not yet tested or not yet published.")
     ]);
     return el("figure", { class: "own-chart" }, [
-      el("p", { class: "axis-title" }, puter ? "Correct answers out of " + lay.max + ", by test date (UTC)"
+      el("p", { class: "axis-title" }, reference ? "Correct answers out of " + lay.max + ", by evaluation finish date (UTC)"
+        : puter ? "Correct answers out of " + lay.max + ", by test date (UTC)"
         : "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
       el("div", { class: "chart-scroll" }, svg),
       lay.message ? el("p", { class: "chart-note" }, lay.message + ".") : null,
@@ -596,6 +603,11 @@
     return sch.window_start_utc + "–" + ("0" + Math.floor(closes / 60) % 24).slice(-2) + ":" + ("0" + closes % 60).slice(-2) + " UTC";
   }
   function setupText(d, e) {
+    if (isReference(d)) {
+      return puterSettingsText(d.settings) + " · " + d.planned_items + " questions in batches of " + d.batch_plan.join(", ") +
+        " · " + d.route.label + " through " + d.route.service_provider + " · evaluations " + dayText(d.schedule.start_date) +
+        " to " + dayText(d.schedule.end_date) + " · configuration " + String(d.series_fingerprint).slice(0, 8);
+    }
     var service = isPuter(d) ? d.route.label + " through " + d.route.service_provider : (e ? accessText(e) : "");
     var config = String(d.config_fingerprint || d.series_fingerprint || "").slice(0, 8);
     return (isPuter(d) ? puterSettingsText(d.settings) : ownSettingsText(d.settings)) + " · " + d.panel_items +
@@ -616,17 +628,19 @@
       var d = list[index];
       while (content.firstChild) content.removeChild(content.firstChild);
       append(content, el("p", { class: "test-name" }, testName(d)));
-      if (isPuter(d)) append(content, el("p", { class: "sub route-disclosure" },
+      if (isPuter(d) || isReference(d)) append(content, el("p", { class: "sub route-disclosure" },
         "Tested through " + d.route.service_provider + " · " +
         (identityConfirmed(d) ? "model identity reported as requested" : "model identity unverified") +
-        " · " + d.planned_items + "-question sample"));
+        " · " + (isReference(d) ? "all " + d.planned_items + " questions, sent in batches"
+          : d.planned_items + "-question sample")));
       append(content, dailyChart(d));
       var details = el("details", { class: "evidence test-details" }, [
         el("summary", {}, "Test details"),
         el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e))
       ]);
       if (isPuter(d)) append(details, puterLabels(d));
-      append(content, [details, checkedNote(d), dailySection(d)]);
+      if (isReference(d)) append(details, referenceLabels(d));
+      append(content, [details, checkedNote(d), isReference(d) ? referenceSection(d) : dailySection(d)]);
       if (isPuter(d)) append(content, el("p", {},
         "Four questions are a small sample and are not comparable with the 40-question tests."));
     }
@@ -652,9 +666,13 @@
 
   // ------------------------------------------------------------------ Puter four-question series
   function isPuter(d) { return d && d.contract === "puter-subset-v1"; }
+  function isReference(d) { return d && d.contract === "puter-reference-v1"; }
   // Which test a graph shows: the full reference set, or a separate quick check of a few of its questions.
   // The two are separate tests; a quick-check score is never shown as a share of the full set.
   function testName(d) {
+    if (isReference(d)) {
+      return "Reference test: all " + d.planned_items + " questions, through " + d.route.service_provider + ", in batches";
+    }
     return isPuter(d) ? "Quick check: " + d.planned_items + " of the " + d.parent_panel_items + " reference questions, " +
       "through " + d.route.service_provider : "Reference test: all " + d.panel_items + " questions";
   }
@@ -664,7 +682,8 @@
   }
   // Confirmed only when every attempted answer of every verified day reported the requested model.
   function identityConfirmed(d) {
-    var verified = d.rows.filter(function (row) { return row.record && row.record.evidence === "verified" && row.record.attempted; });
+    var verified = d.rows.filter(function (row) {        // reference records always carry verified counts
+      return row.record && (row.record.evidence === "verified" || isReference(d)) && row.record.attempted; });
     return verified.length > 0 && verified.every(function (row) {
       return row.record.identity.reported_match === row.record.attempted;
     });
@@ -710,6 +729,52 @@
     ]);
   }
 
+  // A 40-question reference series (puter-reference-v1): one row per finished evaluation with its real start and
+  // finish; partial, stopped and expired evaluations stay visible with their counts, never as scores.
+  var EVALUATION_STATE = { complete: "Complete", partial: "Partial", stopped: "Stopped", expired: "Expired" };
+  function intervalText(r) {
+    var a = r.started_at.slice(0, 10), b = r.finished_at.slice(0, 10);
+    return a === b ? dayText(a) + ", " + r.started_at.slice(11, 16) + "–" + r.finished_at.slice(11, 16) + " UTC"
+      : dayText(a) + " " + r.started_at.slice(11, 16) + " to " + dayText(b) + " " + r.finished_at.slice(11, 16) + " UTC";
+  }
+  function referenceLabels(d) {
+    return el("div", { class: "puter-labels" }, [
+      d.synthetic ? el("p", { class: "notice synthetic", role: "note" }, "Synthetic preview — not real measurements") : null,
+      el("p", { class: "labels" }, [el("strong", {}, d.route.label), " · ",
+        el("span", { class: "tag", "data-kind": "sample" }, "Reference test: " + d.planned_items + " questions"),
+        identityConfirmed(d) ? null : [" · ", el("span", { class: "tag", "data-kind": "identity" }, "Model identity not confirmed")]]),
+      el("p", { class: "sub" }, "Requested route through " + d.route.service_provider + " (an intermediary): model " +
+        d.route.exact_identifier + ", " + d.route.service_provider + " provider " + d.route.requested_provider + ". All " +
+        d.planned_items + " questions of the set " + d.parent_panel_id + ", graded with " + d.grader_version + ", sent in " +
+        d.batch_plan.length + " batches that may span hours or days; each evaluation shows when it started and finished. " +
+        "These are responses for the requested Puter route, not verified " + d.route.maker + " model performance, and the " +
+        "same questions do not make routes a fair ranking. A score needs every question answered; partial, stopped and " +
+        "expired evaluations are listed with their counts.")
+    ]);
+  }
+  function referenceSection(d) {
+    var rows = d.rows.slice().reverse().map(function (row) {
+      var r = row.record, ng = r.not_graded;
+      return el("tr", {}, [
+        el("td", { "data-label": "Evaluation" }, intervalText(r)),
+        el("td", { "data-label": "Result" }, (EVALUATION_STATE[r.status] || r.status) + (row.eligible ? "" : " (not a score)")),
+        el("td", { "data-label": "Correct" }, r.correct + " of " + r.planned_items),
+        el("td", { "data-label": "Attempted" }, r.attempted + " of " + r.planned_items + ", " + r.not_sent + " not sent"),
+        el("td", { "data-label": "Not graded or uncertain" }, String(ng.refusal + ng.error + ng.truncated + ng.missing_text +
+          ng.malformed + ng.uncertain) + " (" + ng.uncertain + " uncertain)"),
+        el("td", { "data-label": "Model identity" }, r.identity.reported_match === r.attempted && r.attempted
+          ? "reported as requested" : "not confirmed (" + r.identity.unknown + " of " + r.attempted + " unknown)"),
+        el("td", { "data-label": "Batches" }, String(r.batches))]);
+    });
+    return [el("p", {}, "Each evaluation sends all " + d.planned_items + " questions once, in batches; a question whose " +
+      "outcome is uncertain is never sent again. Published results cover evaluations finished by " + dayText(d.as_of) + "."),
+      el("details", { class: "evidence own-table" }, [el("summary", {}, "Evaluations as a table"),
+        el("div", { class: "table-scroll" }, el("table", { class: "log own" }, [
+          el("caption", {}, "Reference evaluations. Each row is one separate evaluation; rows are not joined into a trend."),
+          el("thead", {}, el("tr", {}, ["Evaluation", "Result", "Correct", "Attempted", "Not graded or uncertain",
+            "Model identity", "Batches"].map(function (h) { return el("th", { scope: "col" }, h); }))),
+          el("tbody", {}, rows)]))])];
+  }
   function dailySection(d) {
     var parts = [];
     var sch = d.schedule;
@@ -1077,6 +1142,25 @@
     }));
   }
 
+  // The 40-question reference method, described only once a reference series is published.
+  function referenceMethod() {
+    var shown = Object.keys(TESTS.entries || {}).some(function (k) {
+      return (TESTS.entries[k].daily_series || []).some(isReference); });
+    if (!shown) return null;
+    return [el("h2", {}, "Reference tests through Puter"),
+      el("ul", {}, [
+        el("li", {}, "A reference test sends all 40 questions of the set once, through Puter, in batches that may span " +
+          "hours or days. Each evaluation shows when it started and finished."),
+        el("li", {}, "No question is sent twice in one evaluation. A question whose outcome is uncertain, such as a lost " +
+          "connection, is never resent; it is shown as uncertain and never counted as correct."),
+        el("li", {}, "Only finished evaluations are published: complete, partial, stopped (a free-credit limit was " +
+          "reached) or expired (the approved period ended). A score needs all 40 questions answered; the others are " +
+          "listed with their counts, not as scores."),
+        el("li", {}, "Separate evaluations are never joined into a line, and they are kept apart from the four-question " +
+          "quick checks. They show responses for the requested Puter route, which does not confirm which model " +
+          "answered, so they are not verified model performance.")])];
+  }
+
   function howView() {
     var statuses = [
       ["not_tested", "We have no repeated tests of our own for this model. Nothing about its performance over time is claimed."],
@@ -1107,6 +1191,7 @@
           el("li", {}, "Results are only ever from real runs. A scheduled day that fails or is missed stays visible; nothing is filled in."),
           el("li", {}, "An app is tested only as an app. API results are never shown as app results.")
         ])],
+      referenceMethod(),
       el("h2", {}, "Other published tests"),
       el("p", {}, "Some models have results published by others. They are shown by their measurement date, linked to their source, and kept separate from Baseline's own tests."),
       el("ul", {}, [

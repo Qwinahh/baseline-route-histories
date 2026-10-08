@@ -1140,6 +1140,94 @@ class MeasuredCoverageTests(OwnResultsPageTests):
             self.assertNotIn(stale, text)
 
 
+def reference_bundle(records, route_id="puter-claude-sonnet-5-5", as_of="2026-10-15T00:00:00Z"):
+    """A labelled synthetic puter-reference-v1 bundle (40 questions in batches), built from public fields only."""
+    route = dict(own_results.PUTER_ROUTES[route_id], route_id=route_id, access_kind="intermediary",
+                 service_provider=own_results.PUTER_SERVICE)
+    ids = [f"{c}-{n:02d}" for c in ("ext", "con", "evi", "rea") for n in range(1, 11)]
+    cats = [c for c in ("structured_extraction", "constraint_following", "evidence_bound", "bounded_reasoning")
+            for _ in range(10)]
+    series = {"contract": own_results.PUTER_REFERENCE_CONTRACT, "kind": "reference", "synthetic": True,
+              "parent_panel_id": "baseline-calibration-v1", "parent_panel_sha256": "9" * 64, "grader_version": "grader-v0",
+              "planned_items": 40, "item_ids": ids, "item_sha256": [hashlib.sha256(f"item {i}".encode()).hexdigest() for i in ids],
+              "prompt_sha256": [hashlib.sha256(f"prompt {i}".encode()).hexdigest() for i in ids], "categories": cats,
+              "settings": {"sdk_package": "@heyputer/puter.js", "sdk_version": "2.6.3", "model": route["exact_identifier"],
+                           "provider": route["requested_provider"], "max_tokens": 128, "stream": False,
+                           "reasoning_effort": None, "retries": 0},
+              "batch_plan": [10, 10, 10, 10]}
+    series["series_fingerprint"] = own_results.reference_series_fingerprint(series)
+    series["series_id"] = f"{route_id}--reference--{series['series_fingerprint'][:12]}"
+    out = []
+    for r in records:
+        attempted = 40 - r.get("not_sent", 0)
+        uncertain = r.get("uncertain", 0)
+        answered = attempted - uncertain
+        out.append({"record_version": 1, "evaluation_id": r["id"], "status": r["status"], "date": r["finished"][:10],
+                    "started_at": r["started"], "finished_at": r["finished"], "batches": r["batches"],
+                    "batch_evidence_sha256": [hashlib.sha256(f"{r['id']} {n}".encode()).hexdigest()
+                                              for n in range(r["batches"])],
+                    "route_id": route_id, "series_id": series["series_id"], "planned_items": 40,
+                    "attempted": attempted, "answered": answered, "correct": r["correct"],
+                    "incorrect": answered - r["correct"], "format_error": 0,
+                    "not_graded": {"error": 0, "malformed": 0, "missing_text": 0, "refusal": 0, "truncated": 0,
+                                   "uncertain": uncertain},
+                    "not_sent": 40 - attempted, "identity": {"unknown": attempted, "reported_match": 0, "mismatch": 0},
+                    "interpretation": own_results.REFERENCE_INTERPRETATION})
+    return {"format": own_results.BUNDLE_FORMAT, "format_version": 4, "as_of": as_of, "route": route,
+            "series": series, "records": out}
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class ReferenceSetupTests(MeasuredCoverageTests):
+    """A 40-question reference evaluation is its own setup in the selector: its interval, 40 denominator and
+    partial evaluations stay visible; the quick-check history is untouched."""
+
+    def bundles(self):
+        return [self.published("puter-claude-sonnet-5-5--"), reference_bundle([
+            {"id": "puter-ref1", "status": "complete", "started": "2026-10-12T23:50:00Z",
+             "finished": "2026-10-13T01:20:00Z", "batches": 4, "correct": 35},
+            {"id": "puter-ref2", "status": "partial", "started": "2026-10-14T04:00:00Z",
+             "finished": "2026-10-14T05:00:00Z", "batches": 3, "correct": 14, "uncertain": 16, "not_sent": 8}])]
+
+    def test_the_reference_setup_shows_its_interval_scale_and_partial_evaluations(self):
+        render = self.site(self.bundles())
+        page = render.page("#model/puter.claude-sonnet-5-5")
+        text = page["text"]
+        self.assertEqual((page["dailyCharts"], page["selectedSetup"]), (1, "0"))      # newest setup: the reference
+        self.assertIn("Reference test: all 40 questions, through Puter, in batches", text)
+        self.assertIn("Correct answers out of 40", text)
+        self.assertIn("12 Oct 2026 23:50 to 13 Oct 2026 01:20 UTC", text)
+        self.assertIn("Partial (not a score)", text)
+        self.assertIn("8 not sent", text)
+        self.assertIn("(16 uncertain)", text)
+        self.assertNotIn("Four questions are a small sample", text)
+        self.assertIn("Model identity not confirmed", text)
+        self.assertTrue(any(a.startswith("Evaluation 12 Oct 2026 23:50 to 13 Oct 2026 01:20 UTC: 35 of 40 correct")
+                            for a in page["aria"]), page["aria"])
+        quick = render.page("#model/puter.claude-sonnet-5-5", setup="1")              # the quick check, unchanged
+        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter", quick["text"])
+        self.assertIn("Correct answers out of 4", quick["text"])
+        self.assertNotIn("Correct answers out of 40", quick["text"])
+        section = self.measured_section(render("#models"))
+        self.assertIn("Reference test: all 40 questions, through Puter, in batches", section)   # its newest result
+        how = render.page("#how-we-test")["text"]
+        self.assertIn("Reference tests through Puter", how)
+        self.assertIn("A reference test sends all 40 questions of the set once", how)
+        self.assertIn("never counted as correct", how)
+        without = self.site([self.published("puter-claude-sonnet-5-5--")]).page("#how-we-test")["text"]
+        self.assertNotIn("Reference tests through Puter", without)                  # only once one is published
+
+    def test_an_evaluation_without_a_complete_score_is_listed_not_plotted(self):
+        render = self.site([reference_bundle([
+            {"id": "puter-ref1", "status": "expired", "started": "2026-10-12T04:00:00Z",
+             "finished": "2026-10-12T05:00:00Z", "batches": 2, "correct": 12, "not_sent": 20}])])
+        page = render.page("#model/puter.claude-sonnet-5-5")
+        self.assertIn("No complete reference evaluation yet", page["text"])
+        self.assertIn("Expired (not a score)", page["text"])
+        self.assertIn("20 not sent", page["text"])
+        self.assertNotIn("Measured by Baseline1 exact model", page["text"].replace(" ", ""))
+
+
 class PageSourceTests(unittest.TestCase):
     def test_page_loads_nothing_external_and_sets_csp(self):
         html = (ROOT / "site" / "index.html").read_text(encoding="utf-8")

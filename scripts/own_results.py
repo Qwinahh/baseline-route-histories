@@ -48,7 +48,8 @@ FIXTURE_DIR = ROOT / "tests" / "fixtures" / "own_results"
 
 BUNDLE_FORMAT, DATA_FORMAT, REVIEW_FORMAT = "baseline-own-results", "baseline-own-results-data", "baseline-own-results-review"
 FORMAT_VERSION = 1                 # review manifest
-BUNDLE_VERSIONS = (1, 2, 3)        # 2 (T13) also allows a schedule-only daily bundle; 3 is the Puter subset contract
+BUNDLE_VERSIONS = (1, 2, 3, 4)     # 2 (T13) also allows a schedule-only daily bundle; 3 is the Puter subset contract;
+                                   # 4 is the Puter 40-question reference contract
 BUNDLE_VERSION = 2                 # what the exporter writes now
 DATA_VERSION = 2                   # 2 (T13): sources may be person-reviewed or policy-admitted
 POLICY_FORMAT, POLICY_REVIEW_FORMAT = "baseline-own-results-policy", "baseline-own-results-policy-review"
@@ -300,7 +301,7 @@ def check_series(series, route: dict) -> None:
 
 
 def _record_key(record: dict) -> str:
-    return record["run_id"] or "gap:" + record["date"]
+    return record.get("evaluation_id") or record["run_id"] or "gap:" + record["date"]
 
 
 BODY_FIELDS = ("as_of", "records", "route", "series")
@@ -317,6 +318,9 @@ def check_body(body: dict, now: datetime | None = None) -> None:
         raise OwnResultsError(f"series entry must have exactly the fields {list(BODY_FIELDS)} (+ open_dates if daily)")
     if is_puter(body):
         check_puter_body(body, now)
+        return
+    if is_reference(body):
+        check_reference_body(body, now)
         return
     as_of = parse_stamp(body["as_of"])
     if now is not None and as_of > now + timedelta(minutes=5):
@@ -388,6 +392,10 @@ def validate_bundle(bundle, now: datetime | None = None) -> None:
     _exact(bundle, fields, "bundle")
     if (version == 3) != is_puter(bundle):
         raise OwnResultsError("version 3 is exactly the Puter subset contract; versions 1 and 2 never carry it")
+    if (version == 4) != is_reference(bundle):
+        raise OwnResultsError("version 4 is exactly the Puter reference contract; no other version carries it")
+    if version == 4 and not bundle["records"]:
+        raise OwnResultsError("a reference bundle publishes at least one finished evaluation")
     if version == 2 and bundle["series"]["kind"] != "daily":
         raise OwnResultsError("a version-2 bundle is a daily bundle")
     check_body(body_of(bundle), now)
@@ -484,7 +492,15 @@ SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
 
 
 def is_puter(body) -> bool:
-    return isinstance(body, dict) and isinstance(body.get("series"), dict) and "contract" in body["series"]
+    """A four-question Puter quick-check series (puter-subset-v1)."""
+    return isinstance(body, dict) and isinstance(body.get("series"), dict) and \
+        body["series"].get("contract") == PUTER_CONTRACT
+
+
+def is_reference(body) -> bool:
+    """A Puter 40-question reference series (puter-reference-v1)."""
+    return isinstance(body, dict) and isinstance(body.get("series"), dict) and \
+        body["series"].get("contract") == PUTER_REFERENCE_CONTRACT
 
 
 def _canonical_sha(value) -> str:
@@ -686,6 +702,145 @@ def puter_preview_entries(existing=()) -> list:
             for route_id, r in PUTER_ROUTES.items() if "puter." + route_id[len("puter-"):] not in present]
 
 
+# ---------------------------------------------------------------- Puter 40-question reference (puter-reference-v1)
+#
+# One evaluation = all 40 calibration-v1 questions on one requested Puter route, sent in once-only batches that may
+# span hours or UTC dates (scripts/puter_reference.py). A series is one route and its fixed settings and batch
+# plan; a record is one finished evaluation with its real start and finish times, never a single-day reading,
+# and every question accounted for (attempted, not graded including uncertain, or not sent). Only complete
+# evaluations with every question answered and no identity mismatch are graph points. Separate from the
+# four-question quick check (puter-subset-v1) and never merged with it.
+
+PUTER_REFERENCE_CONTRACT = "puter-reference-v1"
+REFERENCE_ITEMS = 40
+REFERENCE_SERIES_FIELDS = ("batch_plan", "categories", "contract", "grader_version", "item_ids", "item_sha256", "kind",
+                           "parent_panel_id", "parent_panel_sha256", "planned_items", "prompt_sha256",
+                           "series_fingerprint", "series_id", "settings", "synthetic")
+REFERENCE_STATUSES = ("complete", "partial", "stopped", "expired")
+REFERENCE_RECORD_FIELDS = {
+    "record_version": int, "evaluation_id": str, "status": str, "date": str, "started_at": str, "finished_at": str,
+    "batches": int, "batch_evidence_sha256": list, "route_id": str, "series_id": str, "planned_items": int,
+    "attempted": int, "answered": int, "correct": int, "incorrect": int, "format_error": int, "not_graded": dict,
+    "not_sent": int, "identity": dict, "interpretation": str,
+}
+REFERENCE_INTERPRETATION = ("Counts from one Baseline evaluation of all 40 reference questions on one requested route "
+                            "through Puter, sent in several batches between the start and finish times shown. "
+                            "Returned-model identity is counted separately; these are results for the requested Puter "
+                            "route, not verified maker model performance, and not a ranking against other routes. "
+                            "Not a quality score, and not a decline, improvement or stability verdict.")
+EVALUATION_ID_RE = re.compile(r"^[a-z0-9][a-z0-9.-]{3,60}$")
+
+
+def reference_series_fingerprint(series: dict) -> str:
+    return _canonical_sha({"contract": PUTER_REFERENCE_CONTRACT, "panel_sha256": series["parent_panel_sha256"],
+                           "item_ids": series["item_ids"], "item_sha256": series["item_sha256"],
+                           "prompt_sha256": series["prompt_sha256"], "grader_version": series["grader_version"],
+                           "settings": series["settings"], "batch_plan": series["batch_plan"]})
+
+
+def check_reference_series(series, route: dict) -> None:
+    _exact(series, REFERENCE_SERIES_FIELDS, "Puter reference series")
+    if series["contract"] != PUTER_REFERENCE_CONTRACT or series["kind"] != "reference" \
+            or not isinstance(series["synthetic"], bool):
+        raise OwnResultsError("a reference series is a puter-reference-v1 series of kind reference")
+    if not isinstance(series["parent_panel_id"], str) or not ID_RE.match(series["parent_panel_id"]) \
+            or not _sha(series["parent_panel_sha256"]) or not isinstance(series["grader_version"], str) \
+            or not GRADER_RE.match(series["grader_version"]):
+        raise OwnResultsError("reference series panel or grader description is invalid")
+    if type(series["planned_items"]) is not int or series["planned_items"] != REFERENCE_ITEMS:
+        raise OwnResultsError(f"a reference series plans exactly {REFERENCE_ITEMS} questions")
+    ids, items, prompts, cats = (series[k] for k in ("item_ids", "item_sha256", "prompt_sha256", "categories"))
+    if not all(isinstance(x, list) and len(x) == REFERENCE_ITEMS for x in (ids, items, prompts, cats)) \
+            or len(set(map(str, ids))) != REFERENCE_ITEMS or not all(isinstance(i, str) and ID_RE.match(i) for i in ids) \
+            or not all(_sha(h) for h in items + prompts) or not all(isinstance(c, str) and CATEGORY_RE.match(c) for c in cats):
+        raise OwnResultsError("the reference set must list 40 distinct item ids with item and prompt hashes and categories")
+    plan = series["batch_plan"]
+    if not isinstance(plan, list) or not plan or not all(type(n) is int and 1 <= n <= 16 for n in plan) \
+            or sum(plan) != REFERENCE_ITEMS:
+        raise OwnResultsError("batch_plan must split the 40 questions into batches of 1-16")
+    check_puter_settings(series["settings"], route)
+    if series["series_fingerprint"] != reference_series_fingerprint(series):
+        raise OwnResultsError("series_fingerprint does not match the reference set, grader, settings and batch plan")
+    if series["series_id"] != f"{route['route_id']}--reference--{series['series_fingerprint'][:12]}":
+        raise OwnResultsError("reference series id must be route--reference--fingerprint prefix")
+
+
+def validate_reference_record(record, route: dict, series: dict, as_of: datetime) -> None:
+    _exact(record, REFERENCE_RECORD_FIELDS, "a reference record")
+    for key, kind in REFERENCE_RECORD_FIELDS.items():
+        if not isinstance(record[key], kind) or isinstance(record[key], bool):
+            raise OwnResultsError(f"{key} has the wrong type")
+    if record["record_version"] != 1 or record["status"] not in REFERENCE_STATUSES \
+            or record["interpretation"] != REFERENCE_INTERPRETATION or not EVALUATION_ID_RE.match(record["evaluation_id"]):
+        raise OwnResultsError("unknown reference record version, status, evaluation id or interpretation")
+    if record["route_id"] != route["route_id"] or record["series_id"] != series["series_id"] \
+            or record["planned_items"] != REFERENCE_ITEMS:
+        raise OwnResultsError("a reference record is bound to another route, series or plan")
+    started, finished = parse_stamp(record["started_at"]), parse_stamp(record["finished_at"])
+    if not started <= finished <= as_of or record["date"] != finished.date().isoformat():
+        raise OwnResultsError("a reference record needs started_at <= finished_at <= as_of, dated by its finish")
+    if not _count(record["batches"], 1, 18) or len(record["batch_evidence_sha256"]) != record["batches"] \
+            or not all(_sha(h) for h in record["batch_evidence_sha256"]):
+        raise OwnResultsError("a reference record lists one evidence hash per batch (1-18 batches)")
+    ng, ident = record["not_graded"], record["identity"]
+    if set(ng) != set(NOT_GRADED_KEYS) or set(ident) != set(IDENTITY_KEYS):
+        raise OwnResultsError("not_graded and identity must hold exactly their count keys")
+    scalars = [record[k] for k in ("attempted", "answered", "correct", "incorrect", "format_error", "not_sent")]
+    if not all(_count(v, 0, REFERENCE_ITEMS) for v in scalars + list(ng.values()) + list(ident.values())):
+        raise OwnResultsError("every reference count is a whole number within the 40 questions")
+    if record["attempted"] + record["not_sent"] != REFERENCE_ITEMS \
+            or record["correct"] + record["incorrect"] + record["format_error"] != record["answered"] \
+            or record["answered"] + sum(ng.values()) != record["attempted"] \
+            or sum(ident.values()) != record["attempted"]:
+        raise OwnResultsError("reference counts must add up to the 40 questions")
+    if record["status"] == "complete" and (record["not_sent"] or ng["uncertain"]):
+        raise OwnResultsError("a complete evaluation has every question sent and no uncertain outcome")
+    if SECRETISH.search(json.dumps(record)) or FIXTURE_MARK in json.dumps(record):
+        raise OwnResultsError("record contains something that looks like a credential or a fixture label")
+
+
+def check_reference_body(body: dict, now: datetime | None = None) -> None:
+    as_of = parse_stamp(body["as_of"])
+    if now is not None and as_of > now + timedelta(minutes=5):
+        raise OwnResultsError("as_of is in the future")
+    route, series, records = body["route"], body["series"], body["records"]
+    check_puter_route(route)
+    check_reference_series(series, route)
+    if not isinstance(records, list) or len(records) > MAX_RECORDS:
+        raise OwnResultsError(f"records must be a list of at most {MAX_RECORDS}")
+    keys = set()
+    for record in records:
+        validate_reference_record(record, route, series, as_of)
+        if record["evaluation_id"] in keys:
+            raise OwnResultsError(f"two records for evaluation {record['evaluation_id']}")
+        keys.add(record["evaluation_id"])
+
+
+def reference_eligible(record: dict) -> bool:
+    """A graph point: a complete evaluation with all 40 questions answered and no identity mismatch."""
+    return record["status"] == "complete" and record["attempted"] == record["planned_items"] \
+        and record["answered"] == record["planned_items"] and record["identity"]["mismatch"] == 0
+
+
+def reference_view(sid: str, body: dict) -> dict:
+    """A reference series as the page draws it: one row per finished evaluation at its finish date, a 0-40 scale,
+    the interval kept on every row, never joined to quick-check points."""
+    series, route = body["series"], body["route"]
+    records = sorted(body["records"], key=lambda r: (r["date"], r["evaluation_id"]))
+    rows = [{"date": r["date"], "state": r["status"], "record": r, "eligible": reference_eligible(r)} for r in records]
+    first = min(r["started_at"] for r in records)[:10]
+    return {"contract": PUTER_REFERENCE_CONTRACT, "series_id": sid, "as_of": body["as_of"],
+            "schedule": {"type": "reference", "start_date": first, "end_date": max(r["date"] for r in records)},
+            "rows": rows, "not_yet_due": 0, "pending_dates": [], "open_dates": [], "panel_items": REFERENCE_ITEMS,
+            "planned_items": REFERENCE_ITEMS, "parent_panel_id": series["parent_panel_id"],
+            "item_ids": series["item_ids"], "categories": series["categories"],
+            "grader_version": series["grader_version"], "settings": series["settings"],
+            "batch_plan": series["batch_plan"], "series_fingerprint": series["series_fingerprint"],
+            "synthetic": series["synthetic"],
+            "route": {k: route[k] for k in ("label", "maker", "exact_identifier", "requested_provider",
+                                            "service_provider")}}
+
+
 # ---------------------------------------------------------------- publication policy (T13)
 
 def is_puter_policy(policy) -> bool:
@@ -709,7 +864,10 @@ def validate_puter_policy(policy, require_enabled: bool = True) -> None:
     if not isinstance(policy["route"], dict) or not isinstance(policy["series"], dict):
         raise OwnResultsError("a Puter policy names one exact route and series")
     check_puter_route(policy["route"])
-    check_puter_series(policy["series"], policy["route"])
+    if policy["series"].get("contract") == PUTER_REFERENCE_CONTRACT:
+        check_reference_series(policy["series"], policy["route"])
+    else:
+        check_puter_series(policy["series"], policy["route"])
     if policy["series"]["synthetic"] is not False:
         raise OwnResultsError("a Puter policy covers genuine results only (synthetic: false)")
     if not isinstance(policy["public_repository"], str) or not REPO_RE.match(policy["public_repository"]) \
@@ -764,7 +922,7 @@ def validate_policy(policy, require_enabled: bool = True) -> None:
 
 def policy_binding_problem(bundle: dict, policy: dict) -> str | None:
     """Why a bundle falls outside an approved policy, or None when it is exactly covered."""
-    if is_puter_policy(policy) != is_puter(bundle):
+    if is_puter_policy(policy) != (is_puter(bundle) or is_reference(bundle)):
         return "the policy type does not match the result type (Puter policies cover only Puter series)"
     if is_puter_policy(policy):
         for key in ("route", "series"):
@@ -991,7 +1149,8 @@ def load_admitted(data_path: Path = DATA_PATH, review_path: Path = REVIEW_PATH, 
 def _refuse_synthetic_in_production(dataset: dict, data_path: Path) -> None:
     """A synthetic preview series (Puter fixtures) can never be part of the production dataset."""
     if Path(data_path).resolve() == DATA_PATH.resolve() and any(
-            is_puter(body) and body["series"]["synthetic"] is not False for body in dataset["series"].values()):
+            (is_puter(body) or is_reference(body)) and body["series"]["synthetic"] is not False
+            for body in dataset["series"].values()):
         raise OwnResultsError("the production dataset holds a synthetic preview series; synthetic results are "
                               "never published")
 
@@ -1281,6 +1440,9 @@ def site_tests(dataset: dict, catalog_entries: list) -> dict:
         series = body["series"]
         if is_puter(body):                       # its own method text; never mixed into the 40-question methods
             rec["daily_series"].append(puter_view(sid, body))
+            continue
+        if is_reference(body):                   # a separate setup in the same selector, never merged
+            rec["daily_series"].append(reference_view(sid, body))
             continue
         method = {k: series[k] for k in ("panel_id", "panel_items", "panel_categories", "grader_version", "settings")}
         if method not in methods:

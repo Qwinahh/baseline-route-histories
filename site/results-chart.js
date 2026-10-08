@@ -50,13 +50,14 @@
     if (row.state === "gap") return "gap";
     if (row.state === "open") return "open";
     if (row.state === "no_record" || !row.record) return "no_record";
-    if (row.record.evidence !== "verified") return "unavailable";
+    if (row.record.evidence !== "verified" && !row.record.started_at) return "unavailable";   // reference: always counted
     return "partial";
   }
 
   function puterDetails(r, out) {
     var ng = r.not_graded, id = r.identity;
     out.puter = true;
+    if (r.started_at) out.interval = [r.started_at, r.finished_at];   // a reference evaluation's real interval
     out.correct = r.correct;
     out.scheduled = r.planned_items;
     out.attempted = r.attempted;
@@ -73,7 +74,7 @@
     var r = row.record;
     var kind = rowKind(row);
     var out = { date: row.date, kind: kind, status: row.state };
-    if (r && r.evidence === "verified" && r.record_version !== undefined) return puterDetails(r, out);
+    if (r && (r.evidence === "verified" || r.started_at) && r.record_version !== undefined) return puterDetails(r, out);
     if (r && r.evidence === "verified") {
       var o = r.first_attempt_outcomes;
       out.correct = r.first_attempt_correct;
@@ -93,7 +94,14 @@
     return d.identity_confirmed ? "returned model reported as requested" : "Model identity not confirmed";
   }
 
+  function intervalHead(d) {
+    var a = d.interval[0], b = d.interval[1];
+    return "Evaluation " + fullDay(a.slice(0, 10)) + " " + a.slice(11, 16) + " to " +
+      (a.slice(0, 10) === b.slice(0, 10) ? "" : fullDay(b.slice(0, 10)) + " ") + b.slice(11, 16) + " UTC: ";
+  }
+
   function describePuter(d, head) {
+    if (d.interval) head = intervalHead(d);
     var counts = d.refusals + " refused, " + d.request_errors + " errors" +
       (d.answer_problems ? ", " + d.answer_problems + " cut off, missing or unreadable" : "");
     if (d.kind === "point") {
@@ -176,8 +184,12 @@
     marks.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
 
     var puter = series.contract === "puter-subset-v1";
-    var message = points.length === 0 ? (puter ? "No daily results yet" : "Waiting for daily results")
-      : points.length === 1 ? (puter ? "Not enough history to show change" : "One daily test; more days are needed to show a pattern")
+    var reference = series.contract === "puter-reference-v1";
+    if (reference) segments = [];                     // separate evaluations are never joined into a line
+    var message = points.length === 0 ? (reference ? "No complete reference evaluation yet" : puter ? "No daily results yet"
+      : "Waiting for daily results")
+      : points.length === 1 ? (puter || reference ? "Not enough history to show change"
+        : "One daily test; more days are needed to show a pattern")
       : null;
     return {
       width: W, height: H, left: L, right: W - R, top: T, plotBottom: plotBottom, laneY: plotBottom + 40,

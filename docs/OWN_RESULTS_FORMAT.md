@@ -343,6 +343,45 @@ docs/PUTER_RESULTS_PUBLICATION.md.
   tests.
 - The private package includes the exporter, but not its synthetic fixtures.
 
+### Puter 40-question reference evaluations (bundle version 4, prepared)
+
+**Version 4** is exactly the `puter-reference-v1` contract. It is separate from the four-question quick check
+(version 3) and never merged with it. Versions 1–3, their records, validation and admitted bytes are unchanged.
+
+**Route.** One of the three reviewed Puter routes, exactly as in version 3. Results are for the requested Puter
+route, never maker-API or app coverage.
+
+**Series.** Exact fields:
+- `contract` (`puter-reference-v1`), `kind` (`reference`) and `synthetic`;
+- the panel (`parent_panel_id`, `parent_panel_sha256`), `grader_version` and `planned_items: 40`;
+- all 40 `item_ids` in panel order, with each item's `item_sha256`, `prompt_sha256` and category (`categories`);
+- the actual route `settings` (the version-3 settings rules, Grok's own values included);
+- `batch_plan`, the planned batch sizes (1–16 each, 40 in total);
+- `series_fingerprint`, recomputed from the panel, items, prompts, grader, settings and batch plan, and
+  `series_id` = `<route_id>--reference--<12 hex>`.
+
+**Records.** One per finished evaluation. Exact fields:
+- `record_version: 1`, `evaluation_id` (the cycle), and `status`: `complete`, `partial`, `stopped` or `expired`;
+- `started_at` (the first batch's reservation) and `finished_at` (the last batch's settlement), real timestamps;
+  `date` is the finish date. An evaluation that spans UTC dates shows its interval, never a single day;
+- `batches` and one `batch_evidence_sha256` per batch (1–18);
+- the version-3 counts out of 40: `attempted`, `answered`, `correct`, `incorrect`, `format_error`,
+  `not_graded` (including `uncertain`), `not_sent` and `identity`, adding up exactly as in version 3;
+- `route_id`, `series_id`, `planned_items` and the fixed `interpretation` text.
+
+Questions in a batch whose outcome is uncertain (an interrupted or unverifiable batch) count as attempted and
+`uncertain`, never as answers. Questions never sent count as `not_sent`. A `complete` evaluation has nothing
+unsent and nothing uncertain. Only evaluations that have finished are published: a running evaluation is never
+published, and a published record never changes.
+
+**Graph point.** A complete evaluation with all 40 questions answered (gradeable) and no identity mismatch.
+Partial, stopped and expired evaluations stay visible in the table with their real counts.
+
+**Evidence and admission.** Candidates come only from `export_puter_results.build_reference_candidates`, after
+the whole shared ledger, tags and evidence hashes are verified. Every batch must have been reserved under the
+reviewed configuration and authorization, and is regraded with `collector.grade`. Admission is by a person-reviewed
+digest or a Puter policy whose `series` is the exact reference series.
+
 ## Policy admission (automated publication, T13)
 
 An automated publisher may admit daily candidates without a person reviewing each one,
