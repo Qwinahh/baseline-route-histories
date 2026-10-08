@@ -1,42 +1,78 @@
 {
  "schema_version": 1,
- "checked_at": "2026-10-01T19:28:34Z",
- "explanation": "An editorial shortlist chosen by Baseline: widely used model families, each with its app, a current general-purpose model and its newest public release. It is not a measured popularity ranking, and it is not a list of models Baseline has tested. Every other model stays in the full directory below.",
+ "checked_at": "2026-10-08T00:42:56Z",
+ "explanation": "Start with the routes that have Baseline results below. The other groups are an editorial shortlist of model families and releases, not a measured popularity ranking. Coverage belongs to the named service: testing via Puter does not establish results for the maker API or chat app.",
  "groups": [
+  {
+   "family": "Measured by Baseline",
+   "reason": "Open a route to see its dated results and graph. Claude and GPT have one four-question daily result so far, too little to show change; Puter did not return a verified model identity. Gemini uses its own separate test setup.",
+   "entries": [
+    "google-api.gemini-3.5-flash-lite",
+    "puter.claude-sonnet-5-5",
+    "puter.gpt-6.1-sol"
+   ]
+  },
   {
    "family": "OpenAI and ChatGPT",
    "reason": "OpenAI's model page lists GPT-6 Astra as its flagship; GPT-6.1 Sol is its newest release (29 Sep 2026). gpt-oss-120b is OpenAI's open-weight model as served by Groq, a separate host: not ChatGPT and not OpenAI's own API.",
-   "entries": ["openai-app.chatgpt", "openai-api.gpt-6-astra", "openai-api.gpt-6.1-sol", "openai-groq.gpt-oss-120b"]
+   "entries": [
+    "openai-app.chatgpt",
+    "openai-api.gpt-6-astra",
+    "openai-api.gpt-6.1-sol",
+    "openai-groq.gpt-oss-120b"
+   ]
   },
   {
    "family": "Claude",
    "reason": "Claude Sonnet 5.5 (28 Sep 2026) and Claude Opus 5.5 (22 Sep 2026) are Anthropic's newest models on its models overview.",
-   "entries": ["anthropic-app.claude", "anthropic-api.claude-sonnet-5-5", "anthropic-api.claude-opus-5-5"]
+   "entries": [
+    "anthropic-app.claude",
+    "anthropic-api.claude-sonnet-5-5",
+    "anthropic-api.claude-opus-5-5"
+   ]
   },
   {
    "family": "Gemini",
-   "reason": "Gemini 3.8 Flash (2 Sep 2026) is Google's newest listed Flash model; Gemini 3.5 Flash-Lite is the route Baseline already tests.",
-   "entries": ["google-app.gemini", "google-api.gemini-3.8-flash", "google-api.gemini-3.5-flash-lite"]
+   "reason": "The Gemini app and a recent Flash release. Find the measured Gemini 3.5 Flash-Lite API route in Measured by Baseline above.",
+   "entries": [
+    "google-app.gemini",
+    "google-api.gemini-3.8-flash"
+   ]
   },
   {
    "family": "DeepSeek",
    "reason": "deepseek-v4-pro and deepseek-flash are the two model IDs on DeepSeek's current pricing page.",
-   "entries": ["deepseek-app.deepseek", "deepseek-api.deepseek-v4-pro", "deepseek-api.deepseek-flash"]
+   "entries": [
+    "deepseek-app.deepseek",
+    "deepseek-api.deepseek-v4-pro",
+    "deepseek-api.deepseek-flash"
+   ]
   },
   {
    "family": "Qwen",
    "reason": "Qwen3.8-Max and Qwen3.8-Flash are the newest entries in Alibaba Model Studio's release table.",
-   "entries": ["qwen-app.qwen", "qwen-api.qwen3.8-max", "qwen-api.qwen3.8-flash"]
+   "entries": [
+    "qwen-app.qwen",
+    "qwen-api.qwen3.8-max",
+    "qwen-api.qwen3.8-flash"
+   ]
   },
   {
    "family": "Llama",
    "reason": "Llama 4 is Meta's current open-weight family; Meta AI is Meta's app. No exact Llama API version is verified here.",
-   "entries": ["meta-app.meta-ai", "meta-local.llama-4-open-weights"]
+   "entries": [
+    "meta-app.meta-ai",
+    "meta-local.llama-4-open-weights"
+   ]
   },
   {
    "family": "Grok",
-   "reason": "grok-4.7 (21 Sep 2026) is the newest model on xAI's developer model list.",
-   "entries": ["xai-app.grok", "xai-api.grok-4.7"]
+   "reason": "Daily testing of Grok 4.7 via Puter is scheduled; its first daily result is pending. The xAI API and Grok app are separate entries without Baseline results.",
+   "entries": [
+    "puter.x-ai-grok-4.7",
+    "xai-app.grok",
+    "xai-api.grok-4.7"
+   ]
   }
  ]
 }
