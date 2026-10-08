@@ -39,11 +39,14 @@ def _latest_timestamp(records) -> datetime:
     stamps += [o["retrieved_at"] for o in records["observations"]]
     stamps += [r["finished_at"] for r in records["ingestion_runs"]]
     stamps += [c["recorded_at"] for c in records["corrections"]]
+    for entry in catalog.load()["entries"]:            # catalogue check times too (Puter entries, 7 October)
+        stamps += [s["checked_at"] for s in entry["sources"]]
+        stamps += [entry["release"]["source"]["checked_at"]] if "release" in entry else []
     return max(registry.parse_utc(t) for t in stamps if t)
 
 
 # Simulated clocks: the day after the latest recorded timestamp, so they stay later
-# than every retrieval and check time however the registry grows.
+# than every retrieval and check time however the registry or catalogue grows.
 _DAY = (_latest_timestamp(RECORDS) + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
 MIDNIGHT_RUN = _DAY.replace(minute=17)
 MORNING_RUN = _DAY.replace(hour=6, minute=17)

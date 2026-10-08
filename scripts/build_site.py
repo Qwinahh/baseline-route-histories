@@ -3,10 +3,16 @@
     py -3.11 -B scripts/build_site.py            # writes dist/ (takes no arguments)
     py -3.11 -B -m http.server 8123 -d dist      # then open http://localhost:8123/
     py -3.11 -B scripts/build_site.py --own-results-preview CANDIDATE OUT_FOLDER
+    py -3.11 -B scripts/build_site.py --puter-preview OUT_FOLDER
 
 The preview form shows one unadmitted own-results candidate (T12) for review. It writes
 only to a folder outside the project, marks the page as a review copy, and the release
 check refuses its output. The default build reads only the admitted own_results/ dataset.
+
+The Puter preview shows the labelled synthetic four-question fixtures
+(tests/fixtures/own_results/puter/) through the same page, with preview-only catalogue
+entries for the two Puter routes and a permanent "Synthetic preview" banner. It is a review
+copy outside the project; nothing in catalog/ or own_results/ changes.
 
 The builder only replaces files it wrote itself and never deletes folders
 recursively; see check_output_dir for which output folders are accepted.
@@ -32,6 +38,7 @@ import own_results  # noqa: E402
 import registry  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+PUTER_PREVIEW = ("several-points.json", "gpt-several.json", "second-setup.json")
 SITE_FILES = ("index.html", "styles.css", "app.js", "freshness.js", "directory.js", "results-chart.js")
 OWNER_MARKER = ".baseline-build"
 OWNED_FILES = frozenset(SITE_FILES + ("data.js", OWNER_MARKER))
@@ -186,6 +193,16 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
     problems = catalog.validate_catalog({"schema_version": catalog.SCHEMA_VERSION, "entries": entries}, records, now)
     if problems:
         raise BuildError("reconciled catalogue does not validate: " + "; ".join(problems[:10]))
+    preview_bundles = []
+    for candidate in own_preview:
+        try:
+            bundle = own_results.parse_json(Path(candidate).read_bytes(), "preview candidate")
+            own_results.validate_bundle(bundle, now)
+        except (own_results.OwnResultsError, OSError) as exc:
+            raise BuildError(f"own results: {exc}") from None
+        preview_bundles.append(bundle)
+    if any(own_results.is_puter(b) for b in preview_bundles):     # review copies only, never catalog/
+        entries = entries + own_results.puter_preview_entries(entries)   # only routes the catalogue lacks
     data["catalog"] = entries  # routes are joined in the browser by id; no copies
     # Editorial Featured shortlist (T14): catalogue ids and written reasons only, validated.
     featured_path = (Path(catalog_path).parent if catalog_path else catalog.CATALOG_PATH.parent) / "featured.json"
@@ -204,6 +221,7 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
     data["catalog_checked_at"] = document.get("checked_at")
     data["baseline_tests"] = own_tests(entries, own_data_path, own_review_path, tuple(own_preview), now)
     data["own_results_preview"] = bool(own_preview)
+    data["synthetic_preview"] = any(own_results.is_puter(b) and b["series"]["synthetic"] for b in preview_bundles)
 
     # Prepare every output file in memory before touching the output folder.
     files = {name: (ROOT / "site" / name).read_bytes() for name in SITE_FILES}
@@ -292,18 +310,24 @@ def _clear_owned_output(out_dir: Path) -> None:
 
 def main(argv: list) -> int:
     preview = len(argv) == 3 and argv[0] == "--own-results-preview"
-    if argv and not preview:
+    puter = len(argv) == 2 and argv[0] == "--puter-preview"
+    if argv and not (preview or puter):
         print("usage: py -3.11 -B scripts/build_site.py   (always writes the project's dist/ folder)")
         print("       py -3.11 -B scripts/build_site.py --own-results-preview CANDIDATE OUT_FOLDER")
+        print("       py -3.11 -B scripts/build_site.py --puter-preview OUT_FOLDER")
         return 2
     out_dir = ROOT / "dist"
     try:
-        if preview:
-            out_dir = Path(os.path.abspath(argv[2]))
+        if preview or puter:
+            out_dir = Path(os.path.abspath(argv[-1]))
             root = ROOT.resolve()
             if out_dir.resolve() == root or root in out_dir.resolve().parents or out_dir.resolve() in root.parents:
                 raise BuildError("a review copy is written outside the project, never to dist/")
-            data = build(out_dir, own_preview=(Path(argv[1]),))
+            candidates = (Path(argv[1]),) if preview else tuple(
+                own_results.FIXTURE_DIR / "puter" / name for name in PUTER_PREVIEW)
+            data = build(out_dir, own_preview=candidates)
+            if puter and not data["synthetic_preview"]:
+                raise BuildError("the Puter preview must be built from the synthetic fixtures only")
         else:
             data = build(out_dir)
     except BuildError as exc:
@@ -312,8 +336,10 @@ def main(argv: list) -> int:
     count = sum(len(r["observations"]) for r in data["routes"])
     print(f"OK: wrote {out_dir} ({len(data['routes'])} routes, {count} observations, "
           f"generated {data['generated_at']})")
-    if preview:
+    if preview or puter:
         print("REVIEW COPY: includes an unadmitted own-results candidate; do not publish this folder.")
+    if puter:
+        print("SYNTHETIC PREVIEW: labelled test data only, not real measurements.")
     return 0
 
 

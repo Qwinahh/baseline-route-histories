@@ -5317,6 +5317,66 @@
      "claim": "'tiny-aya-global' appears in the official model listing"
     }
    ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Requested through Puter's AI service: model claude-sonnet-5-5 with Puter provider claude. Puter's model listing names it anthropic:anthropic/claude-sonnet-5-5; a listing shows what Puter offers, not which model answers a request. Puter reported no returned model in Baseline's runs and may try another provider internally, so the serving model is not confirmed. Hosted by Puter; made by Anthropic. Not Anthropic's own API or app.",
+   "id": "puter.claude-sonnet-5-5",
+   "name": "Claude Sonnet 5.5 via Puter",
+   "maker": "Anthropic",
+   "family": "Claude Sonnet",
+   "identity_kind": "exact",
+   "exact_identifier": "claude-sonnet-5-5",
+   "service_provider": "Puter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://api.puter.com/puterai/chat/models",
+     "checked_at": "2026-10-07T23:58:07Z",
+     "claim": "'anthropic:anthropic/claude-sonnet-5-5' appears in Puter's public AI model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Requested through Puter's AI service: model gpt-6.1-sol with Puter provider openai-completion. Puter's model listing names it openai:openai/gpt-6.1-sol; a listing shows what Puter offers, not which model answers a request. Puter reported no returned model in Baseline's runs and may try another provider internally, so the serving model is not confirmed. Hosted by Puter; made by OpenAI. Not OpenAI's own API or app.",
+   "id": "puter.gpt-6.1-sol",
+   "name": "GPT-6.1 Sol via Puter",
+   "maker": "OpenAI",
+   "family": "GPT",
+   "identity_kind": "exact",
+   "exact_identifier": "gpt-6.1-sol",
+   "service_provider": "Puter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://api.puter.com/puterai/chat/models",
+     "checked_at": "2026-10-07T23:58:07Z",
+     "claim": "'openai:openai/gpt-6.1-sol' appears in Puter's public AI model listing"
+    }
+   ]
+  },
+  {
+   "route_ids": [],
+   "notes": "Requested through Puter's AI service: model x-ai/grok-4.7 with Puter provider xai. Puter's model listing names it x-ai:x-ai/grok-4.7; a listing shows what Puter offers, not which model answers a request. Puter reported no returned model in Baseline's runs and may try another provider internally, so the serving model is not confirmed. Hosted by Puter; made by xAI. Not xAI's own API or app.",
+   "id": "puter.x-ai-grok-4.7",
+   "name": "Grok 4.7 via Puter",
+   "maker": "xAI",
+   "family": "Grok",
+   "identity_kind": "exact",
+   "exact_identifier": "x-ai/grok-4.7",
+   "service_provider": "Puter",
+   "access_kind": "intermediary",
+   "availability": "unknown",
+   "sources": [
+    {
+     "url": "https://api.puter.com/puterai/chat/models",
+     "checked_at": "2026-10-07T23:58:07Z",
+     "claim": "'x-ai:x-ai/grok-4.7' appears in Puter's public AI model listing"
+    }
+   ]
   }
  ]
 }

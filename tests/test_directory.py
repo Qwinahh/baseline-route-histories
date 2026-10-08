@@ -39,6 +39,24 @@ class ResultsChartTests(unittest.TestCase):
         views = {"several-points": series("several-points.json"), "schedule-only": series("schedule-only.json"),
                  "one-point": series("one-point.json"), "two-setups": series("several-points.json", "second-setup.json"),
                  "open-day": series("open-day.json")}
+        # Puter four-question series (labelled synthetic fixtures), mapped through preview-only catalogue entries.
+        puter = ROOT / "tests" / "fixtures" / "own_results" / "puter"
+        puter_entries = entries + own_results.puter_preview_entries(entries)   # the catalogue lists the routes
+
+        def puter_series(*names, entry="puter.claude-sonnet-5-5"):
+            dataset = own_results.empty_dataset()
+            for i, name in enumerate(names):
+                bundle = json.loads((puter / name).read_text(encoding="utf-8"))
+                own_results.validate_bundle(bundle)
+                dataset = own_results.merge(dataset, bundle, {"sha256": f"{i + 100:064x}",
+                                                              "reviewed_at": "2026-10-20T00:00:00Z"})
+            return own_results.site_tests(dataset, puter_entries)["entries"][entry]["daily_series"]
+        if puter.is_dir():                     # private fixtures: absent from the public package
+            views.update({"puter-several": puter_series("several-points.json"),
+                          "puter-schedule-only": puter_series("schedule-only.json"),
+                          "puter-one-point": puter_series("one-point.json"),
+                          "puter-gpt": puter_series("gpt-several.json", entry="puter.gpt-6.1-sol"),
+                          "puter-two-setups": puter_series("several-points.json", "second-setup.json")})
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "views.json"
             path.write_text(json.dumps(views), encoding="utf-8")

@@ -45,7 +45,7 @@ FIXTURE_DIR = ROOT / "tests" / "fixtures" / "own_results"
 
 BUNDLE_FORMAT, DATA_FORMAT, REVIEW_FORMAT = "baseline-own-results", "baseline-own-results-data", "baseline-own-results-review"
 FORMAT_VERSION = 1                 # review manifest
-BUNDLE_VERSIONS = (1, 2)           # 2 (T13) also allows a schedule-only daily bundle
+BUNDLE_VERSIONS = (1, 2, 3)        # 2 (T13) also allows a schedule-only daily bundle; 3 is the Puter subset contract
 BUNDLE_VERSION = 2                 # what the exporter writes now
 DATA_VERSION = 2                   # 2 (T13): sources may be person-reviewed or policy-admitted
 POLICY_FORMAT, POLICY_REVIEW_FORMAT = "baseline-own-results-policy", "baseline-own-results-policy-review"
@@ -308,6 +308,9 @@ def check_body(body: dict, now: datetime | None = None) -> None:
     """
     if not isinstance(body, dict) or set(body) not in (set(BODY_FIELDS), set(BODY_FIELDS) | {"open_dates"}):
         raise OwnResultsError(f"series entry must have exactly the fields {list(BODY_FIELDS)} (+ open_dates if daily)")
+    if is_puter(body):
+        check_puter_body(body, now)
+        return
     as_of = parse_stamp(body["as_of"])
     if now is not None and as_of > now + timedelta(minutes=5):
         raise OwnResultsError("as_of is in the future")
@@ -374,13 +377,15 @@ def validate_bundle(bundle, now: datetime | None = None) -> None:
     if not isinstance(bundle, dict) or bundle.get("format") != BUNDLE_FORMAT or version not in BUNDLE_VERSIONS \
             or isinstance(version, bool):
         raise OwnResultsError(f"not a {BUNDLE_FORMAT} bundle of a known version {BUNDLE_VERSIONS}")
-    fields = BODY_FIELDS + ("format", "format_version") + (("open_dates",) if version == 2 else ())
+    fields = BODY_FIELDS + ("format", "format_version") + (("open_dates",) if version in (2, 3) else ())
     _exact(bundle, fields, "bundle")
+    if (version == 3) != is_puter(bundle):
+        raise OwnResultsError("version 3 is exactly the Puter subset contract; versions 1 and 2 never carry it")
     if version == 2 and bundle["series"]["kind"] != "daily":
         raise OwnResultsError("a version-2 bundle is a daily bundle")
     check_body(body_of(bundle), now)
     if not bundle["records"] and version == 1:
-        raise OwnResultsError("only a version-2 daily bundle may be schedule-only (no records)")
+        raise OwnResultsError("only a version-2 or version-3 daily bundle may be schedule-only (no records)")
 
 
 def body_of(bundle: dict) -> dict:
@@ -406,6 +411,272 @@ def parse_json(raw: bytes, what: str):
 
 def dumps(value) -> bytes:
     return (json.dumps(value, indent=1, sort_keys=True, ensure_ascii=False, allow_nan=False) + "\n").encode("utf-8")
+
+
+# ---------------------------------------------------------------- Puter subset contract (bundle v3)
+#
+# Four fixed questions (a subset of the parent panel) on a requested route through Puter, an
+# intermediary. Responses are graded per question; the returned-model identity is a separate
+# dimension and stays "unknown" whenever Puter did not report a model, however the answer
+# graded. These are results for the requested Puter route, not verified maker-model results.
+# The series and subset fingerprints are recomputed here from public fields, so a changed
+# question, prompt, grader, route, SDK or setting cannot pose as the same history.
+
+PUTER_CONTRACT = "puter-subset-v1"
+PUTER_BUNDLE_VERSION = 3
+PUTER_SERVICE = "Puter"
+# The reviewed routes of the private daily Puter configuration. Labels name the intermediary.
+PUTER_ROUTES = {
+    "puter-claude-sonnet-5-5": {"maker": "Anthropic", "exact_identifier": "claude-sonnet-5-5",
+                                "requested_provider": "claude", "label": "Claude Sonnet 5.5 via Puter"},
+    "puter-gpt-6.1-sol": {"maker": "OpenAI", "exact_identifier": "gpt-6.1-sol",
+                          "requested_provider": "openai-completion", "label": "GPT-6.1 Sol via Puter"},
+    # Three-route daily campaign (8 October 2026): Grok through Puter's xAI driver. The route id replaces the
+    # requested model's "/" so that ids stay path- and URL-safe; the requested model itself is unchanged.
+    "puter-x-ai-grok-4.7": {"maker": "xAI", "exact_identifier": "x-ai/grok-4.7",
+                            "requested_provider": "xai", "label": "Grok 4.7 via Puter"},
+}
+PUTER_ROUTE_FIELDS = ("access_kind", "exact_identifier", "label", "maker", "requested_provider", "route_id",
+                      "service_provider")
+PUTER_SERIES_FIELDS = ("contract", "grader_version", "kind", "parent_panel_id", "parent_panel_items",
+                       "parent_panel_sha256", "planned_items", "schedule", "series_fingerprint", "series_id",
+                       "settings", "subset_categories", "subset_fingerprint", "subset_item_ids",
+                       "subset_item_sha256", "subset_prompt_sha256", "synthetic")
+PUTER_SETTINGS = ("max_tokens", "model", "provider", "reasoning_effort", "retries", "sdk_package", "sdk_version",
+                  "stream")
+PUTER_ORDER = "item-major, Claude then GPT"                       # the collector's request order, part of identity
+# Route-specific settings beyond PUTER_SETTINGS, exactly as the collector's series identity holds them
+# (scripts/puter_daily.py route_series_id). Only the Grok route has any: the provider-enforced 1000-token
+# cap, the returned-model names accepted as the requested one, the exact metering prefix, and that no
+# temperature is forwarded. Claude and GPT keep exactly PUTER_SETTINGS, so their identities never change.
+PUTER_ROUTE_SETTINGS = {
+    "puter-x-ai-grok-4.7": {"max_tokens": 1000, "accepted_models": ["grok-4.7", "x-ai/grok-4.7"],
+                            "meter_prefix": "xai:grok-4_dot_7:", "temperature_forwarded": False},
+}
+# The position of a route's requests in the collector's order, part of its identity. Grok is only ever
+# collected daily after Claude and GPT (the reviewed three-route configuration).
+PUTER_ROUTE_ORDER = {"puter-x-ai-grok-4.7": "item-major, after Claude and GPT"}
+PUTER_PLANNED = 4
+PUTER_STATUSES = ("completed", "stopped", "incomplete", "gap")
+NOT_GRADED_KEYS = ("error", "malformed", "missing_text", "refusal", "truncated", "uncertain")
+IDENTITY_KEYS = ("mismatch", "reported_match", "unknown")
+PUTER_COUNTS = ("attempted", "answered", "correct", "incorrect", "format_error", "not_graded", "not_sent", "identity")
+PUTER_RECORD_FIELDS = {
+    "record_version": int, "date": str, "status": str, "run_id": (str, type(None)), "evidence": str,
+    "evidence_sha256": (str, type(None)), "route_id": str, "series_id": str, "planned_items": int,
+    "attempted": (int, type(None)), "answered": (int, type(None)), "correct": (int, type(None)),
+    "incorrect": (int, type(None)), "format_error": (int, type(None)), "not_graded": (dict, type(None)),
+    "not_sent": (int, type(None)), "identity": (dict, type(None)), "interpretation": str,
+}
+PUTER_RUN_ID_RE = re.compile(r"^puter-daily-(\d{8})T(\d{6})Z-([0-9a-f]{10})$")
+PUTER_INTERPRETATION = ("Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. "
+                        "Returned-model identity is counted separately; these are results for the requested Puter "
+                        "route, not verified maker model performance. Not a quality score, and not a decline, "
+                        "improvement or stability verdict.")
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+def is_puter(body) -> bool:
+    return isinstance(body, dict) and isinstance(body.get("series"), dict) and "contract" in body["series"]
+
+
+def _canonical_sha(value) -> str:
+    return sha256_bytes(json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+
+
+def puter_route_id(model) -> str:
+    """The public route id of a requested Puter model (the collector's series-id prefix)."""
+    return f"puter-{str(model).replace('/', '-')}"
+
+
+def puter_series_fingerprint(series: dict) -> str:
+    """The private collector's series identity, recomputed from public fields (same canonical JSON).
+
+    Claude and GPT hash exactly their original fields; a route with its own settings (Grok) adds them and its
+    request position, as the collector does, so no route can pose as another's history."""
+    s = series["settings"]
+    identity = {"panel_sha256": series["parent_panel_sha256"], "item_ids": series["subset_item_ids"],
+                "prompt_sha256": series["subset_prompt_sha256"], "grader_version": series["grader_version"],
+                "model": s["model"], "provider": s["provider"], "reasoning_effort": s["reasoning_effort"],
+                "max_tokens": s["max_tokens"], "stream": s["stream"], "sdk_version": s["sdk_version"],
+                "order": PUTER_ORDER}
+    route_id = puter_route_id(s["model"])
+    if route_id in PUTER_ROUTE_SETTINGS:
+        identity.update({k: s.get(k) for k in PUTER_ROUTE_SETTINGS[route_id] if k != "max_tokens"},
+                        order=PUTER_ROUTE_ORDER[route_id])
+    return _canonical_sha(identity)
+
+
+def puter_subset_fingerprint(series: dict) -> str:
+    """Binds the ordered item ids to each item's content hash and prompt hash, within the parent panel."""
+    return _canonical_sha({"parent_panel_sha256": series["parent_panel_sha256"], "item_ids": series["subset_item_ids"],
+                           "item_sha256": series["subset_item_sha256"], "prompt_sha256": series["subset_prompt_sha256"]})
+
+
+def puter_run_started(run_id) -> datetime:
+    """The UTC start time encoded in a Puter daily run id; raises if it is not one."""
+    match = PUTER_RUN_ID_RE.match(run_id) if isinstance(run_id, str) else None
+    if not match:
+        raise OwnResultsError("a Puter run record needs a Puter daily run id")
+    try:
+        return datetime.strptime(match.group(1) + match.group(2), "%Y%m%d%H%M%S").replace(tzinfo=timezone.utc)
+    except ValueError:
+        raise OwnResultsError("run id holds an impossible start time") from None
+
+
+def check_puter_route(route) -> None:
+    _exact(route, PUTER_ROUTE_FIELDS, "Puter route")
+    reviewed = PUTER_ROUTES.get(route.get("route_id"))
+    if reviewed is None or {k: route[k] for k in reviewed} != reviewed or route["access_kind"] != "intermediary" \
+            or route["service_provider"] != PUTER_SERVICE:
+        raise OwnResultsError("a Puter route must be one of the reviewed intermediary routes, exactly")
+
+
+def check_puter_settings(settings, route: dict) -> None:
+    extra = PUTER_ROUTE_SETTINGS.get(route["route_id"])
+    _exact(settings, tuple(sorted(set(PUTER_SETTINGS) | set(extra or ()))), "Puter settings")
+    if extra is None:
+        cap_ok = type(settings["max_tokens"]) is int and 1 <= settings["max_tokens"] <= 128
+    else:                                         # every route-specific value exactly, types included
+        cap_ok = all(type(settings[k]) is type(v) and settings[k] == v for k, v in extra.items()) \
+            and settings["reasoning_effort"] is None
+    if settings["sdk_package"] != "@heyputer/puter.js" or not isinstance(settings["sdk_version"], str) \
+            or not SEMVER_RE.match(settings["sdk_version"]) or settings["model"] != route["exact_identifier"] \
+            or settings["provider"] != route["requested_provider"] or not cap_ok \
+            or settings["stream"] is not False or settings["retries"] != 0 \
+            or type(settings["retries"]) is not int or settings["reasoning_effort"] not in (None, "low", "medium", "high"):
+        raise OwnResultsError("Puter settings must be the pinned SDK, the route's model and provider, its reviewed "
+                              "token cap (1-128, or the route's own reviewed settings exactly), no streaming, no "
+                              "retries and a known reasoning setting")
+
+
+def check_puter_series(series, route: dict) -> None:
+    _exact(series, PUTER_SERIES_FIELDS, "Puter series")
+    if series["contract"] != PUTER_CONTRACT or series["kind"] != "daily" or not isinstance(series["synthetic"], bool):
+        raise OwnResultsError("a Puter series is a daily series of the puter-subset-v1 contract")
+    if not isinstance(series["parent_panel_id"], str) or not ID_RE.match(series["parent_panel_id"]) \
+            or not _sha(series["parent_panel_sha256"]) or not _count(series["parent_panel_items"], PUTER_PLANNED) \
+            or not isinstance(series["grader_version"], str) or not GRADER_RE.match(series["grader_version"]):
+        raise OwnResultsError("Puter series parent panel or grader description is invalid")
+    if type(series["planned_items"]) is not int or series["planned_items"] != PUTER_PLANNED:
+        raise OwnResultsError(f"a Puter series plans exactly {PUTER_PLANNED} questions")
+    if series["parent_panel_items"] <= series["planned_items"]:
+        raise OwnResultsError("the subset must be strictly smaller than its parent panel (never the panel shown as four)")
+    ids, items, prompts, cats = (series[k] for k in ("subset_item_ids", "subset_item_sha256", "subset_prompt_sha256",
+                                                     "subset_categories"))
+    if not all(isinstance(x, list) and len(x) == PUTER_PLANNED for x in (ids, items, prompts, cats)) \
+            or len(set(map(str, ids))) != PUTER_PLANNED or not all(isinstance(i, str) and ID_RE.match(i) for i in ids) \
+            or not all(_sha(h) for h in items + prompts) \
+            or not all(isinstance(c, str) and CATEGORY_RE.match(c) for c in cats):
+        raise OwnResultsError("the subset must list 4 distinct item ids with their item and prompt hashes and categories")
+    check_puter_settings(series["settings"], route)
+    if series["subset_fingerprint"] != puter_subset_fingerprint(series):
+        raise OwnResultsError("subset_fingerprint does not match the listed items and prompts")
+    if series["series_fingerprint"] != puter_series_fingerprint(series):
+        raise OwnResultsError("series_fingerprint does not match the subset, grader, route and settings")
+    if series["series_id"] != f"{route['route_id']}--daily--{series['series_fingerprint'][:12]}":
+        raise OwnResultsError("Puter series id must be route--daily--fingerprint prefix")
+    check_schedule(series["schedule"])
+
+
+def validate_puter_record(record, route: dict, series: dict) -> None:
+    _exact(record, PUTER_RECORD_FIELDS, "a Puter record")
+    for key, kind in PUTER_RECORD_FIELDS.items():
+        allowed = kind if isinstance(kind, tuple) else (kind,)
+        if not isinstance(record[key], allowed) or isinstance(record[key], bool):
+            raise OwnResultsError(f"{key} has the wrong type")              # booleans are never counts
+    if record["record_version"] != 1 or record["status"] not in PUTER_STATUSES or record["evidence"] not in EVIDENCE \
+            or record["interpretation"] != PUTER_INTERPRETATION:
+        raise OwnResultsError("unknown Puter record version, status, evidence or interpretation")
+    if record["route_id"] != route["route_id"] or record["series_id"] != series["series_id"] \
+            or record["planned_items"] != series["planned_items"]:
+        raise OwnResultsError(f"Puter record for {record['date']} is bound to another route, series or plan")
+    _day(record["date"])
+    counts_present = [record[k] is not None for k in PUTER_COUNTS]
+    if record["status"] == "gap":
+        if record["evidence"] != "none" or record["run_id"] is not None or record["evidence_sha256"] is not None \
+                or any(counts_present):
+            raise OwnResultsError("a gap carries no run, evidence or counts")
+        return
+    started = puter_run_started(record["run_id"])
+    if started.date().isoformat() != record["date"]:
+        raise OwnResultsError("run id must be a run started on the record's date")
+    if record["evidence_sha256"] is not None and not _sha(record["evidence_sha256"]):
+        raise OwnResultsError("evidence_sha256 must be a sha256")
+    if record["evidence"] == "none":
+        raise OwnResultsError("a run record needs verified or unavailable evidence")
+    if record["evidence"] == "unavailable":
+        if any(counts_present):
+            raise OwnResultsError("counts without verified evidence are not published")
+        return
+    if record["status"] not in ("completed", "stopped") or record["evidence_sha256"] is None or not all(counts_present):
+        raise OwnResultsError("verified evidence needs a closed run, its evidence hash and every count")
+    planned = record["planned_items"]
+    ng, ident = record["not_graded"], record["identity"]
+    if set(ng) != set(NOT_GRADED_KEYS) or set(ident) != set(IDENTITY_KEYS):
+        raise OwnResultsError("not_graded and identity must hold exactly their count keys")
+    scalars = [record[k] for k in ("attempted", "answered", "correct", "incorrect", "format_error", "not_sent")]
+    if not all(_count(v, 0, planned) for v in scalars + list(ng.values()) + list(ident.values())):
+        raise OwnResultsError("every Puter count is a whole number within the planned questions")
+    if record["attempted"] + record["not_sent"] != planned \
+            or record["correct"] + record["incorrect"] + record["format_error"] != record["answered"] \
+            or record["answered"] + sum(ng.values()) != record["attempted"] \
+            or sum(ident.values()) != record["attempted"]:
+        raise OwnResultsError("Puter counts must add up: attempted + not sent = planned; graded = answered; "
+                              "answered + not graded = attempted; identity counts = attempted")
+    if SECRETISH.search(json.dumps(record)) or FIXTURE_MARK in json.dumps(record):
+        raise OwnResultsError("record contains something that looks like a credential or a fixture label")
+
+
+def check_puter_body(body: dict, now: datetime | None = None) -> None:
+    as_of = parse_stamp(body["as_of"])
+    if now is not None and as_of > now + timedelta(minutes=5):
+        raise OwnResultsError("as_of is in the future")
+    route, series, records = body["route"], body["series"], body["records"]
+    check_puter_route(route)
+    check_puter_series(series, route)
+    if not isinstance(records, list) or len(records) > MAX_RECORDS:
+        raise OwnResultsError(f"records must be a list of at most {MAX_RECORDS}")
+    keys, dates, schedule = set(), set(), series["schedule"]
+    for record in records:
+        validate_puter_record(record, route, series)
+        key = _record_key(record)
+        if record["date"] > as_of.date().isoformat() or not schedule["start_date"] <= record["date"] <= schedule["end_date"]:
+            raise OwnResultsError(f"record {key} is later than as_of or outside the scheduled campaign")
+        if record["run_id"] is not None and puter_run_started(record["run_id"]) > as_of:
+            raise OwnResultsError(f"record {key} started after as_of; a snapshot cannot report a later run")
+        if record["date"] in dates or key in keys:
+            raise OwnResultsError(f"two records for {record['date']} in one daily series")
+        dates.add(record["date"])
+        keys.add(key)
+    if "open_dates" in body:
+        _check_open_dates(body, as_of, dates)
+
+
+def puter_eligible(record: dict) -> bool:
+    """A graph point: verified, every planned question attempted and gradeable, and no identity mismatch.
+
+    A run stopped after this route's four questions is still a complete four-question run;
+    a partial or ungradeable run never gets a smaller denominator or a point."""
+    return record["evidence"] == "verified" and record["status"] in ("completed", "stopped") \
+        and record["attempted"] == record["planned_items"] and record["answered"] == record["planned_items"] \
+        and record["identity"]["mismatch"] == 0
+
+
+def puter_preview_entries(existing=()) -> list:
+    """Catalogue entries for the reviewed Puter routes, used only by preview builds (never written to catalog/).
+
+    Routes the catalogue already lists (catalog/models.json holds the three reviewed Puter entries since
+    8 October 2026) are skipped, so a route never maps to two entries; a test catalogue without them still
+    gets the preview-only stand-ins."""
+    present = {e.get("id") for e in existing}
+    # Ids come from the safe route id (Grok's requested model holds a "/"); the two original ids are unchanged.
+    return [{"id": "puter." + route_id[len("puter-"):], "name": r["label"], "maker": r["maker"],
+             "family": r["label"].split(" via ")[0].rsplit(" ", 1)[0], "identity_kind": "exact",
+             "exact_identifier": r["exact_identifier"], "service_provider": PUTER_SERVICE, "access_kind": "intermediary",
+             "availability": "unknown", "route_ids": [], "sources": [],
+             "notes": "Preview-only entry: the requested route through Puter. Not part of the published catalogue."}
+            for route_id, r in PUTER_ROUTES.items() if "puter." + route_id[len("puter-"):] not in present]
 
 
 # ---------------------------------------------------------------- publication policy (T13)
@@ -607,6 +878,8 @@ def check_source(source: dict, bundle: dict, review: dict, policies: dict) -> No
         if {e["sha256"]: e for e in review["admitted"]}.get(digest) != source:
             raise OwnResultsError(f"dataset source {digest[:12]} was not admitted by the review manifest")
         return
+    if is_puter(bundle):
+        raise OwnResultsError("automatic policy admission of Puter results is not supported; a person reviews them")
     approved = policies.get(source["policy_sha256"])
     if approved is None:
         raise OwnResultsError(f"dataset source {digest[:12]} names a policy that is not approved")
@@ -663,7 +936,16 @@ def load_admitted(data_path: Path = DATA_PATH, review_path: Path = REVIEW_PATH, 
     if dumps(rebuild(dataset["sources"], review, folder, now, policies)) != raw:
         raise OwnResultsError("the dataset does not match a rebuild from its admitted candidates; "
                               "re-import admitted candidates instead of editing data.json")
+    _refuse_synthetic_in_production(dataset, data_path)
     return dataset
+
+
+def _refuse_synthetic_in_production(dataset: dict, data_path: Path) -> None:
+    """A synthetic preview series (Puter fixtures) can never be part of the production dataset."""
+    if Path(data_path).resolve() == DATA_PATH.resolve() and any(
+            is_puter(body) and body["series"]["synthetic"] is not False for body in dataset["series"].values()):
+        raise OwnResultsError("the production dataset holds a synthetic preview series; synthetic results are "
+                              "never published")
 
 
 def fixture_digests(folder: Path = FIXTURE_DIR) -> set:
@@ -775,6 +1057,7 @@ def _admit(raw: bytes, source: dict, review_path: Path, output_path: Path, now: 
         return "unchanged"                                   # this exact candidate is already published
     merged = merge(dataset, bundle, source)
     validate_dataset(merged, now)
+    _refuse_synthetic_in_production(merged, output_path)
     new_raw = dumps(merged)
     copy = folder / f"{digest}.json"
     if copy.exists() and copy.read_bytes() != raw:
@@ -884,7 +1167,8 @@ def daily_rows(body: dict) -> dict:
             rows.append({"date": record["date"], "state": record["status"], "record": record})
     rows.sort(key=lambda r: r["date"])
     for row in rows:
-        row["eligible"] = row["record"] is not None and _usable(row["record"])
+        row["eligible"] = row["record"] is not None and (
+            puter_eligible(row["record"]) if is_puter(body) else _usable(row["record"]))
     shown = {r["date"] for r in rows}
     pending = [d.isoformat() for d in campaign_days(body["series"]["schedule"]) if d.isoformat() not in shown]
     return {"rows": rows, "not_yet_due": len(pending), "pending_dates": pending}
@@ -914,6 +1198,22 @@ def daily_view(sid: str, body: dict) -> dict:
             "grader_version": series["grader_version"], "config_fingerprint": series["config_fingerprint"]}
 
 
+def puter_view(sid: str, body: dict) -> dict:
+    """One Puter series as the page draws it: 0-4 scale, requested route, sample size and identity, never merged."""
+    series, route = body["series"], body["route"]
+    rows = daily_rows(body)
+    return {"contract": PUTER_CONTRACT, "series_id": sid, "as_of": body["as_of"], "schedule": series["schedule"],
+            "rows": rows["rows"], "not_yet_due": rows["not_yet_due"], "pending_dates": rows["pending_dates"],
+            "open_dates": list(body.get("open_dates", [])), "panel_items": series["planned_items"],
+            "planned_items": series["planned_items"], "parent_panel_id": series["parent_panel_id"],
+            "parent_panel_items": series["parent_panel_items"], "subset_item_ids": series["subset_item_ids"],
+            "subset_categories": series["subset_categories"], "grader_version": series["grader_version"],
+            "settings": series["settings"], "series_fingerprint": series["series_fingerprint"],
+            "subset_fingerprint": series["subset_fingerprint"], "synthetic": series["synthetic"],
+            "route": {k: route[k] for k in ("label", "maker", "exact_identifier", "requested_provider",
+                                            "service_provider")}}
+
+
 def site_tests(dataset: dict, catalog_entries: list) -> dict:
     """The page's baseline_tests record. Calibration and daily evidence stay separate.
 
@@ -931,6 +1231,9 @@ def site_tests(dataset: dict, catalog_entries: list) -> dict:
         if rec["route_id"] != body["route"]["route_id"]:
             raise OwnResultsError(f"catalogue entry {entry_id} would mix two routes")
         series = body["series"]
+        if is_puter(body):                       # its own method text; never mixed into the 40-question methods
+            rec["daily_series"].append(puter_view(sid, body))
+            continue
         method = {k: series[k] for k in ("panel_id", "panel_items", "panel_categories", "grader_version", "settings")}
         if method not in methods:
             methods.append(method)
@@ -990,9 +1293,17 @@ def main(argv=None) -> int:
             print(f"series {bundle['series']['series_id']} ({bundle['series']['kind']}), as of {bundle['as_of']}")
             if not bundle["records"]:
                 print("  schedule only: no closed runs yet")
+            if is_puter(bundle):
+                print(f"  {bundle['route']['label']}; small sample: {PUTER_PLANNED} questions"
+                      + ("; SYNTHETIC PREVIEW, never publishable" if bundle["series"]["synthetic"] else ""))
             for r in sorted(bundle["records"], key=lambda r: (r["date"], _record_key(r))):
-                score = (f"{r['first_attempt_correct']} of {r['scheduled_items']} first attempts correct"
-                         if r["evidence"] == "verified" else "no counts")
+                if is_puter(bundle):
+                    score = (f"{r['correct']} of {r['planned_items']} correct, {r['attempted']} attempted, identity "
+                             f"{'confirmed' if r['identity']['reported_match'] == r['attempted'] else 'not confirmed'}"
+                             if r["evidence"] == "verified" else "no counts")
+                else:
+                    score = (f"{r['first_attempt_correct']} of {r['scheduled_items']} first attempts correct"
+                             if r["evidence"] == "verified" else "no counts")
                 print(f"  {r['date']} {r['status']} evidence={r['evidence']}: {score}")
             return 0
         print(import_bundle(Path(args.candidate), Path(args.review), Path(args.data)))

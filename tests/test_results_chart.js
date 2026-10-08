@@ -87,6 +87,60 @@ assert.equal(newest.xTicks[0].label, "10 Oct");
 assert.ok(older.points.every((p) => p.date < "2026-10-10"));
 assert.ok(newest.segments.every((s) => s.every((p) => p.date >= "2026-10-10")));
 
+// ---------------------------------------------------------------- Puter four-question series
+// The Gemini messages above stay unchanged; Puter series use their own wording and a 0-4 scale.
+// Absent in the public package, which ships no synthetic Puter fixtures.
+if (views["puter-several"]) {
+  const pSeveral = views["puter-several"][0];
+  assert.equal(pSeveral.contract, "puter-subset-v1");
+  const pl = C.layout(pSeveral, { width: 720, height: 250 });
+  assert.equal(pl.max, 4);
+  assert.deepEqual(pl.yTicks.map((t) => t.value), [0, 1, 2, 3, 4]);                // integer counts, never percentages
+  const pp = Object.fromEntries(pl.points.map((p) => [p.date, p]));
+  assert.deepEqual(pl.points.map((p) => p.date), ["2026-10-05", "2026-10-06", "2026-10-11", "2026-10-12"]);
+  assert.equal(pp["2026-10-06"].correct, 0);                                        // a complete genuine zero is a point
+  assert.equal(pp["2026-10-06"].y, pl.plotBottom);
+  assert.ok(pp["2026-10-05"].label.includes("3 of 4 correct"));
+  assert.ok(pp["2026-10-05"].label.includes("Model identity not confirmed"));
+  assert.ok(pp["2026-10-12"].label.includes("Model identity not confirmed"));       // 1 of 4 reported: still unconfirmed
+  assert.deepEqual(pl.segments.map((s) => s.map((p) => p.date)), [["2026-10-05", "2026-10-06"], ["2026-10-11", "2026-10-12"]]);
+  const pm = Object.fromEntries(pl.marks.filter((m) => m.kind !== "pending").map((m) => [m.date, m]));
+  assert.equal(pm["2026-10-07"].kind, "gap");
+  assert.equal(pm["2026-10-08"].kind, "partial");
+  assert.ok(pm["2026-10-08"].label.includes("2 of 4 questions attempted"));        // never "2 of 2"
+  assert.ok(pm["2026-10-08"].label.includes("not plotted"));
+  assert.equal(pm["2026-10-09"].kind, "unavailable");                              // text omitted: no numbers
+  assert.equal(pm["2026-10-10"].kind, "partial");                                  // truncated: not gradeable
+  assert.ok(pm["2026-10-10"].label.includes("3 gradeable"));
+  for (const m of pl.marks) assert.equal(m.y, undefined);
+  assert.equal(pl.message, null);
+
+  const gpt = C.layout(views["puter-gpt"][0]);
+  const gm = Object.fromEntries(gpt.marks.map((m) => [m.date, m]));
+  assert.equal(gm["2026-10-08"].kind, "partial");                                  // identity mismatch: never a point
+  assert.ok(gm["2026-10-08"].label.includes("differed from the requested model"));
+  assert.equal(gm["2026-10-09"].kind, "partial");                                  // a refusal: not gradeable
+  assert.equal(gm["2026-10-11"].kind, "unavailable");                              // incomplete: uncertain, no numbers
+  assert.equal(gm["2026-10-12"].kind, "open");
+  assert.deepEqual(gpt.points.map((p) => p.date), ["2026-10-05", "2026-10-06", "2026-10-10"]);
+  assert.deepEqual(gpt.segments.map((s) => s.map((p) => p.date)), [["2026-10-05", "2026-10-06"]]);
+
+  const pEmpty = C.layout(views["puter-schedule-only"][0]);
+  assert.equal(pEmpty.points.length, 0);
+  assert.equal(pEmpty.message, "No daily results yet");
+  const pOne = C.layout(views["puter-one-point"][0]);
+  assert.equal(pOne.points.length, 1);
+  assert.equal(pOne.segments.length, 0);
+  assert.equal(pOne.message, "Not enough history to show change");
+
+  const pBoth = views["puter-two-setups"];
+  assert.equal(pBoth.length, 2);                                                    // a changed SDK: separate series
+  assert.notEqual(pBoth[0].series_id, pBoth[1].series_id);
+  const [pNew, pOld] = pBoth.map((s) => C.layout(s));
+  assert.deepEqual(pNew.points.map((p) => p.date), ["2026-10-13", "2026-10-14"]);
+  assert.ok(pOld.points.every((p) => p.date < "2026-10-13"));
+}
+
 // No verdict vocabulary anywhere in the layout module.
 const source = fs.readFileSync(require.resolve("../site/results-chart.js"), "utf8").toLowerCase();
 for (const word of ["stable", "nerf", "significan", "confidence", "decline", "improv", "degrad"]) {

@@ -228,3 +228,7 @@ ol.feature-list { display: grid; gap: 8px; grid-template-columns: repeat(auto-fi
 .feature-card a { font-weight: 600; overflow-wrap: anywhere; }
 .tag[data-evidence="none"], .tag[data-evidence="scheduled"] { color: var(--muted); }
 .highlights h2.all-models { border-top: 1px solid var(--divider); padding-top: 16px; }
+/* Puter four-question series (synthetic preview banner and labels); same restrained look. */
+.notice.synthetic { font-weight: 600; border-color: var(--ink); }
+.puter-labels .labels { margin: 8px 0 4px; }
+.tag[data-kind="sample"], .tag[data-kind="identity"] { font-weight: 600; color: var(--ink); }

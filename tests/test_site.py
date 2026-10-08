@@ -302,10 +302,12 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                     self.assertIn("Not tested by Baseline", page["text"])
                     self.assertIn("No Baseline test history yet.", page["text"])
                     self.assertIn("Aider coding results", page["text"])
-                    charts = [a for a in page["aria"] if a.startswith("Pass rate for ")]
-                    self.assertEqual(len(charts), 1)
-                    self.assertIn("Points are not connected.", charts[0])
-                    self.assertIn(f"Hatched band: no observations recorded here after {latest}.", charts[0])
+                    # One graph per model (6 October 2026): third-party records are a dated table, never a chart.
+                    self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
+                    self.assertEqual(page["totalCharts"], 0)
+                    self.assertIn("are not included in Baseline's graph", page["text"])
+                    self.assertIn(latest + (" (date only)" if route["observations"][-1]["precision"] == "day" else ""),
+                                  page["text"])
                     for obs in route["observations"]:
                         self.assertIn(obs["observed_at"] + (" (date only)" if obs["precision"] == "day" else ""),
                                       page["text"])
@@ -441,7 +443,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         page = self.render("#deepseek-api.deepseek-chat")
         self.assertEqual(page["hash"], "#model/deepseek-api.deepseek-chat?route=deepseek-api.deepseek-chat")
         self.assertIn("deepseek-chat", page["text"])
-        self.assertIn("Pass rate by run", page["text"])
+        self.assertIn("View dated results and sources", page["text"])            # the evidence table, not a chart
 
     def test_unknown_ids_get_a_usable_page(self):
         for hash_ in ("#model/no-such-model", "#model/%E0%A4%A", "#no-such-route"):
@@ -453,6 +455,10 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     def test_sources_and_about_keep_attribution_and_limits(self):
         sources = self.render("#sources")["text"]
         self.assertIn("Apache License 2.0", sources)
+        # An intermediary's model listing is shown under that service, never as the maker's own listing.
+        self.assertIn("Puter: api.puter.com/puterai/chat/models (checked 2026-10-07)", sources)
+        self.assertNotIn("Anthropic: api.puter.com", sources)
+        self.assertIn("does not confirm which model answers a request", sources)
         self.assertIn("link only", sources)
         self.assertIn("Ingestion log", sources)
         about = self.render("#about")["text"]          # the first release's About link still works
@@ -606,14 +612,15 @@ class OwnResultsPageTests(unittest.TestCase):
         out = folder / "dist"
         data = build_site.build(out, generated_at=GENERATED, own_preview=tuple(preview), now=FIXTURE_NOW, **own)
 
-        def page(hash_):
-            result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(out), hash_],
-                                    capture_output=True, text=True, timeout=60, encoding="utf-8")
+        def page(hash_, setup=None):
+            args = ["node", str(ROOT / "tests" / "render_page.js"), str(out), hash_] + ([] if setup is None else [setup])
+            result = subprocess.run(args, capture_output=True, text=True, timeout=60, encoding="utf-8")
             self.assertEqual(result.returncode, 0, result.stderr)
-            return json.loads(result.stdout)
+            render.last_result = json.loads(result.stdout)
+            return render.last_result
 
-        def render(hash_):
-            return page(hash_)["text"]
+        def render(hash_, setup=None):
+            return page(hash_, setup)["text"]
         render.page = page
         records, _ = registry.load_registry(ROOT / "registry")
         render.problems = lambda: release_check.inspect_bundle(out.resolve(), data, records, **own)
@@ -778,14 +785,66 @@ class DailyGraphPageTests(OwnResultsPageTests):
         one = self.site([self.graph("one-point.json")])(f"#model/{GEMINI}")
         self.assertIn("One daily test; more days are needed to show a pattern.", one)
 
-    def test_two_setups_are_separate_histories_newest_first(self):
-        render = self.site([self.graph("several-points.json"), self.graph("second-setup.json")])
-        text = render(f"#model/{GEMINI}")
-        self.assertIn("each setup has its own history below, newest first", text)
-        current = text.index("Current setup: temperature 1, thinking level LOW")
-        earlier = text.index("Earlier setup: temperature 1, thinking level MINIMAL")
-        self.assertLess(current, earlier)
-        self.assertEqual(text.count("Correct answers out of 40 (first attempts)"), 2)
+    def test_one_chart_with_setup_selector(self):
+        render = self.site([self.graph("several-points.json"),
+                            self.graph("second-setup.json")])
+        current = render(f"#model/{GEMINI}")
+        self.assertEqual(render.last_result["dailyCharts"], 1)
+        self.assertEqual(render.last_result["selectedSetup"], "0")
+        self.assertEqual(current.count("Correct answers out of 40 (first attempts)"), 1)
+        earlier = render(f"#model/{GEMINI}", setup="1")
+        self.assertEqual(render.last_result["dailyCharts"], 1)
+        self.assertEqual(render.last_result["selectedSetup"], "1")
+        self.assertNotEqual(current, earlier)
+        for text in (current, earlier):
+            self.assertIn("Test setup", text)
+            self.assertIn("Choose a test setup. Different setups are kept separate and are never joined into one trend.",
+                          text)
+            self.assertIn("Latest setup", text)                                   # an option label, not "active"
+            self.assertNotIn("history below", text)
+            self.assertNotIn("Current setup", text)
+        self.assertIn("Results checked up to 2026-10-12 12:00:00 UTC.", current)   # the newest setup first
+        self.assertNotIn("Results checked up to 2026-10-09", current)
+        self.assertIn("Results checked up to 2026-10-09 12:00:00 UTC.", earlier)   # only the chosen setup
+        self.assertNotIn("Results checked up to 2026-10-12", earlier)
+        self.assertIn("Selected: temperature 1, thinking level MINIMAL", earlier)
+        self.assertIn("Selected: temperature 1, thinking level LOW", current)
+        self.assertIn("daily 02:00–03:00 UTC · configuration b2b2b2b2", current)   # labels name window and setup
+        self.assertIn("configuration a1a1a1a1", current)
+        render(f"#model/{GEMINI}", setup="0")                                      # and back again
+        self.assertEqual((render.last_result["dailyCharts"], render.last_result["selectedSetup"]), (1, "0"))
+        single = self.site([self.graph("several-points.json")])
+        text = single(f"#model/{GEMINI}")
+        self.assertIsNone(single.last_result["selectedSetup"])                     # one setup: no selector
+        self.assertEqual(single.last_result["dailyCharts"], 1)
+        self.assertIn("Setup: temperature 1, thinking level MINIMAL", text)        # the same description
+
+    def test_a_newer_setup_with_no_scores_stays_empty_without_borrowing_older_ones(self):
+        newer = copy.deepcopy(self.graph("second-setup.json"))
+        newer.update(records=[], format_version=2, open_dates=[])                 # scheduled, nothing collected yet
+        render = self.site([self.graph("several-points.json"), newer])
+        latest = render.page(f"#model/{GEMINI}")
+        self.assertEqual((latest["dailyCharts"], latest["selectedSetup"]), (1, "0"))
+        self.assertIn("Waiting for daily results.", latest["text"])
+        self.assertFalse([a for a in latest["aria"] if " correct on the first attempt" in a])   # no older score shown
+        self.assertNotIn("0 of 40 correct", latest["text"])
+        older = render.page(f"#model/{GEMINI}", setup="1")
+        self.assertEqual(older["dailyCharts"], 1)
+        self.assertEqual(len([a for a in older["aria"] if " correct on the first attempt" in a]), 4)
+
+    def test_calibration_and_unmeasured_app_entries_stay_outside_the_graph(self):
+        render = self.site([self.fixture("calibration.json"), self.graph("several-points.json"),
+                            self.graph("second-setup.json")])
+        for setup in (None, "1"):
+            text = render(f"#model/{GEMINI}", setup=setup)
+            self.assertEqual(render.last_result["dailyCharts"], 1)
+            graph = text[text.index("Daily test scores"):text.index("One-off setup test")]
+            self.assertNotIn("correct on this test", graph)                       # calibration never in a setup
+            self.assertIn("31 of 40 correct on this test", text[text.index("One-off setup test"):])
+        app = render.page("#model/google-app.gemini")                             # similar name, different access
+        self.assertEqual((app["dailyCharts"], app["selectedSetup"]), (0, None))
+        self.assertIn("No Baseline test history yet.", app["text"])
+        self.assertNotIn("Daily test scores", app["text"])
 
     def test_calibration_and_daily_stay_apart_and_entries_without_results_unchanged(self):
         render = self.site([self.fixture("calibration.json"), self.graph("several-points.json")])
@@ -855,9 +914,13 @@ class DailyGraphPageTests(OwnResultsPageTests):
                                       text)
                 if not rec["daily_series"]:
                     self.assertIn("No daily test results have been published for this model yet.", text)
-                for series in rec["daily_series"]:
+                # The initial page shows only the selected (latest) setup. Older setups are
+                # checked by the selector tests, not simultaneously rendered in this page.
+                for series in rec["daily_series"][:1]:
                     points = sum(1 for row in series["rows"] if row["eligible"])
-                    message = {0: "Waiting for daily results.", 1: "One daily test; more days are needed to show a pattern."}
+                    message = ({0: "No daily results yet.", 1: "Not enough history to show change."}
+                               if series.get("contract") == "puter-subset-v1" else
+                               {0: "Waiting for daily results.", 1: "One daily test; more days are needed to show a pattern."})
                     if points in message:
                         self.assertIn(message[points], text)
                     if any(row["state"] == "open" for row in series["rows"]):
@@ -865,6 +928,85 @@ class DailyGraphPageTests(OwnResultsPageTests):
                     if any(row["state"] == "gap" for row in series["rows"]):
                         self.assertIn("Missed (recorded gap)", text)
                 self.assertIn("Daily test scores", text)
+
+
+PUTER_FIXTURES = OWN_FIXTURES / "puter"
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+@unittest.skipUnless(PUTER_FIXTURES.is_dir(), "synthetic Puter fixtures stay private (not in the public package)")
+class PuterSetupSelectorTests(OwnResultsPageTests):
+    """Selecting a four-question series changes the scale, explanation and identity caveats together."""
+
+    def test_selected_puter_setup_has_its_own_scale_and_caveats(self):
+        render = self.site([], preview=[PUTER_FIXTURES / name for name in build_site.PUTER_PREVIEW])
+        entry = "puter.claude-sonnet-5-5"
+        self.assertEqual(len(render.data["baseline_tests"]["entries"][entry]["daily_series"]), 2)
+        caveat = "Four questions are a small sample and are not comparable with the 40-question tests."
+        pages = [render.page(f"#model/{entry}", setup=setup) for setup in ("0", "1")]
+        for page in pages:
+            text = page["text"]
+            self.assertEqual(page["dailyCharts"], 1)
+            self.assertIn("Correct answers out of 4, by test date (UTC)", text)
+            self.assertNotIn("out of 40", text)
+            self.assertEqual(text.count(caveat), 1)                               # only for the selected series
+            self.assertEqual(text.count("Small sample: 4 questions"), 1)
+            self.assertIn("Synthetic preview — not real measurements", text)
+            self.assertTrue(any("Daily test scores: correct answers out of 4 by test date" in a for a in page["aria"]))
+        self.assertNotEqual(pages[0]["text"], pages[1]["text"])
+        self.assertEqual([p["selectedSetup"] for p in pages], ["0", "1"])
+        gpt = render.page("#model/puter.gpt-6.1-sol")                             # one setup with an identity caveat
+        self.assertEqual((gpt["dailyCharts"], gpt["selectedSetup"]), (1, None))
+        self.assertIn("Model identity not confirmed", gpt["text"])                # its own identity caveat
+        self.assertEqual(gpt["text"].count(caveat), 1)
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class ThirdPartyEvidenceTests(OwnResultsPageTests):
+    """Third-party records stay as attributed tables; Baseline's daily history is the page's only graph."""
+
+    def external_entry(self, data):
+        with_records = {r["id"]: r for r in data["routes"] if r["observations"]}
+        entry = next(e for e in data["catalog"] if set(e["route_ids"]) & set(with_records))
+        route = with_records[next(i for i in entry["route_ids"] if i in with_records)]
+        source = next(s for s in data["sources"] if s["id"] == route["source_ids"][0])
+        return entry, route, source
+
+    def assert_evidence_kept(self, text, route, source):
+        self.assertIn("Other published tests", text)
+        self.assertIn("These third-party results use a different test and are not included in Baseline's graph. "
+                      "The dated records and sources are retained below; missing dates are not filled in.", text)
+        self.assertNotIn("Pass rate by run", text)
+        self.assertNotIn("Scroll the chart sideways", text)
+        self.assertIn("Runs", text)
+        for obs in route["observations"]:
+            self.assertIn(str(obs["metric"]["numerator"]), text)                 # every dated record still listed
+        self.assertIn(source["author"], text)                                    # attribution retained
+        if source.get("licence"):
+            self.assertIn(source["licence"]["name"], text)
+        self.assertIn("Source and licence", text)
+
+    def test_an_external_only_model_has_no_graph_and_an_honest_empty_state(self):
+        render = self.site([])
+        entry, route, source = self.external_entry(render.data)
+        page = render.page(f"#model/{entry['id']}")
+        self.assertEqual((page["totalCharts"], page["dailyCharts"], page["selectedSetup"]), (0, 0, None))
+        self.assertIn("No Baseline test history yet.", page["text"])
+        self.assertIn("We don't yet have our own repeated tests for this model.", page["text"])
+        self.assertNotIn("Daily test scores", page["text"])
+        self.assert_evidence_kept(page["text"], route, source)
+
+    def test_a_model_with_both_kinds_of_evidence_draws_only_baseline_s_graph(self):
+        data = self.site([]).data
+        entry, route, source = self.external_entry(data)
+        render = self.site([retarget(self.graph_fixture("several-points.json"), entry)])
+        page = render.page(f"#model/{entry['id']}")
+        self.assertEqual((page["totalCharts"], page["dailyCharts"]), (1, 1))
+        self.assertIn("Daily test scores", page["text"])
+        self.assert_evidence_kept(page["text"], route, source)
+
+    def graph_fixture(self, name):
+        return json.loads((GRAPH_FIXTURES / name).read_text(encoding="utf-8"))
 
 
 class PageSourceTests(unittest.TestCase):

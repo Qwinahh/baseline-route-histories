@@ -418,7 +418,8 @@
     ]);
   }
   var ROW_STATE = { completed: "Completed", stopped: "Stopped early", interrupted: "Interrupted",
-                    gap: "Missed (recorded gap)", no_record: "No record", open: "Still open" };
+                    gap: "Missed (recorded gap)", no_record: "No record", open: "Still open",
+                    incomplete: "Incomplete (outcome uncertain)" };
   function dailyRow(row) {
     var r = row.record;
     var state = ROW_STATE[row.state] || row.state;
@@ -443,10 +444,13 @@
   var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·" };
   function dailyChart(series) {
     var lay = Chart.layout(series, { width: 720, height: 250 });
+    var puter = isPuter(series);
     var detail = el("p", { class: "point-detail", "aria-live": "polite" },
       lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
     var svg = s("svg", { class: "chart daily-chart", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
-      "aria-label": "Daily test scores: correct answers out of " + lay.max + " by test date. " + lay.points.length +
+      "aria-label": (puter ? series.route.label + ", small sample of " + lay.max + " questions. Model identity not " +
+        "confirmed unless stated per day. " : "") +
+        "Daily test scores: correct answers out of " + lay.max + " by test date. " + lay.points.length +
         (lay.points.length === 1 ? " daily score" : " daily scores") + " and " +
         lay.marks.filter(function (m) { return m.kind !== "pending"; }).length + " dates without a score." });
     lay.yTicks.forEach(function (t) {
@@ -491,15 +495,18 @@
                                   class: "chart-message" }, lay.message));
     }
     var legend = el("ul", { class: "chart-legend" }, [
-      el("li", {}, "● a daily score: every question attempted. Lines join consecutive days only."),
+      el("li", {}, puter ? "● a daily score: all " + lay.max + " questions attempted and gradeable, with no model mismatch. " +
+        "Lines join consecutive days only." : "● a daily score: every question attempted. Lines join consecutive days only."),
       el("li", {}, "x a missed day: no run, or nothing recorded."),
-      el("li", {}, "~ an incomplete run: shown with its attempted count, not as a score."),
+      el("li", {}, puter ? "~ a partial or ungradeable run, or a model mismatch: shown with its counts, not as a score."
+        : "~ an incomplete run: shown with its attempted count, not as a score."),
       el("li", {}, "? run evidence unavailable: no score shown."),
       el("li", {}, "o a run still open or unresolved when last checked: no score yet, not counted as missed."),
       el("li", {}, "· a later date: not yet tested or not yet published.")
     ]);
     return el("figure", { class: "own-chart" }, [
-      el("p", { class: "axis-title" }, "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
+      el("p", { class: "axis-title" }, puter ? "Correct answers out of " + lay.max + ", by test date (UTC)"
+        : "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
       el("div", { class: "chart-scroll" }, svg),
       lay.message ? el("p", { class: "chart-note" }, lay.message + ".") : null,
       detail, legend]);
@@ -513,7 +520,23 @@
         ? " Nothing newer has been published since then; later dates are not yet known, not confirmed as missed." : ""));
   }
 
-  function dailyBlock(rec) {
+  // One graph area per model (owner decision, 6 October 2026): a labelled selector shows one Baseline
+  // test setup at a time. Setups are never stacked, merged or joined into one trend.
+  // Every label is unique: two setups with the same settings and dates still differ in their daily
+  // window or configuration, and both are named.
+  function windowText(sch) {
+    var start = sch.window_start_utc.split(":").map(Number);
+    var closes = start[0] * 60 + start[1] + sch.window_minutes;
+    return sch.window_start_utc + "–" + ("0" + Math.floor(closes / 60) % 24).slice(-2) + ":" + ("0" + closes % 60).slice(-2) + " UTC";
+  }
+  function setupText(d, e) {
+    var service = isPuter(d) ? d.route.label + " through " + d.route.service_provider : (e ? accessText(e) : "");
+    var config = String(d.config_fingerprint || d.series_fingerprint || "").slice(0, 8);
+    return (isPuter(d) ? puterSettingsText(d.settings) : ownSettingsText(d.settings)) + " · " + d.panel_items +
+      " questions · " + (service ? service + " · " : "") + "scheduled " + dayText(d.schedule.start_date) + " to " +
+      dayText(d.schedule.end_date) + ", daily " + windowText(d.schedule) + (config ? " · configuration " + config : "");
+  }
+  function dailyBlock(rec, e) {
     var list = rec.daily_series || (rec.daily ? [rec.daily] : []);
     var parts = [el("h3", {}, "Daily test scores")];
     if (!list.length) {
@@ -521,20 +544,87 @@
         el("p", {}, "Waiting for daily results."),
         el("p", {}, "No daily test results have been published for this model yet.")]));
     }
-    if (list.length > 1) {
-      parts.push(el("p", {}, "The test setup changed, so each setup has its own history below, newest first. " +
-        "Different setups are never joined or compared as one trend."));
+    var content = el("div", { class: "daily-selected" });
+    function showSetup(index) {
+      if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
+      var d = list[index];
+      while (content.firstChild) content.removeChild(content.firstChild);
+      append(content, el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e)));
+      if (isPuter(d)) append(content, puterLabels(d));
+      append(content, [dailyChart(d), checkedNote(d), dailySection(d)]);
+      if (isPuter(d)) append(content, el("p", {},
+        "Four questions are a small sample and are not comparable with the 40-question tests."));
     }
-    list.forEach(function (d, i) {
-      if (list.length > 1) {
-        parts.push(el("h4", {}, (i === 0 ? "Current setup" : "Earlier setup") + ": " + ownSettingsText(d.settings) +
-          " · " + dayText(d.schedule.start_date) + " to " + dayText(d.schedule.end_date)));
-      }
-      parts.push(dailyChart(d), checkedNote(d), dailySection(d));
-    });
+    if (list.length > 1) {
+      var selector = el("select", { id: "daily-setup" }, list.map(function (d, i) {
+        return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(d, e));
+      }));
+      selector.value = "0";
+      selector.addEventListener("change", function () { showSetup(Number(selector.value)); });
+      parts.push(el("div", { class: "setup-choice" }, [
+        el("label", { for: "daily-setup" }, "Test setup"),
+        el("p", { class: "sub" }, "Choose a test setup. Different setups are kept separate and are never joined into one trend."),
+        selector]));
+    }
+    showSetup(0);
+    parts.push(content);
     parts.push(el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an overall " +
       "change in model quality. Not enough repeated tests to judge a change."));
     return parts;
+  }
+
+  // ------------------------------------------------------------------ Puter four-question series
+  function isPuter(d) { return d && d.contract === "puter-subset-v1"; }
+  function puterSettingsText(x) {
+    return "Puter SDK " + x.sdk_version + ", provider " + x.provider + ", output limit " + x.max_tokens + " tokens" +
+      (x.reasoning_effort ? ", reasoning " + x.reasoning_effort : "") + ", no retries";
+  }
+  // Confirmed only when every attempted answer of every verified day reported the requested model.
+  function identityConfirmed(d) {
+    var verified = d.rows.filter(function (row) { return row.record && row.record.evidence === "verified" && row.record.attempted; });
+    return verified.length > 0 && verified.every(function (row) {
+      return row.record.identity.reported_match === row.record.attempted;
+    });
+  }
+  function puterLabels(d) {
+    return el("div", { class: "puter-labels" }, [
+      d.synthetic ? el("p", { class: "notice synthetic", role: "note" }, "Synthetic preview — not real measurements") : null,
+      el("p", { class: "labels" }, [el("strong", {}, d.route.label), " · ",
+        el("span", { class: "tag", "data-kind": "sample" }, "Small sample: " + d.planned_items + " questions"),
+        identityConfirmed(d) ? null : [" · ", el("span", { class: "tag", "data-kind": "identity" }, "Model identity not confirmed")]]),
+      el("p", { class: "sub" }, "Requested route through " + d.route.service_provider + " (an intermediary): model " +
+        d.route.exact_identifier + ", " + d.route.service_provider + " provider " + d.route.requested_provider + ". " +
+        d.planned_items + " fixed questions (" + d.subset_item_ids.join(", ") + ") from the " + d.parent_panel_items +
+        "-question set " + d.parent_panel_id + ", graded with " + d.grader_version + ". These are responses for the " +
+        "requested Puter route, not verified " + d.route.maker + " model performance.")
+    ]);
+  }
+  function puterRow(row) {
+    var r = row.record;
+    var state = ROW_STATE[row.state] || row.state;
+    if (!r || r.evidence !== "verified") {
+      var why = row.state === "open" ? "run not yet resolved when last checked; no score"
+        : !r ? "nothing was recorded for this date" : r.status === "gap" ? "no run took place"
+        : r.status === "incomplete" ? "outcome uncertain; no counts" : "evidence unavailable; no counts";
+      return el("tr", {}, [el("th", { scope: "row" }, dayText(row.date)), el("td", { "data-label": "Result" }, state + " — " + why),
+                           el("td", { colspan: "4", "data-label": "Counts" }, "no counts")]);
+    }
+    var ng = r.not_graded, id = r.identity;
+    var notGraded = ng.refusal + ng.error + ng.truncated + ng.missing_text + ng.malformed + ng.uncertain;
+    var reason = row.eligible ? "" : r.attempted < r.planned_items ? " — not every question attempted; not a daily score"
+      : r.answered < r.planned_items ? " — not every answer gradeable; not a daily score"
+      : " — returned model differed; not a daily score";
+    var identity = id.mismatch ? id.mismatch + " from a different model" + (id.unknown ? ", " + id.unknown + " not confirmed" : "")
+      : id.reported_match === r.attempted && r.attempted ? "reported as requested" : "not confirmed (" + id.unknown + " of " + r.attempted + " unknown)";
+    return el("tr", {}, [
+      el("th", { scope: "row" }, dayText(row.date)),
+      el("td", { "data-label": "Result" }, state + reason),
+      el("td", { "data-label": "Correct" }, r.correct + " of " + r.planned_items),
+      el("td", { "data-label": "Attempted" }, r.attempted + " of " + r.planned_items + " attempted, " + r.not_sent + " not sent"),
+      el("td", { "data-label": "Not graded or errors" }, notGraded + " (" + ng.refusal + " refused, " + ng.error + " errors, " +
+        (ng.truncated + ng.missing_text + ng.malformed) + " cut off or unreadable, " + ng.uncertain + " uncertain)"),
+      el("td", { "data-label": "Model identity" }, identity)
+    ]);
   }
 
   function dailySection(d) {
@@ -551,9 +641,10 @@
       parts.push(el("details", { class: "evidence own-table" }, [el("summary", {}, "Daily results as a table"),
         el("div", { class: "table-scroll" }, el("table", { class: "log own" }, [
         el("caption", {}, "Daily results by date. Each row is a separate day; rows are not joined into a trend."),
-        el("thead", {}, el("tr", {}, ["Date", "Result", "First-attempt correct", "Sent", "Errors and refusals",
-                                       "Correct on retry"].map(function (h) { return el("th", { scope: "col" }, h); }))),
-        el("tbody", {}, d.rows.slice().reverse().map(dailyRow))
+        el("thead", {}, el("tr", {}, (isPuter(d) ? ["Date", "Result", "Correct", "Attempted", "Not graded or errors", "Model identity"]
+          : ["Date", "Result", "First-attempt correct", "Sent", "Errors and refusals", "Correct on retry"])
+          .map(function (h) { return el("th", { scope: "col" }, h); }))),
+        el("tbody", {}, d.rows.slice().reverse().map(isPuter(d) ? puterRow : dailyRow))
       ]))]));
     }
     if (d.not_yet_due) {
@@ -585,7 +676,7 @@
       body = el("p", {}, st.runs + (st.runs === 1 ? " Baseline run" : " Baseline runs") + (st.latest ? "; latest test " + dayText(st.latest) + "." : "."));
     } else {
       body = [
-        dailyBlock(rec),
+        dailyBlock(rec, e),
         setupSection(rec.calibration || []),
         el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
           "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
@@ -691,16 +782,16 @@
         "These results come from " + (src.author || "a third-party source") + ", measured through " +
         r.service.split(",")[0] + ", not by Baseline. " + AGE_NOTE[F.measurementStatus(newest, Date.now()).key] + " " +
         r.observations.length + (r.observations.length === 1 ? " run" : " runs") +
-        " recorded; each lettered setup is a separate configuration, so points are never joined into a trend."
+        " recorded; each lettered setup is a separate configuration, so its records in the table are never joined into a trend."
       ]),
-      el("h2", {}, "Pass rate by run"),
-      el("p", { class: "scroll-hint" }, "Scroll the chart sideways to reach today."),
-      el("div", { class: "chart-scroll" }, chart(r)),
+      // One graph per model (owner decision, 6 October 2026): third-party records are tables, not a second graph.
       el("p", { class: "caption" }, [
+        "These third-party results use a different test and are not included in Baseline's graph. " +
+        "The dated records and sources are retained below; missing dates are not filled in. ",
         r.observations.length + (r.observations.length === 1 ? " run on " + sorted[0] + ". " :
           " runs between " + sorted[0] + " and " + sorted[sorted.length - 1] + ". Longest gap between runs: " +
           F.longestGapDays(dates) + " days. "),
-        "No observations are recorded here between these runs or after the latest one; the hatched band marks that span up to today. " +
+        "No observations are recorded here between these runs or after the latest one. " +
         "This covers only the evidence Baseline holds: other measurements may exist elsewhere, and the source may have runs it did not publish."
       ]),
       el("h2", {}, "Runs"),
@@ -825,9 +916,11 @@
   function sourcesView() {
     var byMaker = {};
     D.catalog.forEach(function (e) {
+      // A route through an intermediary is listed under that service: its listing is not the maker's.
+      var lister = e.access_kind === "intermediary" ? e.service_provider : e.maker;
       e.sources.forEach(function (src) {
         if (/github\.com\/Aider-AI/.test(src.url)) return;
-        (byMaker[e.maker] = byMaker[e.maker] || {})[src.url] = src.checked_at;
+        (byMaker[lister] = byMaker[lister] || {})[src.url] = src.checked_at;
       });
     });
     var rows = D.runs.map(function (run) {
@@ -843,7 +936,7 @@
       el("h2", {}, "Measurement sources"),
       D.sources.map(sourceBlock),
       el("h2", {}, "Where the model list comes from"),
-      el("p", {}, "Model and app entries were taken from each maker's official model listing. A listing shows what exists, not how a model performs."),
+      el("p", {}, "Model and app entries were taken from each maker's official model listing. Routes through an intermediary service (for example Puter) are listed under that service, from its own model listing; such a listing does not confirm which model answers a request. A listing shows what exists, not how a model performs."),
       el("ul", { class: "plain" }, Object.keys(byMaker).sort().map(function (maker) {
         return el("li", {}, [el("strong", {}, maker + ": "), Object.keys(byMaker[maker]).map(function (u, i) {
           return [i ? " · " : "", link(u, u.replace(/^https:\/\//, "")), " (checked " + byMaker[maker][u].slice(0, 10) + ")"];
@@ -937,6 +1030,10 @@
     document.body.insertBefore(el("p", { class: "notice review-copy", role: "note" },
       "Review copy: this page includes Baseline test results that have not yet been approved for publication."),
       document.body.firstChild);
+  }
+  if (D.synthetic_preview) {
+    document.body.insertBefore(el("p", { class: "notice review-copy synthetic", role: "note" },
+      "Synthetic preview — not real measurements"), document.body.firstChild);
   }
   document.body.appendChild(el("footer", {}, [
     "Data built " + utc(D.generated_at) + " from registry schema v" + D.schema_version + ". ",

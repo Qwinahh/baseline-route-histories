@@ -98,6 +98,8 @@ def inspect_own_results(data: dict, data_path: Path | None = None, review_path: 
     problems = []
     if data.get("own_results_preview") is not False:
         problems.append("this is a review copy with unadmitted Baseline test results; it must never be published")
+    if data.get("synthetic_preview", False) is not False:          # every build writes it; any value but False fails
+        problems.append("this is a synthetic preview (labelled test data); it must never be published")
     data_path, review_path = data_path or own_results.DATA_PATH, review_path or own_results.REVIEW_PATH
     try:
         dataset = own_results.load_admitted(data_path, review_path)

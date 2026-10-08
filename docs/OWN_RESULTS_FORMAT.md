@@ -180,6 +180,169 @@ The checker refuses:
 - **Pending dates:** campaign dates after `as_of` are pending. `as_of` is the time up to
   which the private record was checked, not a measurement date.
 
+### Puter four-question results (bundle version 3, prepared, not yet admitted)
+
+**Version 3** is exactly the `puter-subset-v1` contract. Versions 1 and 2, their Gemini
+records, validation, wording and admitted bytes are unchanged, and a version-3 envelope
+never carries a Gemini series (or the reverse).
+
+**Route.** One of the three reviewed intermediary routes, exactly:
+- `puter-claude-sonnet-5-5`, labelled "Claude Sonnet 5.5 via Puter";
+- `puter-gpt-6.1-sol`, labelled "GPT-6.1 Sol via Puter";
+- `puter-x-ai-grok-4.7`, labelled "Grok 4.7 via Puter" (maker xAI, requested model
+  `x-ai/grok-4.7`, Puter provider `xai`; three-route campaign from 8 October 2026). The route
+  id replaces the model's `/` with `-` so ids stay path- and URL-safe.
+
+Each route has `access_kind: "intermediary"`, `service_provider: "Puter"`, its maker, the
+exact identifier and the requested Puter `provider`. It is never maker-API or
+consumer-app coverage.
+
+**Series.** A series carries:
+- the parent panel (`parent_panel_id`, `parent_panel_sha256`, `parent_panel_items`, which
+  must be larger than the subset);
+- the ordered subset: `subset_item_ids` with each item's content hash, prompt hash and
+  category, and `planned_items: 4`;
+- `grader_version`;
+- the actual Puter settings: SDK package and version, model, provider, `max_tokens`
+  1–128, `stream: false`, `retries: 0` and `reasoning_effort` (or null). Gemini's
+  temperature and thinking settings are never invented. The Grok route has exactly these
+  plus its own reviewed values, and nothing else: `max_tokens: 1000` (the provider-enforced
+  cap), `accepted_models: ["grok-4.7", "x-ai/grok-4.7"]` (returned names counted as the
+  requested model), `meter_prefix: "xai:grok-4_dot_7:"` and `temperature_forwarded: false`,
+  with `reasoning_effort: null`. Claude and GPT may not carry these fields;
+- `synthetic` (true only for preview fixtures).
+
+**Fingerprints.** The validator recomputes `subset_fingerprint` and `series_fingerprint`
+from these public fields. The second is the collector's own series identity, and
+`series_id` is `<route_id>--daily--<12 hex>`. A changed question, prompt, grader, route,
+SDK or setting is therefore always a separate series. Claude and GPT hash exactly their
+original fields (their identities did not change when Grok was added); Grok's identity also
+holds its own settings and its request position ("item-major, after Claude and GPT"), which
+gives the collector's `puter-x-ai-grok-4.7--daily--291df76c8060`.
+
+**Records.** Every record has `record_version: 1`, `date`, `status` (`completed`,
+`stopped`, `incomplete` or `gap`), the Puter `run_id`, `evidence` and the stored result's
+`evidence_sha256`. Verified records also carry the counts:
+- `attempted`, `answered`, `correct`, `incorrect`, `format_error` and `not_sent`;
+- `not_graded`: refusal, truncated, missing text, malformed, error and uncertain;
+- `identity`: unknown, reported match and mismatch.
+
+The counts must add up, with the planned four as the denominator:
+- attempted + not sent = 4;
+- correct + incorrect + format error = answered;
+- answered + not graded = attempted;
+- the identity counts = attempted.
+
+Booleans, fractions and non-finite numbers are refused, as are unknown fields at any
+depth.
+
+**Identity is separate from grading.** A correct answer with no returned model counts as
+`unknown`, never as confirmed. The page shows "Model identity not confirmed" unless every
+attempted response reported the requested model.
+
+**Points.** A record is a graph point only if:
+- its evidence is verified;
+- all four questions were attempted and answered (gradeable);
+- there is no identity mismatch.
+
+A run stopped after this route's four questions still counts. Partial, ungradeable,
+mismatched, incomplete or unavailable days appear in the table only. A complete genuine
+zero is a point at zero. "3 correct of 3 sent" is never shown as 100%: it is "3 of 4
+correct, 3 attempted".
+
+**Evidence.** Candidates come only from `scripts/export_puter_results.py`, a private,
+offline exporter, in this order:
+1. It checks each dated setup (a `baseline-puter-setups` file): the exact configuration
+   bytes, and the hash-bound authorization that restates them, the panel, schedule and
+   destination, whose id is its own hashes' id and whose campaign dates cover the setup's
+   dates. Setups are in date order and never overlap.
+2. It reads an explicit snapshot with the reviewed collector checks: ledger chain and
+   head, create-once checkpoint, date and claim tags, and stored evidence bytes against the
+   ledger hash, for every run including one-off calibration claims.
+3. Only then are one-off claims (route calibrations) excluded: they own no daily date and
+   are never a daily record, gap or open date, but a tampered or missing calibration
+   artifact still stops the export.
+4. Each daily run is bound to the setup of its date: the configuration hash, authorization
+   id and series ids its reservation recorded. Another setup inside a setup's dates, or a
+   listed setup's run outside its own dates, is refused.
+5. It binds each run's planned item/model pairs (8 for two routes, 12 for three, in the
+   configured order), item and prompt hashes and exact per-route settings (Grok's 1000-token
+   cap included), and refuses duplicate or swapped rows.
+6. It regrades from the verified response text with `collector.grade`.
+
+A series shared by consecutive setups with the same identity (Claude and GPT across the
+two-to-three-route change on 8 October) is one continuous series over their dates; a route
+added later starts at its first authorized date (Grok: 8 October, never 7 October). A series
+that would resume after a break between setups is refused.
+
+Copied `summary.json` and series files are never read. If the response text was omitted
+from bounded evidence, the record is `unavailable` with no numbers. Uncertain
+(`incomplete`) runs never carry numbers. A reservation not yet settled is an open date,
+and only once its window has closed. Gap lines name no setup, so a gap belongs to the setup
+authorized for its date.
+
+**What `as_of` may know (review R1).**
+- The exporter uses only the ledger lines time-stamped at or before `as_of`. The ledger is
+  in time order, so this is a reloaded prefix.
+- A run reserved later is absent.
+- A run settled, recorded incomplete or reconciled later is still unresolved in that view:
+  an open date if its window had closed, otherwise pending, never a score.
+- The public validator also refuses any record whose run id encodes a start time later
+  than `as_of`, to the second. The existing Gemini rule is unchanged.
+
+**Evidence origin (review R2).**
+- Every stored result artifact must state its origin (`synthetic`) before its status is
+  considered, whether the run settled, was recorded incomplete or was reconciled.
+  Production refuses synthetic evidence, and a synthetic preview refuses genuine evidence.
+- Only two collector-written notes carry no origin, because nothing provable was sent: the
+  child wrote no result, or the token was absent after the reservation. Those runs are
+  exported with no numbers (`incomplete` or `stopped`, `unavailable`) and make no origin
+  claim.
+- Unresolved reservations likewise only produce open dates. The series' `synthetic` flag
+  is the export mode, which every origin-bearing artifact in it must match.
+
+**Admission.** Puter candidates are admitted only by a person-reviewed digest; automatic
+policy admission is refused. A synthetic series is refused by the exporter in production
+mode, by any import into the production dataset, and by `load_admitted` for the
+production `data.json`. The synthetic fixtures' digests are also on the existing fixture
+refusal list.
+
+**Catalogue entries.** `catalog/models.json` lists the three routes so `site_tests` maps
+each exactly once: `puter.claude-sonnet-5-5`, `puter.gpt-6.1-sol` and `puter.x-ai-grok-4.7`.
+Each is labelled "… via Puter", with `access_kind: "intermediary"`, `service_provider: "Puter"`,
+the route's maker and exact requested identifier, `availability: "unknown"` and no release
+date. Each cites Puter's public AI model listing (https://api.puter.com/puterai/chat/models,
+checked 2026-10-07T23:58:07Z). That listing's names (`anthropic:anthropic/claude-sonnet-5-5`,
+`openai:openai/gpt-6.1-sol`, `x-ai:x-ai/grok-4.7`) are Puter's catalogue names, not the SDK
+provider routing names (`claude`, `openai-completion`, `xai`), and do not confirm which model
+answers a request. The maker-API and app entries are separate and never matched. The Sources
+page lists an intermediary's listing under that service, not under the maker. Preview builds
+add preview-only stand-ins only for routes a catalogue lacks. See
+docs/PUTER_RESULTS_PUBLICATION.md.
+
+**Display.**
+- Each Puter `daily_series` item has `contract: "puter-subset-v1"`, the requested route
+  and its label, the subset and settings, `synthetic`, and `panel_items: 4` as the chart
+  scale.
+- The page shows:
+  - the route label, "Small sample: 4 questions" and "Model identity not confirmed" (unless
+    every attempted answer reported the requested model);
+  - a 0–4 integer axis;
+  - a table with correct, attempted, not graded or errors, and model identity per day;
+  - "No daily results yet" (no points) and "Not enough history to show change" (one
+    point).
+- Puter series are never added to the 40-question test-method list and never ranked
+  against Gemini.
+
+**Preview and release boundary.**
+- `scripts/build_site.py --puter-preview OUT` builds a review copy from the synthetic
+  fixtures. It sets `synthetic_preview: true` and shows a permanent "Synthetic preview —
+  not real measurements" banner.
+- The release check refuses any page whose `synthetic_preview` is not false.
+- The public export leaves out `tests/fixtures/own_results/puter/`, the exporter and its
+  tests.
+- The private package includes the exporter, but not its synthetic fixtures.
+
 ## Policy admission (automated publication, T13)
 
 An automated publisher may admit daily candidates without a person reviewing each one,

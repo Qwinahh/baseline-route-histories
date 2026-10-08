@@ -7,7 +7,11 @@
    question attempted) become points. A line joins two points only on consecutive
    calendar days of the same series; any gap, missing record, partial or unavailable
    result breaks it. Rows without a score are marks in a separate "no score" lane, so
-   they can never be read as a zero. Nothing is interpolated or carried forward. */
+   they can never be read as a zero. Nothing is interpolated or carried forward.
+
+   Puter four-question series (contract puter-subset-v1): the scale is 0 to 4, a point needs all
+   four questions attempted and gradeable with no identity mismatch, and every description says
+   whether the returned model identity was confirmed. Grading and identity stay separate. */
 (function (root, factory) {
   if (typeof module === "object" && module.exports) module.exports = factory();
   else root.BaselineResultsChart = factory();
@@ -50,10 +54,26 @@
     return "partial";
   }
 
+  function puterDetails(r, out) {
+    var ng = r.not_graded, id = r.identity;
+    out.puter = true;
+    out.correct = r.correct;
+    out.scheduled = r.planned_items;
+    out.attempted = r.attempted;
+    out.answered = r.answered;
+    out.refusals = ng.refusal;
+    out.request_errors = ng.error;
+    out.answer_problems = ng.truncated + ng.missing_text + ng.malformed + ng.uncertain;
+    out.identity_confirmed = id.reported_match === r.attempted && r.attempted > 0;
+    out.identity_mismatch = id.mismatch;
+    return out;
+  }
+
   function details(row) {
     var r = row.record;
     var kind = rowKind(row);
     var out = { date: row.date, kind: kind, status: row.state };
+    if (r && r.evidence === "verified" && r.record_version !== undefined) return puterDetails(r, out);
     if (r && r.evidence === "verified") {
       var o = r.first_attempt_outcomes;
       out.correct = r.first_attempt_correct;
@@ -67,9 +87,28 @@
     return out;
   }
 
+  function identityText(d) {
+    if (d.identity_mismatch) return "the returned model differed from the requested model for " + d.identity_mismatch +
+      (d.identity_mismatch === 1 ? " answer" : " answers");
+    return d.identity_confirmed ? "returned model reported as requested" : "Model identity not confirmed";
+  }
+
+  function describePuter(d, head) {
+    var counts = d.refusals + " refused, " + d.request_errors + " errors" +
+      (d.answer_problems ? ", " + d.answer_problems + " cut off, missing or unreadable" : "");
+    if (d.kind === "point") {
+      return head + d.correct + " of " + d.scheduled + " correct; all " + d.attempted + " questions attempted; " +
+        counts + "; " + identityText(d) + ".";
+    }
+    return head + "not plotted as a daily score (" + d.status + "): " + d.attempted + " of " + d.scheduled +
+      " questions attempted, " + d.answered + " gradeable, " + d.correct + " of " + d.scheduled + " correct; " +
+      counts + "; " + identityText(d) + ".";
+  }
+
   // Plain sentence for screen readers and the details panel. Never a verdict.
   function describe(d) {
     var head = fullDay(d.date) + ": ";
+    if (d.puter) return describePuter(d, head);
     if (d.kind === "point") {
       return head + d.correct + " of " + d.scheduled + " correct on the first attempt; all " + d.attempted +
         " questions attempted; " + d.refusals + " refused, " + d.request_errors + " request errors" +
@@ -136,8 +175,10 @@
     });
     marks.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
 
-    var message = points.length === 0 ? "Waiting for daily results"
-      : points.length === 1 ? "One daily test; more days are needed to show a pattern" : null;
+    var puter = series.contract === "puter-subset-v1";
+    var message = points.length === 0 ? (puter ? "No daily results yet" : "Waiting for daily results")
+      : points.length === 1 ? (puter ? "Not enough history to show change" : "One daily test; more days are needed to show a pattern")
+      : null;
     return {
       width: W, height: H, left: L, right: W - R, top: T, plotBottom: plotBottom, laneY: plotBottom + 40,
       max: max, yTicks: yTicks, xTicks: xTicks, points: points,
