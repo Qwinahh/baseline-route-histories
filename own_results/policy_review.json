@@ -1,6 +1,10 @@
 {
  "approved": [
   {
+   "reviewed_at": "2026-10-08T12:25:32Z",
+   "sha256": "552f5dd2c59afd7787b646efac55e1c4a53a22c0a6398d3ad4ee79dd3bbcbaac"
+  },
+  {
    "reviewed_at": "2026-10-02T12:47:42Z",
    "sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7"
   },

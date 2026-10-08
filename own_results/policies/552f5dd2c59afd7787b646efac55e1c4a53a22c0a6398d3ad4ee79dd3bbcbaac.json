@@ -1,0 +1,36 @@
+{
+ "allowed_paths": [
+  "own_results/admitted/",
+  "own_results/data.json"
+ ],
+ "campaign": {
+  "end_date": "2026-10-14",
+  "start_date": "2026-10-08",
+  "type": "daily",
+  "window_minutes": 1080,
+  "window_start_utc": "04:00"
+ },
+ "config_fingerprint": "c0cc84b90ebd35ebb2671741b6cd166ca00adba40146b4d57d6f53c70809711a",
+ "enabled": true,
+ "format": "baseline-own-results-policy",
+ "format_version": 1,
+ "grader_version": "grader-v0",
+ "panel_items": 40,
+ "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+ "public_branch": "main",
+ "public_repository": "Qwinahh/baseline-route-histories",
+ "route": {
+  "access_kind": "intermediary",
+  "exact_identifier": "gpt-oss-120b",
+  "maker": "OpenAI",
+  "route_id": "groq.openai.gpt-oss-120b",
+  "service_provider": "Groq"
+ },
+ "series_kind": "daily",
+ "settings": {
+  "max_output_tokens": 1024,
+  "temperature": 1.0,
+  "thinking_level": "LOW",
+  "timeout_seconds": 120
+ }
+}

@@ -1062,11 +1062,15 @@
       return el("ul", {}, [
         el("li", {}, m.panel_items + " short questions written for Baseline (set " + m.panel_id + "), in " + cats.length +
           " categories: " + cats.join(", ") + "."),
-        el("li", {}, "Each question is sent through the model's API with fixed settings: " + ownSettingsText(m.settings) +
-          ". The first attempt is what counts. If a request fails, one retry may be made; an answer recovered that way is shown separately and never added to the first-attempt count."),
+        el("li", {}, "Each question is sent through the service named on the model page (the maker's own API or a " +
+          "third-party host) with fixed settings: " + ownSettingsText(m.settings) + ". The first attempt is what counts. " +
+          "Where a setup permits an operational retry after a failed request, an answer recovered that way is shown " +
+          "separately and never added to the first-attempt count; a setup without retries keeps the failure as it happened."),
         el("li", {}, "Answers are graded automatically against a fixed answer key (" + m.grader_version + "): an exact answer, a JSON object, a whole number or one of the listed choices. Grading is strict, so a right answer in the wrong format counts as a format error."),
         el("li", {}, "A daily run counts as usable only if at least 90% of its questions were attempted. Missed, failed or interrupted days stay listed; nothing is filled in."),
-        el("li", {}, "Results apply only to the exact API route tested. An app, or another version of the model, is a separate entry and is not covered."),
+        el("li", {}, "Results apply only to the exact route tested: that model through that service, with these settings. " +
+          "An app, another version of the model, another model from the same maker, or the same model through another " +
+          "service is a separate entry and is not covered."),
         el("li", {}, "The questions were written and first run as a one-off setup test before this description was published, so the method was not publicly preregistered. No formal plan for judging changes exists yet, so no change verdict is shown."),
         el("li", {}, "Prompts and raw responses stay private. The counts come from Baseline's private run records, which were checked against stored file hashes before publication; visitors cannot check individual answers.")
       ]);
@@ -1099,7 +1103,7 @@
       METHODS.length ? methodSection() : [
         el("h2", {}, "What our tests will be"),
         el("ul", {}, [
-          el("li", {}, "A fixed set of test prompts, run through each model's API on a declared timetable, with every attempt and failure kept."),
+          el("li", {}, "A fixed set of test prompts, run through each model's named service on a declared timetable, with every attempt and failure kept."),
           el("li", {}, "Results are only ever from real runs. A scheduled day that fails or is missed stays visible; nothing is filled in."),
           el("li", {}, "An app is tested only as an app. API results are never shown as app results.")
         ])],
