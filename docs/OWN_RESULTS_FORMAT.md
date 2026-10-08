@@ -301,8 +301,8 @@ authorized for its date.
 - Unresolved reservations likewise only produce open dates. The series' `synthetic` flag
   is the export mode, which every origin-bearing artifact in it must match.
 
-**Admission.** Puter candidates are admitted only by a person-reviewed digest; automatic
-policy admission is refused. A synthetic series is refused by the exporter in production
+**Admission.** Puter candidates are admitted by a person-reviewed digest, or automatically
+under an approved Puter policy (below), never under a Gemini-type policy. A synthetic series is refused by the exporter in production
 mode, by any import into the production dataset, and by `load_admitted` for the
 production `data.json`. The synthetic fixtures' digests are also on the existing fixture
 refusal list.
@@ -369,6 +369,21 @@ but only under a **publication policy that a person approved**.
   unapproved policy file fails the build and the release check.
 - **Limits:** the publisher can write only the two allowed paths. It cannot create or
   change a policy, and it cannot touch `review.json`.
+
+**Puter policies** (format `baseline-own-results-puter-policy` v1, automatic Puter
+publication, 8 October 2026) cover exactly one genuine four-question series. Exact fields:
+- `format`, `format_version` (1) and `enabled` (a boolean; an approved policy must be enabled);
+- `route`: the complete public Puter route object (one of the three reviewed routes);
+- `series`: the complete public series object, checked by the bundle-v3 rules (contract,
+  parent panel, ordered subset with item and prompt hashes and categories, grader, actual
+  settings, recomputed subset and series fingerprints, series id and the fixed schedule),
+  with `synthetic: false`;
+- `public_repository`, `public_branch` and `allowed_paths` as above.
+
+A Puter source is admitted only if its bundle's `route` and `series` equal the policy's
+exactly, and the timing rules above hold. A Gemini-type policy never covers a Puter bundle
+and a Puter policy never covers a Gemini bundle. Existing Gemini policies and every
+person-reviewed source load unchanged.
 
 ## Admission and import
 

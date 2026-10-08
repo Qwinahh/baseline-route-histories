@@ -19,6 +19,9 @@ Since T13 a candidate can also be admitted automatically under a publication pol
 a person approved (own_results/policy_review.json lists its digest; policies/ keeps it).
 Such sources are labelled policy-admitted, never person-reviewed, and the bundle must
 match the policy exactly. The automated publisher cannot create or change a policy.
+Puter four-question series have their own strict policy type (baseline-own-results-puter-policy
+v1): it binds the exact public route and the complete series (subset, hashes, grader,
+settings, fingerprints and fixed schedule), so a policy covers one Puter series and nothing else.
 
 Importing is validated before anything is written, atomic and idempotent: the same
 records again change nothing; a run already published with different contents is
@@ -52,6 +55,10 @@ POLICY_FORMAT, POLICY_REVIEW_FORMAT = "baseline-own-results-policy", "baseline-o
 POLICY_FIELDS = ("allowed_paths", "campaign", "config_fingerprint", "enabled", "format", "format_version",
                  "grader_version", "panel_items", "panel_sha256", "public_branch", "public_repository", "route",
                  "series_kind", "settings")
+# Puter four-question series (bundle v3): one exact route and series per policy (automatic Puter publication).
+PUTER_POLICY_FORMAT = "baseline-own-results-puter-policy"
+PUTER_POLICY_FIELDS = ("allowed_paths", "enabled", "format", "format_version", "public_branch", "public_repository",
+                       "route", "series")
 # The only public paths an automated publisher may write.
 PUBLICATION_PATHS = ("own_results/admitted/", "own_results/data.json")
 HUMAN_SOURCE = ("reviewed_at", "sha256")
@@ -681,13 +688,49 @@ def puter_preview_entries(existing=()) -> list:
 
 # ---------------------------------------------------------------- publication policy (T13)
 
+def is_puter_policy(policy) -> bool:
+    return isinstance(policy, dict) and policy.get("format") == PUTER_POLICY_FORMAT
+
+
+def validate_puter_policy(policy, require_enabled: bool = True) -> None:
+    """A Puter publication policy: exactly one genuine four-question series, and where it may be written.
+
+    `route` and `series` are the complete public objects a candidate must carry, byte for byte as JSON
+    values: the requested Puter route, the contract, parent panel and subset (item ids, item and prompt
+    hashes, categories), grader, actual settings, recomputed fingerprints and the fixed schedule. The
+    series must be genuine (`synthetic: false`). Every field is required and nothing else is allowed."""
+    if not is_puter_policy(policy) or policy.get("format_version") != 1:
+        raise OwnResultsError(f"not a {PUTER_POLICY_FORMAT} v1 policy")
+    _exact(policy, PUTER_POLICY_FIELDS, "Puter policy")
+    if not isinstance(policy["enabled"], bool):
+        raise OwnResultsError("policy enabled must be true or false")
+    if require_enabled and policy["enabled"] is not True:
+        raise OwnResultsError("the publication policy is disabled")
+    if not isinstance(policy["route"], dict) or not isinstance(policy["series"], dict):
+        raise OwnResultsError("a Puter policy names one exact route and series")
+    check_puter_route(policy["route"])
+    check_puter_series(policy["series"], policy["route"])
+    if policy["series"]["synthetic"] is not False:
+        raise OwnResultsError("a Puter policy covers genuine results only (synthetic: false)")
+    if not isinstance(policy["public_repository"], str) or not REPO_RE.match(policy["public_repository"]) \
+            or not isinstance(policy["public_branch"], str) or not BRANCH_RE.match(policy["public_branch"]):
+        raise OwnResultsError("policy needs the public repository (owner/name) and branch")
+    if policy["allowed_paths"] != list(PUBLICATION_PATHS):
+        raise OwnResultsError(f"policy allowed_paths must be exactly {list(PUBLICATION_PATHS)}")
+    if SECRETISH.search(json.dumps(policy)) or FIXTURE_MARK in json.dumps(policy):
+        raise OwnResultsError("policy contains something that looks like a credential or a fixture label")
+
+
 def validate_policy(policy, require_enabled: bool = True) -> None:
     """A publication policy: exactly which daily series an automated publisher may admit, and where.
 
     The policy itself is reviewed by a person (its digest goes in policy_review.json); an
     automated publisher can only use an approved policy, never create or change one.
     A disabled template may leave the panel, grader and item count unresolved (null).
+    A Puter policy is checked by validate_puter_policy.
     """
+    if is_puter_policy(policy):
+        return validate_puter_policy(policy, require_enabled)
     if not isinstance(policy, dict) or policy.get("format") != POLICY_FORMAT or policy.get("format_version") != 1:
         raise OwnResultsError(f"not a {POLICY_FORMAT} v1 policy")
     _exact(policy, POLICY_FIELDS, "policy")
@@ -721,6 +764,13 @@ def validate_policy(policy, require_enabled: bool = True) -> None:
 
 def policy_binding_problem(bundle: dict, policy: dict) -> str | None:
     """Why a bundle falls outside an approved policy, or None when it is exactly covered."""
+    if is_puter_policy(policy) != is_puter(bundle):
+        return "the policy type does not match the result type (Puter policies cover only Puter series)"
+    if is_puter_policy(policy):
+        for key in ("route", "series"):
+            if bundle[key] != policy[key]:
+                return f"{key} differs from the approved policy"
+        return None
     series = bundle["series"]
     expected = {"route": policy["route"], "kind": policy["series_kind"],
                 "config_fingerprint": policy["config_fingerprint"], "panel_sha256": policy["panel_sha256"],
@@ -878,8 +928,6 @@ def check_source(source: dict, bundle: dict, review: dict, policies: dict) -> No
         if {e["sha256"]: e for e in review["admitted"]}.get(digest) != source:
             raise OwnResultsError(f"dataset source {digest[:12]} was not admitted by the review manifest")
         return
-    if is_puter(bundle):
-        raise OwnResultsError("automatic policy admission of Puter results is not supported; a person reviews them")
     approved = policies.get(source["policy_sha256"])
     if approved is None:
         raise OwnResultsError(f"dataset source {digest[:12]} names a policy that is not approved")
