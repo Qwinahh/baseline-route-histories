@@ -109,6 +109,14 @@
   // No entry record means "Not tested by Baseline".
   var TESTS = D.baseline_tests || { runs: 0, calibration_runs: 0, entries: {}, methods: [] };
   var METHODS = TESTS.methods || [];
+  var modelGroups = Dir.modelGroups(entries, TESTS);
+  var groupByEntry = {};
+  modelGroups.forEach(function (g) { g.members.forEach(function (e) { groupByEntry[e.id] = g; }); });
+  function displayEntry(e) {
+    var g = groupByEntry[e.id];
+    return Object.assign({}, g.preferred, { name: g.canonical.name.replace(/ via Puter$/, ""),
+      release: g.canonical.release || g.preferred.release, model_group: g });
+  }
   function ownStatus(e) { return Dir.baselineStatus(e, TESTS, Date.now()); }
   var lastRuns = {};
   D.runs.forEach(function (run) { if (!run.superseded) lastRuns[run.source_id] = run; });
@@ -249,11 +257,13 @@
   }
 
   function entryLink(e) {
-    return Dir.encodeState({ view: "model", id: e.id, route: "", q: "", provider: "", access: "", evidence: "",
+    var g = e.model_group || groupByEntry[e.id];
+    return Dir.encodeState({ view: "model", id: g.id, service: e.id, route: "", q: "", provider: "", access: "", evidence: "",
                              availability: "", sort: Dir.DEFAULT_SORT });
   }
 
   function highlightCard(e) {
+    e = displayEntry(e);
     var ev = Dir.evidenceKind(e, TESTS, Date.now());
     return el("li", { class: "feature-card" }, [
       link(entryLink(e), e.name),
@@ -264,7 +274,9 @@
 
   function highlightsView() {
     var featured = D.featured;
-    var newest = Dir.newReleases(entries, 8);
+    var grouped = Dir.groupedEntries(entries, TESTS, Dir.emptyState());
+    var newest = Dir.newReleases(grouped, 8);
+    var featuredSeen = new Set();
     if (!featured && !newest.length) return null;
     var parts = [];
     if (featured) {
@@ -276,7 +288,11 @@
             el("h3", {}, g.family),
             el("p", { class: "sub" }, g.reason),
             el("ul", { class: "feature-list" }, g.entries.map(function (id) { return entryById[id]; })
-              .filter(Boolean).map(highlightCard))
+              .filter(Boolean).filter(function (e) {
+                var id = groupByEntry[e.id].id;
+                if (featuredSeen.has(id)) return false;
+                featuredSeen.add(id); return true;
+              }).map(highlightCard))
           ]);
         }))
       ]));
@@ -300,8 +316,8 @@
 
   function drawResults(results, status) {
     while (results.firstChild) results.removeChild(results.firstChild);
-    var list = Dir.filterEntries(entries, state, Date.now());
-    status.textContent = list.length === 1 ? "1 entry" : list.length + " entries";
+    var list = Dir.groupedEntries(entries, TESTS, state, Date.now());
+    status.textContent = list.length === 1 ? "1 model or app" : list.length + " models and apps";
     if (!list.length) {
       var clear = el("button", { type: "button", class: "button" }, "Clear search and filters");
       clear.addEventListener("click", function () {
@@ -320,13 +336,14 @@
     list.forEach(function (e) {
       var cov = Dir.coverage(e, Date.now());
       var st = ownStatus(e);
-      var target = Dir.encodeState({ view: "model", id: e.id, route: "", q: state.q, provider: state.provider,
+      var target = Dir.encodeState({ view: "model", id: e.model_group.id, service: e.id, route: "", q: state.q, provider: state.provider,
                                      access: state.access, evidence: state.evidence,
                                      availability: state.availability, sort: state.sort });
       ul.appendChild(el("li", { class: "row" }, [
         el("span", { class: "cell name" }, [link(target, e.name),
           e.exact_identifier && e.exact_identifier !== e.name ? el("code", { class: "sub" }, e.exact_identifier) : null,
-          el("span", { class: "sub" }, e.maker + " · " + accessText(e)),
+          el("span", { class: "sub" }, e.maker + " · " + accessText(e) +
+            (e.model_group.members.length > 1 ? " · " + e.model_group.members.length + " access routes" : "")),
           e.identity_kind === "exact" ? null : el("span", { class: "sub" }, e.identity_kind === "automatic"
             ? "model chosen by the app" : "family entry, exact version not verified")]),
         el("span", { class: "cell", "data-label": "Released" }, Dir.releaseDate(e)
@@ -698,14 +715,20 @@
   function modelView() {
     var e = entryById[state.id];
     if (!e) return notFound("There is no entry with the id “" + state.id + "”. It may have been renamed.");
+    var group = groupByEntry[e.id];
+    // Canonical model links open the measured route. Old route-specific links still work.
+    var chosen = group.members.filter(function (member) { return member.id === state.service; })[0];
+    if (chosen) e = chosen;
+    else if (state.route) {
+      e = group.members.filter(function (member) { return member.route_ids.indexOf(state.route) !== -1; })[0] || e;
+    } else if (e.id === group.id) e = group.preferred;
     var routes = e.routes.slice().sort(function (a, b) { return settingsText(a.settings) < settingsText(b.settings) ? -1 : 1; });
     var route = routes.filter(function (r) { return r.id === state.route; })[0] || routes[0];
     var st = ownStatus(e);
     var wrap = el("article", { class: "detail", "aria-labelledby": "model-title" }, backLink());
     append(wrap, el("header", { class: "identity" }, [
       el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
-      el("h1", { id: "model-title" }, e.access_kind === "intermediary" && e.service_provider === "Puter"
-        ? e.name.replace(/ via Puter$/, "") : e.name),
+      el("h1", { id: "model-title" }, group.canonical.name.replace(/ via Puter$/, "")),
       e.exact_identifier && e.exact_identifier !== e.name ? el("p", { class: "ident" }, el("code", {}, e.exact_identifier)) : null,
       el("p", { class: "released" }, e.release
         ? ["Released " + releaseText(e.release) + " · ", link(e.release.source.url, "release source")]
@@ -713,6 +736,19 @@
       statusBlock(st)
     ]));
 
+    if (group.members.length > 1) {
+      var access = el("select", { id: "model-service" }, group.members.map(function (member) {
+        return el("option", { value: member.id }, member.service_provider + " · " +
+          (Dir.ACCESS_LABELS[member.access_kind] || member.access_kind) + " · " + Dir.evidenceKind(member, TESTS).label);
+      }));
+      access.value = e.id;
+      access.addEventListener("change", function () {
+        go(Object.assign({}, state, { id: group.id, service: access.value, route: "" }), false);
+        render(false);
+      });
+      append(wrap, el("div", { class: "setup-choice" }, [el("label", { for: "model-service" }, "Access route"), access,
+        el("p", { class: "sub" }, "Showing results for this route only. Other services may behave differently; their results are kept separate.")]));
+    }
     append(wrap, ownTestsSection(e, st));
 
     var other = el("section", { class: "part", "aria-labelledby": "other-tests" }, el("h2", { id: "other-tests" }, "Other published tests"));

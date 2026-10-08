@@ -21,7 +21,7 @@
   }
 
   function emptyState() {
-    return { view: "models", id: "", route: "", q: "", provider: "", access: "", evidence: "",
+    return { view: "models", id: "", route: "", service: "", q: "", provider: "", access: "", evidence: "",
              availability: "", sort: DEFAULT_SORT, legacy: "" };
   }
 
@@ -36,7 +36,7 @@
     var query = qIndex === -1 ? "" : text.slice(qIndex + 1);
     var params;
     try { params = new URLSearchParams(query); } catch (e) { params = new URLSearchParams(""); }
-    FILTER_KEYS.concat(["route"]).forEach(function (key) {
+    FILTER_KEYS.concat(["route", "service"]).forEach(function (key) {
       var value;
       try { value = params.get(key); } catch (e) { value = null; }
       if (value !== null) state[key] = value.normalize ? value.normalize("NFC") : value;
@@ -57,6 +57,7 @@
   function encodeState(state) {
     var params = new URLSearchParams();
     if (state.view === "model" && state.route) params.set("route", state.route);
+    if (state.view === "model" && state.service) params.set("service", state.service);
     FILTER_KEYS.forEach(function (key) {
       var value = state[key];
       if (value && !(key === "sort" && value === DEFAULT_SORT)) params.set(key, value);
@@ -220,10 +221,58 @@
     return Object.keys(seen).sort(function (a, b) { return fold(a) < fold(b) ? -1 : 1; });
   }
 
+  function modelKey(e) {
+    if (e.identity_kind !== "exact" || !e.exact_identifier || e.access_kind === "consumer_app") return "entry:" + e.id;
+    // Explicit catalogue alias only. Do not strip arbitrary host prefixes or version suffixes.
+    var id = e.id === "puter.x-ai-grok-4.7" && e.exact_identifier === "x-ai/grok-4.7" ? "grok-4.7" : e.exact_identifier;
+    return JSON.stringify([e.maker, id]);
+  }
+  function preferredRoute(members, tests) {
+    function rank(e) {
+      var r = tests && tests.entries && tests.entries[e.id];
+      if (r && r.runs > 0) return 4;
+      if (r && (r.calibration || []).length) return 3;
+      if (r && (r.daily_series || []).length) return 2;
+      return newestObservation(e) ? 1 : 0;
+    }
+    return members.slice().sort(function (a, b) {
+      var difference = rank(b) - rank(a);
+      if (difference) return difference;
+      if (a.access_kind === "direct_api" && b.access_kind !== "direct_api") return -1;
+      if (b.access_kind === "direct_api" && a.access_kind !== "direct_api") return 1;
+      return a.id.localeCompare(b.id);
+    })[0];
+  }
+  function modelGroups(entries, tests) {
+    var groups = new Map();
+    entries.forEach(function (e) {
+      var key = modelKey(e);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    });
+    return Array.from(groups.values()).map(function (members) {
+      var canonical = members.filter(function (e) { return e.access_kind === "direct_api"; })
+        .sort(function (a, b) { return a.id.localeCompare(b.id); })[0] || members[0];
+      return { id: canonical.id, canonical: canonical, members: members, preferred: preferredRoute(members, tests) };
+    });
+  }
+  function groupedEntries(entries, tests, state, nowMs) {
+    var matched = new Set(filterEntries(entries, state, nowMs).map(function (e) { return e.id; }));
+    var list = modelGroups(entries, tests).map(function (group) {
+      var members = group.members.filter(function (e) { return matched.has(e.id); });
+      if (!members.length) return null;
+      var selected = preferredRoute(members, tests);
+      // Display metadata only: all evidence remains attached to selected.id.
+      return Object.assign({}, selected, { name: group.canonical.name.replace(/ via Puter$/, ""),
+        release: group.canonical.release || selected.release, model_group: group });
+    }).filter(Boolean);
+    return filterEntries(list, Object.assign(emptyState(), { sort: state.sort }), nowMs);
+  }
+
   return { parseState: parseState, encodeState: encodeState, filterEntries: filterEntries,
            coverage: coverage, newestObservation: newestObservation, distinct: distinct,
            releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS, STALE_DAYS: STALE_DAYS,
            outcomeGroups: outcomeGroups, evidenceKind: evidenceKind, EVIDENCE_KINDS: EVIDENCE_KINDS,
-           newReleases: newReleases,
+           newReleases: newReleases, modelGroups: modelGroups, groupedEntries: groupedEntries,
            ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState, DEFAULT_SORT: DEFAULT_SORT };
 });

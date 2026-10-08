@@ -63,5 +63,12 @@ if (process.argv[4] !== undefined) {
 const svgs = all().filter((n) => n.tagName === "svg");
 const dailyCharts = svgs.filter((n) => (n.getAttribute("class") || "").split(/\s+/).includes("daily-chart")).length;
 const aria = all().map((n) => n.getAttribute("aria-label")).filter(Boolean);
+const modelRows = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "row").map(n => {
+  const a = n.children[0].children[0];
+  return {name:a.textContent, href:a.getAttribute("href")};
+});
+const service = all().find(n => n.getAttribute("id") === "model-service");
 process.stdout.write(JSON.stringify({ text: body.textContent, aria, hash: location.hash, dailyCharts,
-  totalCharts: svgs.length, selectedSetup: selector ? selector.value : null }));
+  totalCharts: svgs.length, selectedSetup: selector ? selector.value : null, modelRows,
+  selectedService: service ? service.value : null,
+  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [] }));

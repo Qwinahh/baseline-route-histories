@@ -281,12 +281,15 @@ class RenderedCoverageWordingTests(unittest.TestCase):
 
     def test_directory_lists_every_entry_honestly(self):
         page = self.render("#models")
-        self.assertIn(f"{len(self.data['catalog'])} entries", page["text"])
+        self.assertIn(f"{len(page['modelRows'])} models and apps", page["text"])
+        self.assertEqual(len({r["href"].split("?")[0] for r in page["modelRows"]}), len(page["modelRows"]))
         self.assertIn("Baseline's own recurring tests have not started yet.", page["text"])
         self.assertIn("API results are never shown as app results", page["text"])
-        self.assertEqual(page["text"].count("Not tested by Baseline"), len(self.data["catalog"]))
-        for entry in self.data["catalog"]:
-            self.assertIn(entry["name"], page["text"])
+        self.assertEqual(page["text"].count("Not tested by Baseline"), len(page["modelRows"]))
+        self.assertLess(len(page["modelRows"]), len(self.data["catalog"]))
+        for row in page["modelRows"]:
+            self.assertIn(row["name"], page["text"])
+            self.assertIn("#model/", row["href"])
 
     def test_every_measured_route_uses_scoped_gap_wording(self):
         routes = {r["id"]: r for r in self.data["routes"]}
@@ -321,7 +324,8 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         for group in featured["groups"]:
             self.assertIn(group["family"], text)
             self.assertIn(group["reason"], text)
-        self.assertIn("Third-party host (Groq)", text)                       # the hosted entry is labelled as hosted
+        groq = self.render("#model/openai-groq.gpt-oss-120b?service=openai-groq.gpt-oss-120b")
+        self.assertIn("Third-party host (Groq)", groq["text"])  # available in its route selector
         dated = sorted((e for e in self.data["catalog"] if e.get("release")),
                        key=lambda e: (e["release"]["date"], e["name"].lower()), reverse=True)
         section = text[text.index("New releases"):text.index("All models")]
@@ -332,7 +336,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         self.assertEqual(text.count("Tested by Baseline"),
                          sum(1 for g in featured["groups"] for i in g["entries"] if i in tested) +
                          sum(1 for e in dated[:8] if e["id"] in tested))
-        self.assertEqual(text.count("Not tested by Baseline"), len(self.data["catalog"]))   # list statuses unchanged
+        self.assertEqual(text.count("Not tested by Baseline"), len(self.render("#models")["modelRows"]))   # list statuses unchanged
         for hash_ in ("#models?q=claude", "#models?sort=name", "#models?access=consumer_app"):
             with self.subTest(view=hash_):
                 filtered = self.render(hash_)["text"]
@@ -434,7 +438,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         render = self.variant(no_measurements)
         directory = render("#models")
         self.assertNotIn("Other published tests available", directory)
-        self.assertGreaterEqual(directory.count("None recorded"), len(self.data["catalog"]))  # plus the filter option
+        self.assertGreaterEqual(directory.count("None recorded"), len(self.render("#models")["modelRows"]))  # plus the filter option
         detail = render(f"#model/{fresh_entry['id']}")
         self.assertIn("No other published results are recorded here.", detail)
         self.assertNotIn("Pass rate", detail)
@@ -637,7 +641,7 @@ class OwnResultsPageTests(unittest.TestCase):
         self.assertIn("31 of 40 correct on this test, 18 Sep 2026", directory)
         self.assertIn("Baseline has published a one-off setup test of its own", directory)
         self.assertNotIn("Baseline's own recurring tests have not started yet.", directory)
-        self.assertEqual(directory.count("Not tested by Baseline"), len(render.data["catalog"]) - 1)
+        self.assertEqual(directory.count("Not tested by Baseline"), len(render.page("#models")["modelRows"]) - 1)
         page = render(f"#model/{GEMINI}")
         for text in ("One-off setup test", "31 of 40 correct on this test", "measured 18 Sep 2026",
                      "Not enough repeated tests to judge a change", "not part of the daily history",

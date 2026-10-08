@@ -3,6 +3,26 @@
 const assert = require("node:assert/strict");
 const D = require("../site/directory.js");
 
+// Routes for the same exact requested model are navigation choices, never merged data.
+const api = {id:"api.test", name:"Test 1", maker:"Maker", identity_kind:"exact", exact_identifier:"test-1", access_kind:"direct_api", service_provider:"Maker", routes:[], release:{date:"2026-09-01"}};
+const host = {...api, id:"host.test", name:"Test 1 via Puter", access_kind:"intermediary", service_provider:"Puter", release:null};
+const otherVersion = {...api, id:"api.test2", exact_identifier:"test-2"};
+const appEntry = {...api, id:"app.test", access_kind:"consumer_app"};
+const hostTests = {entries:{"host.test":{runs:1,latest_run:"2026-10-07",daily_series:[{}]}}};
+const grouped = D.modelGroups([host, api, otherVersion, appEntry], hostTests);
+assert.equal(grouped.length, 3);
+const testGroup = grouped.find(g=>g.id === api.id);
+assert.equal(testGroup.preferred.id, host.id);
+assert.equal(testGroup.members.length, 2);
+assert.equal(D.groupedEntries([host,api],hostTests,D.emptyState())[0].id,host.id);
+assert.equal(D.groupedEntries([host,api],hostTests,{...D.emptyState(),access:"direct_api"})[0].id,api.id);
+assert.equal(D.groupedEntries([host,api],hostTests,{...D.emptyState(),q:"Puter"}).length,1);
+assert.equal(D.groupedEntries([host,api],hostTests,D.emptyState())[0].release.date,"2026-09-01");
+assert.equal(D.parseState(D.encodeState({...D.emptyState(),view:"model",id:api.id,service:api.id})).service,api.id);
+assert.equal(host.release,null); // grouping does not rewrite source records
+assert.equal(D.modelGroups([api,{...api,id:"other-maker",maker:"Other"}],hostTests).length,2);
+assert.equal(D.modelGroups([{...api,identity_kind:"family"},{...host,identity_kind:"family"}],hostTests).length,2);
+
 const NOW = Date.parse("2026-09-30T00:00:00Z");
 const obs = (date) => ({ observed_at: date, retrieved_at: "2026-09-28T22:33:01Z" });
 const entries = [
