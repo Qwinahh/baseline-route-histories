@@ -1,0 +1,76 @@
+{
+ "as_of": "2026-10-07T22:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 3,
+ "open_dates": [],
+ "records": [],
+ "route": {
+  "access_kind": "intermediary",
+  "exact_identifier": "x-ai/grok-4.7",
+  "label": "Grok 4.7 via Puter",
+  "maker": "xAI",
+  "requested_provider": "xai",
+  "route_id": "puter-x-ai-grok-4.7",
+  "service_provider": "Puter"
+ },
+ "series": {
+  "contract": "puter-subset-v1",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "parent_panel_id": "baseline-calibration-v1",
+  "parent_panel_items": 40,
+  "parent_panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+  "planned_items": 4,
+  "schedule": {
+   "end_date": "2026-10-21",
+   "start_date": "2026-10-08",
+   "type": "daily",
+   "window_minutes": 1080,
+   "window_start_utc": "04:00"
+  },
+  "series_fingerprint": "291df76c8060d8fb98db55dc4653aa3583f8fbf84e4f1d309ddb4d98225c05e8",
+  "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+  "settings": {
+   "accepted_models": [
+    "grok-4.7",
+    "x-ai/grok-4.7"
+   ],
+   "max_tokens": 1000,
+   "meter_prefix": "xai:grok-4_dot_7:",
+   "model": "x-ai/grok-4.7",
+   "provider": "xai",
+   "reasoning_effort": null,
+   "retries": 0,
+   "sdk_package": "@heyputer/puter.js",
+   "sdk_version": "2.6.3",
+   "stream": false,
+   "temperature_forwarded": false
+  },
+  "subset_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "subset_fingerprint": "76eb13361969d4babdb303df85c639fc7e0eaa6ea76f501c4f69b14345a3015b",
+  "subset_item_ids": [
+   "ext-03",
+   "con-03",
+   "evi-03",
+   "rea-03"
+  ],
+  "subset_item_sha256": [
+   "782dfaa86771ab1f5f584c1f6b16f96aa9db79a31fcaf60c3bceb3b2cecf8dd8",
+   "8a4f0f12c6ac349926223a8b38ba28dc26d30b0fb111d2996f7cd18804764d8a",
+   "26936aa49aba3d631dd388244a06ae0c9562cafcc32cc8639fc54c8f51a751f3",
+   "36a09169fe640362275c692ff3644f6699c5ecda456abaf3e6181ca72193c72c"
+  ],
+  "subset_prompt_sha256": [
+   "1309f16668da9c85f886322fc18239c6b562eb65b5fca989d0f26504df29cba8",
+   "aef825f8f8b535693780efd33cf2c76b3152db9e6b6a0338b6251a0070be2018",
+   "4377af385581abbebca849af3e62fe853fe0befb871bc6f14fbee75976a35003",
+   "bc99c2043f3a0fc2f1f147692ab14dabeb045400ab2d3668a0d0587b7ddefb3a"
+  ],
+  "synthetic": false
+ }
+}
