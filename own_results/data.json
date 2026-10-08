@@ -440,7 +440,7 @@
    }
   },
   "puter-claude-sonnet-5-5--daily--485055318d01": {
-   "as_of": "2026-10-08T00:28:59Z",
+   "as_of": "2026-10-08T07:33:49Z",
    "open_dates": [],
    "records": [
     {
@@ -471,6 +471,37 @@
      "record_version": 1,
      "route_id": "puter-claude-sonnet-5-5",
      "run_id": "puter-daily-20261007T093621Z-b99ba40662",
+     "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
+     "status": "completed"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 3,
+     "date": "2026-10-08",
+     "evidence": "verified",
+     "evidence_sha256": "15191bf9ee4ecebea3dd2b4688658a4694f339c50235c304ddb0d69bc4457654",
+     "format_error": 1,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-claude-sonnet-5-5",
+     "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
      "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
      "status": "completed"
     }
@@ -540,7 +571,7 @@
    }
   },
   "puter-gpt-6.1-sol--daily--f0d9bf655682": {
-   "as_of": "2026-10-08T00:28:59Z",
+   "as_of": "2026-10-08T07:33:49Z",
    "open_dates": [],
    "records": [
     {
@@ -571,6 +602,37 @@
      "record_version": 1,
      "route_id": "puter-gpt-6.1-sol",
      "run_id": "puter-daily-20261007T093621Z-b99ba40662",
+     "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
+     "status": "completed"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-08",
+     "evidence": "verified",
+     "evidence_sha256": "15191bf9ee4ecebea3dd2b4688658a4694f339c50235c304ddb0d69bc4457654",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-gpt-6.1-sol",
+     "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
      "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
      "status": "completed"
     }
@@ -640,9 +702,41 @@
    }
   },
   "puter-x-ai-grok-4.7--daily--291df76c8060": {
-   "as_of": "2026-10-08T00:28:59Z",
+   "as_of": "2026-10-08T07:33:49Z",
    "open_dates": [],
-   "records": [],
+   "records": [
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-08",
+     "evidence": "verified",
+     "evidence_sha256": "15191bf9ee4ecebea3dd2b4688658a4694f339c50235c304ddb0d69bc4457654",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-x-ai-grok-4.7",
+     "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
+     "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+     "status": "completed"
+    }
+   ],
    "route": {
     "access_kind": "intermediary",
     "exact_identifier": "x-ai/grok-4.7",
@@ -730,6 +824,10 @@
    "sha256": "1b2ad8973d0b910838a2b188f48f071da3f60677f5adf7bf7d5a2782fc18a562"
   },
   {
+   "reviewed_at": "2026-10-08T09:26:15Z",
+   "sha256": "325e028ca903fe8b72f41414ee07b04716e77a1e4ba9dbced9407adec1397972"
+  },
+  {
    "admitted_at": "2026-10-08T06:18:23Z",
    "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
    "sha256": "420324ef3af4bb141e2aac94f7ef5102bd730222dd5a9666094e582e16d4ab43"
@@ -748,6 +846,10 @@
    "sha256": "82beec7b625058d53f200bbbf5b6ee65d8c6574479b6b60f7f17dd2bb40f7c8d"
   },
   {
+   "reviewed_at": "2026-10-08T09:26:15Z",
+   "sha256": "89eee51cda2f62ef19d2ad11c18a2dbe5d4c37589e2123f4db35c16ebe93d9b8"
+  },
+  {
    "admitted_at": "2026-10-04T02:43:33Z",
    "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
    "sha256": "8fa58cf6bc280578893d8cee744a41197c01ac8e50e2dbeaed618bb2c9e9c03a"
@@ -764,6 +866,10 @@
   {
    "reviewed_at": "2026-10-08T00:28:59Z",
    "sha256": "e0147886154e4a275ce2c286d45ab4410ee3767c43a8c3e0c27ed89691418806"
+  },
+  {
+   "reviewed_at": "2026-10-08T09:26:15Z",
+   "sha256": "f1d5bf472b26df8f922c91c36d2e6064d506735fa78417c22c163f345eb6aec5"
   },
   {
    "admitted_at": "2026-10-05T02:03:46Z",
