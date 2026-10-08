@@ -174,7 +174,7 @@ assert.equal(ev(null, { id: "x", routes: [{ observations: [obs("2026-09-01")] }]
 assert.equal(ev({ runs: 0, calibration: [{}], daily_series: [] }), "ours");                 // a setup test counts
 assert.equal(ev({ runs: 3, calibration: [], daily_series: [{}] }), "ours");
 assert.equal(ev({ runs: 0, calibration: [], daily_series: [{ rows: [] }] }), "scheduled");  // schedule only: not tested
-assert.equal(D.EVIDENCE_KINDS.none, "No measurements yet");
+assert.equal(D.EVIDENCE_KINDS.none, "Catalogue listing only");
 const dated = [
   { id: "a", name: "Alpha", maker: "M1", release: { date: "2026-09-03" }, routes: [] },
   { id: "b", name: "Beta", maker: "M2", release: { date: "2026-09-29" }, routes: [] },

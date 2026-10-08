@@ -1,17 +1,8 @@
 {
  "schema_version": 1,
  "checked_at": "2026-10-08T00:42:56Z",
- "explanation": "Start with the routes that have Baseline results below. The other groups are an editorial shortlist of model families and releases, not a measured popularity ranking. Coverage belongs to the named service: testing via Puter does not establish results for the maker API or chat app.",
+ "explanation": "An editorial shortlist of model families and releases, not a measured popularity ranking. The models Baseline has measured are listed above, computed from the published results. Coverage belongs to the named service: testing via Puter does not establish results for the maker API or chat app.",
  "groups": [
-  {
-   "family": "Measured by Baseline",
-   "reason": "Open a route to see its dated results and graph. Claude and GPT have one four-question daily result so far, too little to show change; Puter did not return a verified model identity. Gemini uses its own separate test setup.",
-   "entries": [
-    "google-api.gemini-3.5-flash-lite",
-    "puter.claude-sonnet-5-5",
-    "puter.gpt-6.1-sol"
-   ]
-  },
   {
    "family": "OpenAI and ChatGPT",
    "reason": "OpenAI's model page lists GPT-6 Astra as its flagship; GPT-6.1 Sol is its newest release (29 Sep 2026). gpt-oss-120b is OpenAI's open-weight model as served by Groq, a separate host: not ChatGPT and not OpenAI's own API.",
@@ -33,7 +24,7 @@
   },
   {
    "family": "Gemini",
-   "reason": "The Gemini app and a recent Flash release. Find the measured Gemini 3.5 Flash-Lite API route in Measured by Baseline above.",
+   "reason": "The Gemini app and a recent Flash release. The measured Gemini 3.5 Flash-Lite API route is listed under Measured by Baseline above.",
    "entries": [
     "google-app.gemini",
     "google-api.gemini-3.8-flash"
@@ -67,7 +58,7 @@
   },
   {
    "family": "Grok",
-   "reason": "Daily testing of Grok 4.7 via Puter is scheduled; its first daily result is pending. The xAI API and Grok app are separate entries without Baseline results.",
+   "reason": "Grok 4.7 is the newest model on xAI's developer model list (21 Sep 2026). Baseline's daily quick check runs through Puter; the xAI API and Grok app are separate entries.",
    "entries": [
     "puter.x-ai-grok-4.7",
     "xai-app.grok",

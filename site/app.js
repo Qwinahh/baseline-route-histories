@@ -118,6 +118,14 @@
       release: g.canonical.release || g.preferred.release, model_group: g });
   }
   function ownStatus(e) { return Dir.baselineStatus(e, TESTS, Date.now()); }
+  // Data-derived coverage (8 October 2026): the exact models with at least one published Baseline daily
+  // result in any of their daily setups, computed from the admitted results and never from an editorial
+  // list. A catalogue-only, scheduled-only, calibration-only or third-party-measured entry is not counted;
+  // each result stays on its own route and setup (review R1: a new empty setup never hides older results).
+  function latestResult(e) { return Dir.latestDailyResult(TESTS.entries[e.id]); }
+  function hasDailyResult(e) { return latestResult(e) !== null; }
+  var testedGroups = modelGroups.filter(function (g) { return g.members.some(hasDailyResult); })
+    .sort(function (a, b) { return displayEntry(a.preferred).name.localeCompare(displayEntry(b.preferred).name); });
   var lastRuns = {};
   D.runs.forEach(function (run) { if (!run.superseded) lastRuns[run.source_id] = run; });
 
@@ -256,10 +264,10 @@
       (!state.sort || state.sort === Dir.DEFAULT_SORT);
   }
 
-  function entryLink(e) {
+  function entryLink(e, setup) {
     var g = e.model_group || groupByEntry[e.id];
-    return Dir.encodeState({ view: "model", id: g.id, service: e.id, route: "", q: "", provider: "", access: "", evidence: "",
-                             availability: "", sort: Dir.DEFAULT_SORT });
+    return Dir.encodeState({ view: "model", id: g.id, service: e.id, setup: setup || "", route: "", q: "", provider: "",
+                             access: "", evidence: "", availability: "", sort: Dir.DEFAULT_SORT });
   }
 
   function highlightCard(e) {
@@ -277,8 +285,7 @@
     var grouped = Dir.groupedEntries(entries, TESTS, Dir.emptyState());
     var newest = Dir.newReleases(grouped, 8);
     var featuredSeen = new Set();
-    if (!featured && !newest.length) return null;
-    var parts = [];
+    var parts = [testedView(featuredSeen)];
     if (featured) {
       parts.push(el("section", { class: "featured", "aria-labelledby": "featured-title" }, [
         el("h2", { id: "featured-title" }, "Featured"),
@@ -307,6 +314,48 @@
     }
     parts.push(el("h2", { class: "all-models" }, "All models"));
     return el("div", { class: "highlights" }, parts);
+  }
+
+  // One measured model: the route and setup holding its newest published result, named, labelled and
+  // linked from that same result (review R1), never from a newer setup without results.
+  function measuredCard(g) {
+    var best = null;
+    g.members.forEach(function (member) {
+      var hit = latestResult(member);
+      if (hit && (!best || hit.date > best.date)) best = { entry: member, series: hit.series, date: hit.date };
+    });
+    var e = Object.assign({}, best.entry, { name: g.canonical.name.replace(/ via Puter$/, ""),
+      release: g.canonical.release || best.entry.release, model_group: g });
+    var setups = TESTS.entries[best.entry.id].daily_series || [];
+    var newer = setups.length && setups[0].series_id !== best.series.series_id;
+    return el("li", { class: "feature-card" }, [
+      link(entryLink(e, best.series.series_id), e.name),
+      el("span", { class: "sub" }, e.maker + " · " + accessText(e) + (Dir.releaseDate(e) ? " · released " + releaseText(e.release) : "")),
+      el("span", { class: "sub test-name" }, testName(best.series) + " · scheduled " +
+        dayText(best.series.schedule.start_date) + " to " + dayText(best.series.schedule.end_date) +
+        " · latest result " + dayText(best.date) +
+        (newer ? " · a newer test setup has no result yet" : "")),
+      el("span", { class: "tag", "data-evidence": "ours" }, Dir.EVIDENCE_KINDS.ours)
+    ]);
+  }
+
+  // The measured models, each with the test of its newest result; computed, never curated.
+  function testedView(seen) {
+    var cards = testedGroups.map(function (g) {
+      seen.add(g.id);
+      return measuredCard(g);
+    });
+    var n = testedGroups.length;
+    return el("section", { class: "tested", "aria-labelledby": "tested-title" }, [
+      el("h2", { id: "tested-title" }, "Measured by Baseline"),
+      el("p", { class: "sub" }, n
+        ? n + (n === 1 ? " exact model has" : " exact models have") + " published Baseline daily results. This list " +
+          "is computed from those results. A result belongs only to the route it was measured on; every other " +
+          "entry is a catalogue listing until Baseline publishes a test of it."
+        : "No model has published Baseline daily results yet. Every entry is a catalogue listing until Baseline " +
+          "publishes a test of it."),
+      n ? el("ul", { class: "feature-list" }, cards) : null
+    ]);
   }
 
   function accessText(e) {
@@ -566,6 +615,7 @@
       if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
       var d = list[index];
       while (content.firstChild) content.removeChild(content.firstChild);
+      append(content, el("p", { class: "test-name" }, testName(d)));
       if (isPuter(d)) append(content, el("p", { class: "sub route-disclosure" },
         "Tested through " + d.route.service_provider + " · " +
         (identityConfirmed(d) ? "model identity reported as requested" : "model identity unverified") +
@@ -580,18 +630,20 @@
       if (isPuter(d)) append(content, el("p", {},
         "Four questions are a small sample and are not comparable with the 40-question tests."));
     }
+    // A link may name one setup (?setup=<series id>, from a measured card); otherwise the latest is shown.
+    var initial = Math.max(0, list.map(function (d) { return d.series_id; }).indexOf(state.setup));
     if (list.length > 1) {
       var selector = el("select", { id: "daily-setup" }, list.map(function (d, i) {
         return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(d, e));
       }));
-      selector.value = "0";
+      selector.value = String(initial);
       selector.addEventListener("change", function () { showSetup(Number(selector.value)); });
       parts.push(el("div", { class: "setup-choice" }, [
         el("label", { for: "daily-setup" }, "Test setup"),
         el("p", { class: "sub" }, "Choose a test setup. Different setups are kept separate and are never joined into one trend."),
         selector]));
     }
-    showSetup(0);
+    showSetup(initial);
     parts.push(content);
     parts.push(el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an overall " +
       "change in model quality. Not enough repeated tests to judge a change."));
@@ -600,6 +652,12 @@
 
   // ------------------------------------------------------------------ Puter four-question series
   function isPuter(d) { return d && d.contract === "puter-subset-v1"; }
+  // Which test a graph shows: the full reference set, or a separate quick check of a few of its questions.
+  // The two are separate tests; a quick-check score is never shown as a share of the full set.
+  function testName(d) {
+    return isPuter(d) ? "Quick check: " + d.planned_items + " of the " + d.parent_panel_items + " reference questions, " +
+      "through " + d.route.service_provider : "Reference test: all " + d.panel_items + " questions";
+  }
   function puterSettingsText(x) {
     return "Puter SDK " + x.sdk_version + ", provider " + x.provider + ", output limit " + x.max_tokens + " tokens" +
       (x.reasoning_effort ? ", reasoning " + x.reasoning_effort : "") + ", no retries";

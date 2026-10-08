@@ -68,7 +68,9 @@ const modelRows = all().filter(n => n.tagName === "li" && n.getAttribute("class"
   return {name:a.textContent, href:a.getAttribute("href")};
 });
 const service = all().find(n => n.getAttribute("id") === "model-service");
+const featureLinks = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "feature-card")
+  .map(n => n.children[0]).filter(a => a && a.tagName === "a").map(a => [a.textContent, a.getAttribute("href")]);
 process.stdout.write(JSON.stringify({ text: body.textContent, aria, hash: location.hash, dailyCharts,
   totalCharts: svgs.length, selectedSetup: selector ? selector.value : null, modelRows,
   selectedService: service ? service.value : null,
-  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [] }));
+  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [], featureLinks }));

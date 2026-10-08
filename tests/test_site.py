@@ -1013,6 +1013,133 @@ class ThirdPartyEvidenceTests(OwnResultsPageTests):
         return json.loads((GRAPH_FIXTURES / name).read_text(encoding="utf-8"))
 
 
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class MeasuredCoverageTests(OwnResultsPageTests):
+    """The measured list, test names and denominators come from published results (8 October 2026)."""
+
+    def published(self, route_prefix):
+        """The newest public admitted candidate of a route: genuine aggregates already published, re-imported here
+        through a temporary review manifest (never the production dataset)."""
+        found = []
+        for path in sorted((ROOT / "own_results" / "admitted").glob("*.json")):
+            bundle = json.loads(path.read_text(encoding="utf-8"))
+            if bundle["series"]["series_id"].startswith(route_prefix):
+                found.append(bundle)
+        if not found:
+            self.skipTest("no published candidate for " + route_prefix)
+        return max(found, key=lambda b: b["as_of"])
+
+    @staticmethod
+    def measured_section(text):
+        start = text.index("Measured by Baseline")
+        return text[start:text.index("Featured", start)]
+
+    def test_the_measured_list_is_computed_from_published_results_as_they_grow(self):
+        empty = self.site([])
+        section = self.measured_section(empty("#models"))
+        self.assertIn("No model has published Baseline daily results yet.", section)
+        self.assertIn("catalogue listing", section)
+        one = self.site([self.fixture("daily-part1.json")])
+        section = self.measured_section(one("#models"))
+        self.assertIn("1 exact model has published Baseline daily results.", section)
+        self.assertIn("Reference test: all 40 questions", section)
+        puter = [self.published(p) for p in ("puter-claude-sonnet-5-5--", "puter-gpt-6.1-sol--", "puter-x-ai-grok-4.7--")]
+        four = self.site([self.fixture("daily-part1.json")] + puter)
+        page = four.page("#models")
+        section = self.measured_section(page["text"])
+        self.assertIn("4 exact models have published Baseline daily results.", section)
+        for name in ("Claude Sonnet 5.5", "gpt-6.1-sol", "grok-4.7", "gemini-3.5-flash-lite"):   # canonical group names
+            self.assertIn(name, section)
+        self.assertEqual(section.count("Quick check: 4 of the 40 reference questions, through Puter"), 3)
+        self.assertEqual(section.count("Reference test: all 40 questions"), 1)
+        for app in ("Claude app", "ChatGPT", "Grok app", "Gemini app"):
+            self.assertNotIn(app, section)                               # apps are never measured by association
+        tested = {k for k, r in four.data["baseline_tests"]["entries"].items() if r["runs"]}
+        self.assertEqual(tested, {GEMINI, "puter.claude-sonnet-5-5", "puter.gpt-6.1-sol", "puter.x-ai-grok-4.7"})
+        self.assertIn("Catalogue listing only", page["text"])            # unmeasured cards say so explicitly
+        featured = page["text"][page["text"].index("Featured"):page["text"].index("New releases")]
+        self.assertNotIn("Grok 4.7Third-party host", featured.replace(" ", ""))   # not repeated under Featured
+
+    def test_each_graph_names_its_test_and_keeps_its_own_denominator(self):
+        grok, claude = self.published("puter-x-ai-grok-4.7--"), self.published("puter-claude-sonnet-5-5--")
+        render = self.site([self.fixture("daily-part1.json"), grok, claude])
+        page = render.page("#model/puter.x-ai-grok-4.7")
+        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter", page["text"])
+        self.assertIn("Correct answers out of 4", page["text"])
+        self.assertNotIn("out of 40", page["text"])
+        self.assertEqual(page["dailyCharts"], 1)
+        gemini = render.page(f"#model/{GEMINI}")
+        self.assertIn("Reference test: all 40 questions", gemini["text"])
+        self.assertIn("Correct answers out of 40", gemini["text"])
+        self.assertNotIn("Quick check", gemini["text"])
+        rows = render.data["baseline_tests"]["entries"]["puter.claude-sonnet-5-5"]["daily_series"][0]["rows"]
+        self.assertEqual([(r["date"], r["record"]["correct"]) for r in rows if r["record"]],
+                         [(r["date"], r["correct"]) for r in claude["records"]])   # the published history, unchanged
+
+    @staticmethod
+    def card_link(render, name):
+        """The href of the home page's card named `name` (render_page.js reports card links)."""
+        return next(href for text, href in render.page("#models")["featureLinks"] if text == name)
+
+    def test_review_r1_an_older_measured_setup_survives_a_new_empty_setup(self):
+        """Codex's reproduction: two historical points, then a newer setup without results."""
+        render = self.site([self.fixture("daily-part1.json"), self.fixture("graph/schedule-only.json")])
+        tests = render.data["baseline_tests"]["entries"][GEMINI]
+        self.assertEqual(tests["runs"], 0)                                   # the newest setup has no result yet
+        section = self.measured_section(render("#models"))
+        self.assertNotIn("No model has published Baseline daily results yet.", section)
+        self.assertIn("1 exact model has published Baseline daily results.", section)
+        self.assertIn("Reference test: all 40 questions · scheduled 20 Sep 2026 to 30 Sep 2026 · latest result "
+                      "21 Sep 2026 · a newer test setup has no result yet", section)   # the measured setup's own dates
+        href = self.card_link(render, "gemini-3.5-flash-lite")
+        old = "gemini-api.gemini-3.5-flash-lite--daily--abababababab"
+        self.assertIn("setup=" + old, href)                                  # the link opens the measured setup
+        page = render.page(href)
+        self.assertEqual(page["selectedSetup"], "1")                         # the older setup, not the empty one
+        self.assertIn("Reference test: all 40 questions", page["text"])
+        self.assertIn("21 Sep 2026", page["text"])
+        latest = render.page(f"#model/{GEMINI}")
+        self.assertEqual(latest["selectedSetup"], "0")                       # unchanged default: the latest setup
+
+    def test_review_r1_a_zero_score_counts_and_a_gap_or_calibration_does_not(self):
+        zero = copy.deepcopy(self.published("puter-x-ai-grok-4.7--"))
+        zero["records"] = [dict(r, correct=0, incorrect=r["answered"] - r["format_error"]) for r in zero["records"]]
+        self.assertTrue(zero["records"])
+        gap_only = copy.deepcopy(self.fixture("graph/open-day.json"))
+        gap_only["records"] = [r for r in gap_only["records"] if r["status"] == "gap"]
+        gap_only["as_of"] = "2026-10-05T03:00:00Z"
+        render = self.site([zero, gap_only, self.fixture("calibration.json")])
+        section = self.measured_section(render("#models"))
+        self.assertIn("1 exact model has published Baseline daily results.", section)   # Grok's genuine zero only
+        self.assertIn("grok-4.7", section)
+        self.assertNotIn("gemini-3.5-flash-lite", section)                   # a gap or a one-off setup test is not one
+        grok = render.page("#model/puter.x-ai-grok-4.7")
+        self.assertIn("0 of 4 correct; all 4 questions attempted", grok["text"])   # a scored zero, not a gap
+
+    def test_review_r1_card_route_and_test_name_come_from_the_same_result(self):
+        claude = self.published("puter-claude-sonnet-5-5--")
+        render = self.site([self.fixture("graph/several-points.json"), claude])
+        section = self.measured_section(render("#models"))
+        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter · scheduled 7 Oct 2026 to 21 Oct "
+                      "2026 · latest result", section)
+        href = self.card_link(render, "Claude Sonnet 5.5")
+        self.assertIn("service=puter.claude-sonnet-5-5", href)
+        self.assertIn("setup=" + claude["series"]["series_id"], href)
+        page = render.page(href)
+        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter", page["text"])
+        self.assertIn("Correct answers out of 4", page["text"])
+        gemini = render.page(self.card_link(render, "gemini-3.5-flash-lite"))
+        self.assertIn("Reference test: all 40 questions", gemini["text"])
+        self.assertNotIn("Quick check", gemini["text"])
+
+    def test_the_editorial_list_carries_no_fixed_result_counts(self):
+        featured = json.loads((ROOT / "catalog" / "featured.json").read_text(encoding="utf-8"))
+        self.assertNotIn("Measured by Baseline", [g["family"] for g in featured["groups"]])
+        text = json.dumps(featured).lower()
+        for stale in ("so far", "pending", "one four-question", "first daily result", "have one"):
+            self.assertNotIn(stale, text)
+
+
 class PageSourceTests(unittest.TestCase):
     def test_page_loads_nothing_external_and_sets_csp(self):
         html = (ROOT / "site" / "index.html").read_text(encoding="utf-8")

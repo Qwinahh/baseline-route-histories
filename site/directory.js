@@ -21,7 +21,7 @@
   }
 
   function emptyState() {
-    return { view: "models", id: "", route: "", service: "", q: "", provider: "", access: "", evidence: "",
+    return { view: "models", id: "", route: "", service: "", setup: "", q: "", provider: "", access: "", evidence: "",
              availability: "", sort: DEFAULT_SORT, legacy: "" };
   }
 
@@ -36,7 +36,7 @@
     var query = qIndex === -1 ? "" : text.slice(qIndex + 1);
     var params;
     try { params = new URLSearchParams(query); } catch (e) { params = new URLSearchParams(""); }
-    FILTER_KEYS.concat(["route", "service"]).forEach(function (key) {
+    FILTER_KEYS.concat(["route", "service", "setup"]).forEach(function (key) {
       var value;
       try { value = params.get(key); } catch (e) { value = null; }
       if (value !== null) state[key] = value.normalize ? value.normalize("NFC") : value;
@@ -58,6 +58,7 @@
     var params = new URLSearchParams();
     if (state.view === "model" && state.route) params.set("route", state.route);
     if (state.view === "model" && state.service) params.set("service", state.service);
+    if (state.view === "model" && state.setup) params.set("setup", state.setup);     // one daily test setup
     FILTER_KEYS.forEach(function (key) {
       var value = state[key];
       if (value && !(key === "sort" && value === DEFAULT_SORT)) params.set(key, value);
@@ -148,12 +149,24 @@
   // for its first result, other published tests only, or nothing. Never a quality label.
   var EVIDENCE_KINDS = {
     ours: "Tested by Baseline", scheduled: "Baseline test scheduled, no result yet",
-    external: "Other published tests only", none: "No measurements yet"
+    external: "Other published tests only", none: "Catalogue listing only"
   };
+  // The newest published daily result of an entry across all of its setups, or null. A result is a graph
+  // point (a complete zero counts; a gap, unavailable, partial or open day does not). It names its own
+  // setup: an older setup's result is never relabelled with a newer setup that has none yet.
+  function latestDailyResult(rec) {
+    var best = null;
+    ((rec && rec.daily_series) || []).forEach(function (series) {
+      (series.rows || []).forEach(function (row) {
+        if (row.eligible && (!best || row.date > best.date)) best = { series: series, date: row.date };
+      });
+    });
+    return best;
+  }
   function evidenceKind(entry, tests, nowMs) {
     var rec = tests && tests.entries ? tests.entries[entry.id] : null;
     var key;
-    if (rec && ((rec.runs || 0) > 0 || (rec.calibration || []).length)) key = "ours";
+    if (rec && ((rec.runs || 0) > 0 || latestDailyResult(rec) || (rec.calibration || []).length)) key = "ours";
     else if (rec && (rec.daily_series || []).length) key = "scheduled";
     else key = coverage(entry, nowMs === undefined ? Date.now() : nowMs).kind !== "none" ? "external" : "none";
     return { key: key, label: EVIDENCE_KINDS[key] };
@@ -273,6 +286,7 @@
            coverage: coverage, newestObservation: newestObservation, distinct: distinct,
            releaseDate: releaseDate, baselineStatus: baselineStatus, STATUS: STATUS, STALE_DAYS: STALE_DAYS,
            outcomeGroups: outcomeGroups, evidenceKind: evidenceKind, EVIDENCE_KINDS: EVIDENCE_KINDS,
+           latestDailyResult: latestDailyResult,
            newReleases: newReleases, modelGroups: modelGroups, groupedEntries: groupedEntries,
            ACCESS_LABELS: ACCESS_LABELS, emptyState: emptyState, DEFAULT_SORT: DEFAULT_SORT };
 });
