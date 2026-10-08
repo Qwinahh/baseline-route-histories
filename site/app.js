@@ -509,7 +509,7 @@
         : "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
       el("div", { class: "chart-scroll" }, svg),
       lay.message ? el("p", { class: "chart-note" }, lay.message + ".") : null,
-      detail, legend]);
+      detail, el("details", { class: "chart-key" }, [el("summary", {}, "How to read this graph"), legend])]);
   }
 
   function checkedNote(d) {
@@ -549,9 +549,17 @@
       if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
       var d = list[index];
       while (content.firstChild) content.removeChild(content.firstChild);
-      append(content, el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e)));
-      if (isPuter(d)) append(content, puterLabels(d));
-      append(content, [dailyChart(d), checkedNote(d), dailySection(d)]);
+      if (isPuter(d)) append(content, el("p", { class: "sub route-disclosure" },
+        "Tested through " + d.route.service_provider + " · " +
+        (identityConfirmed(d) ? "model identity reported as requested" : "model identity unverified") +
+        " · " + d.planned_items + "-question sample"));
+      append(content, dailyChart(d));
+      var details = el("details", { class: "evidence test-details" }, [
+        el("summary", {}, "Test details"),
+        el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e))
+      ]);
+      if (isPuter(d)) append(details, puterLabels(d));
+      append(content, [details, checkedNote(d), dailySection(d)]);
       if (isPuter(d)) append(content, el("p", {},
         "Four questions are a small sample and are not comparable with the 40-question tests."));
     }
@@ -696,7 +704,8 @@
     var wrap = el("article", { class: "detail", "aria-labelledby": "model-title" }, backLink());
     append(wrap, el("header", { class: "identity" }, [
       el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
-      el("h1", { id: "model-title" }, e.name),
+      el("h1", { id: "model-title" }, e.access_kind === "intermediary" && e.service_provider === "Puter"
+        ? e.name.replace(/ via Puter$/, "") : e.name),
       e.exact_identifier && e.exact_identifier !== e.name ? el("p", { class: "ident" }, el("code", {}, e.exact_identifier)) : null,
       el("p", { class: "released" }, e.release
         ? ["Released " + releaseText(e.release) + " · ", link(e.release.source.url, "release source")]
