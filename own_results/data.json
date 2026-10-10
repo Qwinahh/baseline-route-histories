@@ -579,7 +579,7 @@
    }
   },
   "puter-claude-sonnet-5-5--daily--485055318d01": {
-   "as_of": "2026-10-08T22:00:00Z",
+   "as_of": "2026-10-09T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -710,7 +710,7 @@
    }
   },
   "puter-gpt-6.1-sol--daily--f0d9bf655682": {
-   "as_of": "2026-10-08T22:00:00Z",
+   "as_of": "2026-10-09T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -841,7 +841,7 @@
    }
   },
   "puter-x-ai-grok-4.7--daily--291df76c8060": {
-   "as_of": "2026-10-08T22:00:00Z",
+   "as_of": "2026-10-09T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -949,6 +949,11 @@
  },
  "sources": [
   {
+   "admitted_at": "2026-10-10T02:16:17Z",
+   "policy_sha256": "bd0dd35da6ffc5100c3205c032ec1feebd3e0d0e62458e6e9c1b4f37d1a5330a",
+   "sha256": "01df1e7c4104cffef817a27c5b13482edba0675840f2288046d5210acf1c2739"
+  },
+  {
    "reviewed_at": "2026-10-08T00:28:59Z",
    "sha256": "027850dce932ae773fa3f8748dd321f4b3bd938f5d1e84748c73e8c9700e61fb"
   },
@@ -975,6 +980,11 @@
    "admitted_at": "2026-10-08T09:29:13Z",
    "policy_sha256": "8f3daf7815cd30630530c901cc4ec0d3e3bf4aecae284cc72b2509c5cf241087",
    "sha256": "367d86aaad9496b149e14d5688fdb7090c15333c575f44c8397bce189e386fb5"
+  },
+  {
+   "admitted_at": "2026-10-10T02:16:17Z",
+   "policy_sha256": "dde86e1e65da922f08f87c8df50ef08e0d71bd42ceb141a7a70ec1558b0f825e",
+   "sha256": "3dbe42796ed12778e2a788fbf6b82c98d0a61444c15dd39e228e6344a7ab2d4e"
   },
   {
    "admitted_at": "2026-10-08T06:18:23Z",
@@ -1036,6 +1046,11 @@
    "admitted_at": "2026-10-03T02:03:57Z",
    "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
    "sha256": "cbd04bfcc687041946c4a88667d841751e5e7809d614fab631cee05a095dfcc9"
+  },
+  {
+   "admitted_at": "2026-10-10T02:16:17Z",
+   "policy_sha256": "8f3daf7815cd30630530c901cc4ec0d3e3bf4aecae284cc72b2509c5cf241087",
+   "sha256": "dd6c8e08f2392ceb8d0e33894a03f82ffdad5bfd3aae5a6943aff7721aeb0d4b"
   },
   {
    "reviewed_at": "2026-10-08T00:28:59Z",
