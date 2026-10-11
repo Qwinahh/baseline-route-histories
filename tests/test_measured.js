@@ -28,7 +28,9 @@ function daily(id, rows, opts = {}) {
 function quick(id, rows) {
   return { series_id: id, panel_items: 4, contract: "puter-subset-v1",
     rows: rows.map(([date, correct]) => ({ date, state: "completed", eligible: true,
-      record: { date, correct, answered: 4, identity: { mismatch: 0 } } })) };
+      record: { date, record_version: 1, evidence: "verified", status: "completed", correct, answered: 4, attempted: 4,
+                planned_items: 4, not_sent: 0, not_graded: { refusal: 0, error: 0, truncated: 0, missing_text: 0, malformed: 0,
+                uncertain: 0 }, identity: { unknown: 4, reported_match: 0, mismatch: 0 } } })) };
 }
 function reference(id, evaluations) {
   return { series_id: id, panel_items: 40, contract: "puter-reference-v1",
@@ -198,4 +200,59 @@ assert.deepEqual(trimmed.yTicks.map((t) => t.value), [0, 10, 20, 30, 40]);      
 assert.ok(trimmed.points[1].x - trimmed.points[0].x > full.points[1].x - full.points[0].x);
 const short = Object.assign({}, campaign, { as_of: "2026-10-03T12:00:00Z" });
 assert.equal(C.layout(short, { trim: true }).xTicks.slice(-1)[0].label, "8 Oct");   // at least a week is shown
+// ---------------------------------------------------------------- the monitor readout (11 October 2026)
+let o = M.observation(daily("r", [["2026-10-08", 36], ["2026-10-09", 37]]), Date.parse("2026-10-10T06:00:00Z"));
+assert.equal(o.text, "1 more correct answer than the previous test (8 Oct 2026)");
+assert.match(o.caution, /^Not enough evidence of a lasting improvement/);
+o = M.observation(daily("f", [["2026-10-08", 36], ["2026-10-09", 33]]), Date.parse("2026-10-10T06:00:00Z"));
+assert.equal(o.text, "3 fewer correct answers than the previous test (8 Oct 2026)");
+assert.match(o.caution, /^Not enough evidence of a lasting decline/);
+o = M.observation(daily("e", [["2026-10-08", 36], ["2026-10-09", 36]]), Date.parse("2026-10-10T06:00:00Z"));
+assert.equal(o.text, "Same score on these two tests (8 Oct 2026 and 9 Oct 2026)");        // never "stable"
+assert.match(o.caution, /does not mean the model is stable/);
+assert.equal(M.observation(daily("one", [["2026-10-09", 37]]), NOW).text, "First result—no history yet.");
+assert.equal(M.observation(quick("q", [["2026-10-08", 2], ["2026-10-09", 4]]), NOW).text,
+             "Quick check: 4 questions, too small to compare as a full test.");          // 4 never compared
+assert.equal(M.observation(outage, Date.parse("2026-10-10T06:00:00Z")).text,
+             "The latest attempt, on 9 Oct 2026, has no score, so no comparison is shown.");
+assert.equal(M.observation({ series_id: "s", panel_items: 40, rows: [] }, NOW), null);
+const key1 = M.observation(rise, Date.parse("2026-10-09T12:00:00Z")).key;
+assert.notEqual(key1, M.observation(rise, Date.parse("2026-10-11T00:00:01Z")).key);    // the live refresh can see expiry
+assert.equal(key1, M.observation(rise, Date.parse("2026-10-09T13:00:00Z")).key);       // and nothing changes within it
+
+// ---------------------------------------------------------------- movement links and Change availability
+const mv = M.movements(models([["a", [rise]], ["b", [daily("b", [["2026-10-07", 30], ["2026-10-08", 26]])]],
+                               ["c", [daily("c", [["2026-10-07", 30], ["2026-10-08", 30]])]], ["q", [sample]]]), NOW);
+assert.deepEqual(mv.map((m) => [m.id, m.comparison.change]), [["b", -10], ["a", 2.5]]);   // nonzero, largest first
+assert.equal(M.highlight(models([["a", [rise]], ["b", [daily("b", [["2026-10-07", 30], ["2026-10-08", 26]])]]]), NOW).id,
+             mv[0].id);                                                   // the same choice as the home's selection
+assert.equal(M.changeAvailable(rise), true);
+assert.equal(M.changeAvailable(daily("one", [["2026-10-09", 37]])), false);
+assert.equal(M.changeAvailable(daily("m", [["2026-10-08", 36], ["2026-10-09", 30, { outcomes: { timeout: 10, incorrect: 0 } }]])),
+             false);                                                      // a mixed run is never a change point
+assert.equal(M.comparableRows(outage).length, 2);                          // the outage day is excluded
+
+// ---------------------------------------------------------------- Change view layout (site/results-chart.js)
+const Cx = require("../site/results-chart.js");
+function dated(s) { return Object.assign(s, { as_of: "2026-10-10T12:00:00Z", schedule: { start_date: s.rows[0].date, end_date: "2026-10-29" } }); }
+let ch = Cx.changeLayout(dated(daily("c1", [["2026-10-03", 37], ["2026-10-04", 37], ["2026-10-05", 38], ["2026-10-06", null],
+  ["2026-10-07", 36], ["2026-10-08", 30, { outcomes: { incorrect: 5, timeout: 5 } }], ["2026-10-09", 36], ["2026-10-10", 37]])),
+  { width: 900, height: 340, trim: true });
+assert.deepEqual(ch.anchor, { date: "2026-10-03", correct: 37, total: 40 });
+assert.equal(ch.extent, 4);                                                // at least ±4 answers for a 40-question panel
+assert.deepEqual(ch.yTicks.map((t) => t.label), ["\u22124", "\u22123", "\u22122", "\u22121", "0", "+1", "+2", "+3", "+4"]);
+assert.deepEqual(ch.points.map((p) => [p.date.slice(8), p.delta]), [["03", 0], ["04", 0], ["05", 1], ["07", -1], ["09", -1], ["10", 0]]);
+assert.deepEqual(ch.segments.map((s) => s.map((p) => p.date.slice(8))), [["03", "04", "05"], ["09", "10"]]);   // gaps break
+assert.ok(ch.marks.some((m) => m.date === "2026-10-08" && m.kind === "not_comparable"));
+assert.ok(Math.abs((ch.zeroY - ch.top) - (ch.plotBottom - ch.zeroY)) < 1e-9);  // zero sits in the middle
+ch = Cx.changeLayout(dated(daily("c2", [["2026-10-03", 30], ["2026-10-04", 39], ["2026-10-05", 25]])), { trim: true });
+assert.equal(ch.extent, 9);                                                // widened symmetrically to the largest change
+assert.equal(ch.yTicks[0].value, -ch.yTicks[ch.yTicks.length - 1].value);
+ch = Cx.changeLayout(dated(daily("c3", [["2026-10-03", 0, errorsOnly], ["2026-10-04", 20], ["2026-10-05", 22]])), { trim: true });
+assert.equal(ch.anchor.date, "2026-10-04");                                // an error-only run is never the anchor
+ch = Cx.changeLayout(dated(Object.assign(quick("q4", [["2026-10-03", 3], ["2026-10-04", 3]]), {})), { trim: true });
+assert.deepEqual(ch.yTicks.map((t) => t.label), ["\u22121", "0", "+1"]);   // ±1 minimum for a 4-question panel
+assert.deepEqual(Cx.changeLayout(dated(daily("c4", [["2026-10-03", 37]])), {}), { unavailable: "one", count: 1 });
+const sc = Cx.layout(dated(daily("c5", [["2026-10-03", 37], ["2026-10-04", 36]])), { trim: true });
+assert.deepEqual(sc.yTicks.map((t) => t.value), [0, 10, 20, 30, 40]);       // Score view: the full scale, unchanged
 console.log("measured.js: all assertions passed");

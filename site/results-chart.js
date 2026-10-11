@@ -9,6 +9,12 @@
    result breaks it. Rows without a score are marks in a separate "no score" lane, so
    they can never be read as a zero. Nothing is interpolated or carried forward.
 
+   changeLayout (the monitor, 11 October 2026): the same dates and marks, with each fully gradeable result drawn as
+   its correct count minus the first fully gradeable result's (the anchor, labelled with its date and score). The
+   vertical range is symmetric about a zero line: at least plus or minus a tenth of the panel (4 answers of 40, 1 of 4),
+   widened symmetrically to fit larger differences, with signed integer ticks. A scored run that is not fully
+   gradeable is a mark, never a change point or the anchor. Lines still join consecutive days only.
+
    opts.trim (the measured site, 9 October 2026): the x axis ends at the latest checked date (the newest row or
    as_of, at least a week after the start) instead of the campaign's last scheduled date, so recorded history
    fills the graph. Later scheduled dates are not drawn; the page lists how many are not yet due.
@@ -30,7 +36,8 @@
     unavailable: "Run evidence unavailable: no score shown",
     open: "Run still open or unresolved when last checked: no score yet",
     pending: "Not yet tested or not yet published",
-    failed: "Run finished without a gradeable answer (every question failed or was not answered): no score shown"
+    failed: "Run finished without a gradeable answer (every question failed or was not answered): no score shown",
+    not_comparable: "Scored, but not every answer was gradeable or the returned model differed: not a change point"
   };
   var REQUEST_ERRORS = ["timeout", "provider_error", "rate_limited", "auth_error", "client_error"];
   var ANSWER_PROBLEMS = ["truncated", "empty", "malformed", "answered_identity_mismatch", "answered_identity_unknown"];
@@ -81,6 +88,13 @@
     out.identity_confirmed = id.reported_match === r.attempted && r.attempted > 0;
     out.identity_mismatch = id.mismatch;
     return out;
+  }
+
+  // Every question graded and no returned-model mismatch: a result the Change view may plot.
+  function fullyGraded(r, max) {
+    if (!r) return false;
+    var mismatch = r.identity ? r.identity.mismatch : (r.first_attempt_outcomes || {}).answered_identity_mismatch;
+    return gradeable(r) === max && !mismatch;
   }
 
   function details(row) {
@@ -176,13 +190,21 @@
     for (var v = 0; v < max; v += step) yTicks.push({ value: v, y: y(v) });
     yTicks.push({ value: max, y: y(max) });
 
+    // Weekly date ticks; a trimmed axis spaces them to fit its width (about 64px per label) so short histories show
+    // their days without labels running into each other.
+    var every = 7;
+    if (opts.trim) {
+      var fit = Math.max(2, Math.floor((W - L - R) / 64));
+      every = [1, 2, 3, 7, 14, 28].filter(function (n) { return Math.floor((last - first) / n) + 1 <= fit; })[0] || 28;
+    }
     var xTicks = [];
-    for (var n = first; n <= last; n += 7) {
+    for (var n = first; n <= last; n += every) {
       var iso = new Date(n * DAY_MS).toISOString().slice(0, 10);
       xTicks.push({ date: iso, x: x(iso), label: dayLabel(iso) });
     }
     if (xTicks[xTicks.length - 1].date !== endDate && last - first >= 4) {
-      if (last - dayNumber(xTicks[xTicks.length - 1].date) < 3) xTicks.pop();     // never two labels on top of each other
+      var room = opts.trim ? Math.max(2, Math.ceil(every / 2)) : 3;
+      if (last - dayNumber(xTicks[xTicks.length - 1].date) < room) xTicks.pop();   // never two labels on top of each other
       xTicks.push({ date: endDate, x: x(endDate), label: dayLabel(endDate) });
     }
 
@@ -191,6 +213,7 @@
       var d = details(row);
       d.x = x(row.date);
       d.label = describe(d);
+      d.fullyGraded = d.kind === "point" && fullyGraded(row.record, max);
       if (d.kind === "point") {
         d.y = y(d.correct);
         points.push(d);
@@ -224,6 +247,54 @@
     };
   }
 
-  return { layout: layout, describe: describe, rowKind: rowKind, dayLabel: dayLabel, fullDay: fullDay,
-           MARK_LABELS: MARK_LABELS };
+  function signed(n) { return n > 0 ? "+" + n : n < 0 ? "\u2212" + Math.abs(n) : "0"; }
+
+  // The Change view of a series: { unavailable: reason } with fewer than two fully gradeable results, otherwise the
+  // score layout's dates and marks with change points, signed ticks, the zero line and the anchor.
+  function changeLayout(series, opts) {
+    var lay = layout(series, opts);
+    var max = series.panel_items;
+    var graded = lay.points.filter(function (p) { return p.fullyGraded; });
+    if (graded.length < 2) {
+      return { unavailable: graded.length === 1 ? "one" : "none", count: graded.length };
+    }
+    var anchor = graded[0];
+    var deltas = graded.map(function (p) { return p.correct - anchor.correct; });
+    var extent = Math.max(Math.max(1, Math.round(max / 10)), Math.max.apply(null, deltas.map(Math.abs)));
+    var T = lay.top, plotBottom = lay.plotBottom;
+    function y(delta) { return T + (extent - delta) / (2 * extent) * (plotBottom - T); }
+    var step = extent <= 5 ? 1 : extent <= 10 ? 2 : extent <= 25 ? 5 : 10;
+    var yTicks = [];
+    for (var v = -Math.floor(extent / step) * step; v <= extent; v += step) yTicks.push({ value: v, y: y(v), label: signed(v) });
+    var points = [], segments = [], current = null, previous = null;
+    var marks = lay.marks.slice();
+    var gradedDates = {};
+    graded.forEach(function (p) { gradedDates[p.date] = true; });
+    lay.points.forEach(function (p) {
+      if (!gradedDates[p.date]) {
+        marks.push({ date: p.date, kind: "not_comparable", x: p.x,
+                     label: p.label + " " + MARK_LABELS.not_comparable + "." });
+        current = null; previous = null;
+        return;
+      }
+      var delta = p.correct - anchor.correct;
+      var point = Object.assign({}, p, { delta: delta, y: y(delta),
+        label: p.label + " Change from " + fullDay(anchor.date) + " (" + anchor.correct + " of " + max + "): " +
+          signed(delta) + (Math.abs(delta) === 1 ? " correct answer." : " correct answers.") });
+      points.push(point);
+      if (current && previous === dayNumber(p.date) - 1) current.push(point);
+      else { current = [point]; segments.push(current); }
+      previous = dayNumber(p.date);
+    });
+    if (series.contract === "puter-reference-v1") segments = [];
+    marks.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    return Object.assign({}, lay, {
+      mode: "change", yTicks: yTicks, points: points, marks: marks, extent: extent, zeroY: y(0), message: null,
+      segments: segments.filter(function (s) { return s.length > 1; }),
+      anchor: { date: anchor.date, correct: anchor.correct, total: max }
+    });
+  }
+
+  return { layout: layout, changeLayout: changeLayout, describe: describe, rowKind: rowKind, dayLabel: dayLabel,
+           fullDay: fullDay, signed: signed, MARK_LABELS: MARK_LABELS };
 });

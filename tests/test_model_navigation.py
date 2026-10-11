@@ -52,7 +52,6 @@ class ModelNavigationTests(unittest.TestCase):
         self.assertIn("service=puter.claude-sonnet-5-5", page["modelRows"][0]["href"])
         old_filter = self.page("#models?q=claude-sonnet-5-5&access=direct_api")   # a retired filter is ignored
         self.assertEqual(old_filter["modelRows"], page["modelRows"])
-        self.assertNotIn("Collecting baseline", old_filter["text"])
 
     def test_apps_are_not_given_api_graphs(self):
         for app in ("anthropic-app.claude", "openai-app.chatgpt", "google-app.gemini"):

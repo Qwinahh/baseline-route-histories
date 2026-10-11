@@ -142,6 +142,27 @@
   //   kind "latest" / "first": otherwise the newest scored full test ("first" when it is that series' only one);
   //   kind "quick": otherwise the newest quick check;
   //   null when nothing is measured.
+  // Every eligible nonzero movement across `models`, largest absolute change first (ties: newest result, then
+  // model id). Within-model observations for links, never a ranking of models against each other.
+  function movements(models, nowMs) {
+    var moves = [];
+    (models || []).forEach(function (m) {
+      (m.series || []).forEach(function (s) {
+        var latest = latestScored(s);
+        if (!latest || !isFull(s)) return;
+        var c = comparison(s, nowMs);
+        if (c.eligible && c.change !== 0) {
+          moves.push({ id: m.id, model: m, series: s, latest: latest, later: laterAttempt(s), comparison: c });
+        }
+      });
+    });
+    moves.sort(function (a, b) {
+      return Math.abs(b.comparison.change) - Math.abs(a.comparison.change) || b.latest.at - a.latest.at ||
+        (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    });
+    return moves;
+  }
+
   function highlight(models, nowMs) {
     var moves = [], fulls = [], quicks = [];
     (models || []).forEach(function (m) {
@@ -206,6 +227,46 @@
       laterText(h);
   }
 
+  // Fully gradeable scored results of a series (every question graded, no returned-model mismatch): the only
+  // results the Change view may plot or anchor on. Failures, partials and mixed runs are never change points.
+  function comparableRows(series) {
+    return scoredRows(series).filter(function (row) { return comparable(series, row); });
+  }
+  function changeAvailable(series) { return comparableRows(series).length >= 2; }
+
+  // The workspace readout for one series: its latest raw score and, only where the comparison rules allow it, the
+  // observed change from the previous test, in correct answers; otherwise why no comparison is shown.
+  var REASONS = {
+    quick_check: "Quick check: 4 questions, too small to compare as a full test.",
+    one_result: "First result—no history yet.",
+    missing_day: "No scored result on the previous day, so no comparison is shown.",
+    identity_mismatch: "A returned model differed from the one requested, so these tests are not compared.",
+    not_fully_graded: "Not every answer in these tests was gradeable, so they are not compared.",
+    stale: "The newest result is more than 48 hours old, so no recent comparison is shown."
+  };
+  function observation(series, nowMs) {
+    var latest = latestScored(series);
+    if (!latest) return null;
+    var c = comparison(series, nowMs), later = laterAttempt(series);
+    var out = { latest: latest, comparison: c, later: later, text: "", caution: "",
+                key: [c.eligible, c.reason, latest.date, c.previous ? c.previous.date : ""].join("|") };
+    if (c.eligible) {
+      var n = c.latest.correct - c.previous.correct, size = Math.abs(n);
+      out.change = n;
+      out.text = n === 0 ? "Same score on these two tests (" + dayText(c.previous.date) + " and " + dayText(c.latest.date) + ")"
+        : size + (n > 0 ? " more" : " fewer") + " correct answer" + (size === 1 ? "" : "s") + " than the previous test (" +
+          dayText(c.previous.date) + ")";
+      out.caution = n > 0 ? "Not enough evidence of a lasting improvement: two tests are a small sample, not a confirmed change."
+        : n < 0 ? "Not enough evidence of a lasting decline: two tests are a small sample, not a confirmed change."
+        : "Equal scores on two tests; that does not mean the model is stable.";
+    } else if (c.reason === "later_attempt") {
+      out.text = "The latest attempt, on " + dayText(later.date) + ", has no score, so no comparison is shown.";
+    } else {
+      out.text = REASONS[c.reason] || "";
+    }
+    return out;
+  }
+
   // A mini history for the measured list: scored results only, on the full 0 to total scale, joined only on
   // consecutive days (reference evaluations are never joined). One result is one point, never a line.
   function sparkline(series, width, height) {
@@ -233,5 +294,7 @@
            isReference: isReference, scoredRows: scoredRows, latestScored: latestScored, isMeasured: isMeasured,
            gradeable: gradeable, laterAttempt: laterAttempt,
            defaultIndex: defaultIndex, comparison: comparison, highlight: highlight, caption: caption,
+           movements: movements, comparableRows: comparableRows, changeAvailable: changeAvailable,
+           observation: observation,
            sparkline: sparkline, dayText: dayText };
 });

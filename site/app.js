@@ -1,6 +1,6 @@
-/* Baseline: Baseline's own measurements, model pages, sources and "How we test" (T07, T08; measured site,
-   9 October 2026). Renders window.BASELINE_DATA. All text goes through textContent. Only models with a scored
-   Baseline result are listed; catalogue entries and third-party results are kept in the data but not shown.
+/* Baseline: Baseline's own measurements as one monitoring surface (monitor interface, 11 October 2026), with
+   "How we test" and Sources. Renders window.BASELINE_DATA. All text goes through textContent. Only models with a
+   scored Baseline result are listed; catalogue entries and third-party results are kept in the data but not shown.
    URL state lives in the hash (site/directory.js), so back/forward and shared links work. */
 (function () {
   "use strict";
@@ -109,7 +109,7 @@
     });
     var top = leads[0];
     return { id: g.id, group: g, entry: top.entry, series: top.series, latest: top.latest, leads: leads,
-             name: g.canonical.name.replace(/ via Puter$/, ""), maker: top.entry.maker,
+             name: displayName(g), maker: top.entry.maker,
              exact_identifier: top.entry.exact_identifier, family: top.entry.family,
              service_provider: top.entry.service_provider, access_kind: top.entry.access_kind,
              release: g.canonical.release || top.entry.release };
@@ -128,10 +128,11 @@
 
   // The comparison depends on the clock (the 48-hour rule), so the open page keeps a handle on the two places that
   // show it: the home focus and the model page's caption (review R2). `refreshLive` replaces only what changed.
-  var live = { focus: null, caption: null };
+  var live = { readout: null, kicker: null, moves: null };
 
   function render(focusHeading) {
-    live = { focus: null, caption: null };
+    var railScroll = (document.querySelector && document.querySelector(".rail")) ? document.querySelector(".rail").scrollTop : 0;
+    live = { readout: null, kicker: null, moves: null, chart: null };
     while (app.firstChild) app.removeChild(app.firstChild);
     document.querySelectorAll("nav.primary a").forEach(function (a) {
       var current = a.getAttribute("data-view") === (state.view === "model" ? "models" : state.view);
@@ -154,92 +155,61 @@
     else if (state.view === "sources") app.appendChild(sourcesView());
     else if (state.view === "how-we-test") app.appendChild(howView());
     else app.appendChild(directoryView());
-    if (focusHeading) {
+    var again = pendingFocus ? document.getElementById(pendingFocus) : null;
+    pendingFocus = null;
+    if (again) {                                    // a rail or picker selection keeps focus where it was, without
+      var rail = document.querySelector && document.querySelector(".rail");   // scrolling the page or the rail
+      if (rail && railScroll) rail.scrollTop = railScroll;
+      try { again.focus({ preventScroll: true }); } catch (err) { again.focus(); }
+      keepHeadingVisible();
+    } else if (focusHeading) {
       var h = app.querySelector("h1");
       if (h) { h.setAttribute("tabindex", "-1"); h.focus(); }
     }
+    fitChart();
   }
 
-  // Graphs are drawn at the screen's own size: crossing the phone breakpoint (a rotation) redraws the page.
-  if (window.matchMedia) {
-    var narrowQuery = window.matchMedia("(max-width: 720px)");
-    var redraw = function () { render(false); };
-    if (narrowQuery.addEventListener) narrowQuery.addEventListener("change", redraw);
-    else if (narrowQuery.addListener) narrowQuery.addListener(redraw);
+  // After a selection, the new model's name and readout stay in view: if the page was scrolled past the workspace
+  // heading, it is brought back to the top of the viewport; otherwise nothing moves.
+  function keepHeadingVisible() {
+    var h = app.querySelector && app.querySelector("#model-title");
+    if (!h || !h.getBoundingClientRect || !window.scrollBy) return;
+    var top = h.getBoundingClientRect().top;
+    if (top < 0) window.scrollBy(0, top - 12);
   }
+
+  // The graph is laid out at the width it is shown at (review R3), so its labels keep their real size at every
+  // screen width; a resize redraws only the graph, keeping the model, setup, view and selected point.
+  var resizeTimer = null;
+  window.addEventListener("resize", function () {
+    if (resizeTimer) window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(fitChart, 150);
+  });
 
   window.addEventListener("hashchange", function () {
     state = Dir.parseState(window.location.hash);
     render(true);
   });
 
-  // ------------------------------------------------------------------ home
-  // One continuous hierarchy (9 October 2026): the question, the focus history, the measured models.
-  function directoryView() {
-    var wrap = el("section", { class: "directory", "aria-labelledby": "directory-title" });
-    append(wrap, el("header", { class: "home-head" }, [
-      el("h1", { id: "directory-title" }, "What changed in our latest model tests?"),
-      el("p", { class: "lede" }, measuredModels.length
-        ? "Baseline runs its own fixed tests on a small set of exact models and publishes every result, including " +
-          "missed and incomplete runs. Only models Baseline has tested are listed here."
-        : TESTS.calibration_runs ? "Baseline has published only a one-off setup test so far. Models are listed here " +
-          "once Baseline publishes repeated test results; the setup test is on its model's page."
-        : "Baseline has no scored test result of its own to show yet. A model is listed here once Baseline has a " +
-          "scored result for it.")
-    ]));
-    var focus = currentFocus();
-    var slot = el("div", { class: "focus-slot" }, focus ? focusView(focus) : null);
-    live.focus = { slot: slot, key: focusKey(focus) };
-    append(wrap, slot);
-    if (!measuredModels.length) return wrap;
+  // ------------------------------------------------------------------ the monitor (11 October 2026)
+  // One working surface: the tested models on a rail (one selector on phones) beside one history workspace for the
+  // selected model. The home opens on the existing focus choice (site/measured.js); rail links, movement links, deep
+  // links and back/forward select a model in the same workspace. Nothing here changes which results count, which
+  // comparisons are allowed or how services and test setups are kept apart.
+  var chartMode = null;            // the visitor's chosen graph view ("score" or "change"), kept while it is valid
+  var pendingFocus = null;         // the rail link or picker to refocus after a selection redraws the page
 
-    var search = el("input", { type: "search", id: "q", name: "q", autocomplete: "off", spellcheck: "false",
-                               placeholder: "Search tested models or providers", value: state.q });
-    search.value = state.q;
-    var controls = el("form", { class: "controls measured-controls", role: "search", "aria-label": "Find tested models" }, [
-      el("div", { class: "search" }, [el("label", { for: "q" }, "Search"), search]),
-      select("provider", "Provider", [["", "All providers"]].concat(makers.map(function (m) { return [m, m]; }))),
-      select("sort", "Sort", [["release", "Newest release"], ["name", "Name (A–Z)"], ["provider", "Provider"],
-                              ["date", "Latest result"]])
-    ]);
-    controls.addEventListener("submit", function (ev) { ev.preventDefault(); });
-    search.addEventListener("input", function () { update({ q: search.value }); });
-    var status = el("p", { class: "result-count", role: "status", "aria-live": "polite" });
-    var results = el("div", { class: "results" });
-    var sortNote = el("span", { class: "sort-note" }, SORT_NOTES[state.sort] || SORT_NOTES.release);
-    append(wrap, el("section", { class: "measured", "aria-labelledby": "measured-title" }, [
-      el("h2", { id: "measured-title" }, "Models tested by Baseline"), controls, status, results,
-      el("p", { class: "fine" }, [sortNote, " Each entry is one exact model through one named service; results " +
-        "through different services are never combined. Release dates are cited from each maker's announcements, " +
-        "release notes or model pages. ", link("#how-we-test", "How we test")])]));
-    drawResults(results, status);
+  function directoryView() { return monitorView(homeSelection()); }
 
-    function select(key, label, options) {
-      var id = "f-" + key;
-      var node = el("select", { id: id, name: key });
-      options.forEach(function (o) {
-        var opt = el("option", { value: o[0] }, o[1]);
-        if (state[key] === o[0]) opt.setAttribute("selected", "selected");
-        node.appendChild(opt);
-      });
-      node.value = state[key] || (key === "sort" ? Dir.DEFAULT_SORT : "");
-      node.addEventListener("change", function () { var patch = {}; patch[key] = node.value; update(patch); });
-      return el("div", { class: "field" }, [el("label", { for: id }, label), node]);
-    }
-    function update(patch) {
-      Object.keys(patch).forEach(function (k) { state[k] = patch[k]; });
-      state.access = ""; state.evidence = ""; state.availability = "";   // retired filters never linger in links
-      go(state, true);
-      sortNote.textContent = SORT_NOTES[state.sort] || SORT_NOTES.release;
-      drawResults(results, status);
-    }
-    return wrap;
-  }
+  function notFound(message) { return monitorView({ notFound: message }); }
 
+  // A link to one model and setup that keeps the visitor's rail search, provider and sort (review R2), so choosing a
+  // model never resets the list; back and forward restore both, since they live in the same hash.
   function entryLink(e, setup) {
     var g = groupByEntry[e.id];
-    return Dir.encodeState({ view: "model", id: g.id, service: e.id, setup: setup || "", route: "", q: "", provider: "",
-                             access: "", evidence: "", availability: "", sort: Dir.DEFAULT_SORT });
+    return Dir.encodeState({ view: "model", id: g.id, service: e.id, setup: setup || "", route: "", q: state.q || "",
+                             provider: state.provider || "", access: "", evidence: "", availability: "",
+                             sort: state.sort || Dir.DEFAULT_SORT });
   }
 
   function accessText(e) {
@@ -252,106 +222,169 @@
       : e.access_kind === "intermediary" ? e.service_provider + " (a third-party host)"
       : e.access_kind === "consumer_app" ? "this app" : accessText(e);
   }
-  // The concise route and identity qualifier shown wherever a result is: which service, which requested model,
-  // and, for an intermediary, whether the returned model was confirmed. Graphs never merge services.
-  function routeQualifier(e, series) {
-    var intermediary = isPuter(series) || isReference(series);
-    return e.maker + " · " + accessText(e) + " · requested model " + e.exact_identifier +
-      (intermediary && !identityConfirmed(series) ? " · model identity not confirmed" : "");
+  // The friendliest name the catalogue already gives a model (never invented): a member's display name when it differs
+  // from the exact identifier, without its "via <service>" suffix. Exact identifiers stay in the context and details.
+  function displayName(g) {
+    var friendly = g.members.filter(function (m) { return m.name.replace(/ via \S.*$/, "") !== m.exact_identifier; })
+      .map(function (m) { return m.name.replace(/ via \S.*$/, ""); });
+    return friendly[0] || g.canonical.name.replace(/ via \S.*$/, "");
+  }
+  function scoreText(p) { return p.correct + "/" + p.total; }
+  function shortDay(date) { var d = String(date).split("-"); return Number(d[2]) + " " + MONTHS[Number(d[1]) - 1]; }
+  function kindText(d, e) {
+    return isPuter(d) ? "Quick check · " + d.planned_items + " questions · " + e.service_provider
+      : isReference(d) ? "Reference test · " + d.planned_items + " questions · " + e.service_provider
+      : d.panel_items + " questions · " + (e.access_kind === "direct_api" ? e.service_provider + " API" : e.service_provider);
   }
 
-  // The focus: a real history, named, sized and dated, with a short descriptive caption (site/measured.js).
-  function currentFocus() {
-    return M.highlight(measuredModels.map(function (m) {
+  function focusModels() {
+    return measuredModels.map(function (m) {
       return { id: m.id, measured: m, series: [].concat.apply([], m.leads.map(function (l) { return seriesOf(l.entry); })) };
-    }), Date.now());
+    });
   }
-  // What the focus says: its kind, series, result and compared result. Equal keys mean nothing visible changed.
-  function focusKey(h) {
-    return h ? [h.kind, h.series.series_id, h.latest.date, h.comparison ? h.comparison.previous.date : ""].join("|") : "";
-  }
-  function focusView(h) {
-    var m = h.model.measured, owner = seriesOwner[h.series.series_id];
-    var href = entryLink(owner, h.series.series_id);
-    var kicker = el("p", { class: "focus-kicker" }, M.HEADINGS[h.kind]);
-    var caption = el("p", { class: "focus-caption" }, M.caption(h));
-    var section = el("section", { class: "focus", "aria-labelledby": "focus-title" }, [
-      kicker,
-      el("h2", { id: "focus-title" }, link(href, m.name)),
-      el("p", { class: "focus-meta" }, routeQualifier(owner, h.series) + " · " + testName(h.series) +
-        " · latest result " + dayText(h.latest.date)),
-      dailyChart(h.series, "focus"),
-      caption,
-      el("p", { class: "focus-link" }, link(href, "Full history and test details for " + m.name))
-    ]);
-    section.liveParts = { series: h.series.series_id, latest: h.latest.date, kicker: kicker, caption: caption };
-    return section;
+  function currentFocus() { return M.highlight(focusModels(), Date.now()); }
+  // The home opens on the existing choice: the largest eligible recent movement, else the latest (or first) full
+  // measurement, else the latest quick check. It is chosen once; a later refresh never moves the selection.
+  function homeSelection() {
+    var h = currentFocus();
+    if (!h) return null;
+    var owner = seriesOwner[h.series.series_id];
+    return { entry: owner, group: groupByEntry[owner.id], setup: h.series.series_id };
   }
 
-  function drawResults(results, status) {
-    while (results.firstChild) results.removeChild(results.firstChild);
-    var list = Dir.filterEntries(measuredModels, { q: state.q, provider: state.provider,
-                                                   sort: state.sort === "date" ? "name" : state.sort }, Date.now());
-    if (state.sort === "date") list.sort(function (a, b) { return b.latest.at - a.latest.at; });   // stable: by name
+  function monitorView(sel) {
+    var moves = el("aside", { class: "rail-moves", "aria-label": "Recent comparable movement" });
+    live.moves = { node: moves, key: null };
+    drawMoves();
+    return el("div", { class: "monitor" }, [moves, railView(sel), workspaceView(sel)]);
+  }
+
+  // ---------------------------------------------------------------- the rail
+  function railView(sel) {
+    var selected = sel && sel.entry && measuredMember(sel.entry) ? sel.group.id : "";
+    var rail = el("nav", { class: "rail", "aria-label": "Models tested by Baseline" });
+    if (!measuredModels.length) {
+      return append(rail, [el("h2", { class: "rail-title" }, "Tested models"), el("p", { class: "rail-count" }, "None yet")]);
+    }
+    var byName = measuredModels.slice().sort(function (a, b) { return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+    // Phones: every tested model, whatever the desktop filters; the link is made when one is chosen.
+    var picker = el("select", { id: "model-picker" }, (selected ? [] : [el("option", { value: "" }, "Choose a tested model")])
+      .concat(byName.map(function (m) {
+        return el("option", { value: m.id },
+          m.name + " — " + scoreText(m.latest) + ", " + shortDay(m.latest.date) + (isPuter(m.series) ? " (quick check)" : ""));
+      })));
+    picker.value = selected || "";
+    picker.addEventListener("change", function () {
+      var m = byName.filter(function (x) { return x.id === picker.value; })[0];
+      if (!m) return;
+      pendingFocus = "model-picker";
+      window.location.hash = entryLink(m.entry, m.series.series_id);
+    });
+    var search = el("input", { type: "search", id: "q", name: "q", autocomplete: "off", spellcheck: "false",
+                               placeholder: "Search", value: state.q });
+    search.value = state.q;
+    search.addEventListener("input", function () { update({ q: search.value }); });
+    var filters = el("form", { class: "rail-filters", role: "search", "aria-label": "Find tested models" }, [
+      el("label", { for: "q", class: "visually-hidden" }, "Search tested models"), search,
+      field("provider", "Provider", [["", "All providers"]].concat(makers.map(function (m) { return [m, m]; }))),
+      field("sort", "Sort", [["release", "Newest release"], ["name", "Name"], ["provider", "Provider"], ["date", "Latest result"]])
+    ]);
+    filters.addEventListener("submit", function (ev) { ev.preventDefault(); });
+    var status = el("p", { class: "rail-count", role: "status", "aria-live": "polite" });
+    var list = el("ul", { class: "rail-list" });
+    append(rail, [el("div", { class: "picker" }, [el("label", { for: "model-picker" }, "Model"), picker]),
+      el("h2", { class: "rail-title" }, "Tested models"), filters, status, list,
+      el("p", { class: "rail-note" }, [SORT_NOTES[state.sort] || SORT_NOTES.release, " Each entry is one exact model " +
+        "through one named service; results through different services are never combined."])]);
+    drawRail(list, status, selected);
+
+    function field(key, label, options) {
+      var id = "f-" + key;
+      var node = el("select", { id: id, name: key }, options.map(function (o) { return el("option", { value: o[0] }, o[1]); }));
+      node.value = state[key] || (key === "sort" ? Dir.DEFAULT_SORT : "");
+      node.addEventListener("change", function () { var patch = {}; patch[key] = node.value; update(patch); });
+      return el("div", { class: "field" }, [el("label", { for: id }, label), node]);
+    }
+    function update(patch) {
+      Object.keys(patch).forEach(function (k) { state[k] = patch[k]; });
+      state.access = ""; state.evidence = ""; state.availability = "";   // retired filters never linger in links
+      go(state, true);
+      drawRail(list, status, selected);
+      if (live.moves) { live.moves.key = null; drawMoves(); }   // movement links carry the same filters
+    }
+    return rail;
+  }
+
+  function drawRail(list, status, selected) {
+    while (list.firstChild) list.removeChild(list.firstChild);
+    var shown = Dir.filterEntries(measuredModels, { q: state.q, provider: state.provider,
+                                                    sort: state.sort === "date" ? "name" : state.sort }, Date.now());
+    if (state.sort === "date") shown.sort(function (a, b) { return b.latest.at - a.latest.at; });   // stable: by name
     var n = measuredModels.length;
-    status.textContent = list.length === n ? n + (n === 1 ? " tested model" : " tested models")
-      : list.length + " of " + n + " tested models";
-    if (!list.length) {
+    status.textContent = shown.length === n ? n + (n === 1 ? " tested model" : " tested models")
+      : shown.length + " of " + n + " tested models";
+    if (!shown.length) {
       var clear = el("button", { type: "button", class: "button" }, "Clear search and filters");
       clear.addEventListener("click", function () {
-        go(Dir.emptyState(), true);
-        render(false);
-        var q = document.getElementById("q");
+        state.q = ""; state.provider = ""; go(state, true);
+        var q = document.getElementById("q"), pv = document.getElementById("f-provider");
+        if (q) q.value = "";
+        if (pv) pv.value = "";
+        drawRail(list, status, selected);
         if (q) q.focus();
       });
-      append(results, el("div", { class: "empty" }, [el("p", {}, "No tested model matches your search."), clear]));
+      append(list, el("li", { class: "rail-empty" }, [el("p", {}, "No tested model matches your search."), clear]));
       return;
     }
-    append(results, el("ul", { class: "measured-rows", "aria-label": "Models tested by Baseline" }, list.map(measuredRow)));
-  }
-
-  // One compact entry per measured exact model: its mini history, latest correct/total and test date.
-  function measuredRow(m) {
-    var setups = seriesOf(m.entry);
-    var newer = setups.length && setups[0].series_id !== m.series.series_id && !M.latestScored(setups[0]);
-    var others = m.leads.slice(1).map(function (l) { return l.entry.service_provider; });
-    return el("li", { class: "measured-row" }, [
-      el("div", { class: "mr-name" }, [link(entryLink(m.entry, m.series.series_id), m.name),
-        el("span", { class: "sub" }, routeQualifier(m.entry, m.series)),
-        el("span", { class: "sub test-name" }, testName(m.series) + (newer ? " · a newer test setup has no result yet" : "") +
-          (others.length ? " · also tested through " + others.join(", ") + " (kept separate)" : ""))]),
-      sparkline(m.series, m.name),
-      el("p", { class: "mr-latest" }, [el("strong", {}, m.latest.correct + " of " + m.latest.total),
-        el("span", { class: "sub" }, "latest result " + dayText(m.latest.date))])
-    ]);
-  }
-
-  function sparkline(series, name) {
-    var sp = M.sparkline(series, 132, 40);
-    var svg = s("svg", { class: "spark", viewBox: "0 0 " + sp.width + " " + sp.height, width: sp.width, height: sp.height,
-      role: "img", "aria-label": "History of " + name + ", " + testName(series) + ": " + sp.points.map(function (p) {
-        return p.correct + " of " + p.total + " on " + dayText(p.date); }).join("; ") +
-        (sp.points.length === 1 ? " (one result)" : "") });
-    svg.appendChild(s("line", { x1: 0, x2: sp.width, y1: sp.height - 4, y2: sp.height - 4, class: "spark-floor" }));
-    sp.segments.forEach(function (seg) {
-      svg.appendChild(s("polyline", { points: seg.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") }));
+    shown.forEach(function (m) {
+      var a = el("a", { href: entryLink(m.entry, m.series.series_id), id: "rail-" + m.id, class: "rail-link" }, [
+        el("span", { class: "rail-name" }, m.name),
+        el("span", { class: "rail-score" }, [el("strong", {}, scoreText(m.latest)), " · " + shortDay(m.latest.date)]),
+        el("span", { class: "rail-kind" }, kindText(m.series, m.entry))]);
+      if (m.id === selected) a.setAttribute("aria-current", "true");
+      a.addEventListener("click", function () { pendingFocus = a.getAttribute("id"); });
+      list.appendChild(el("li", { class: "rail-item" }, a));
     });
-    sp.points.forEach(function (p) { svg.appendChild(s("circle", { cx: p.x, cy: p.y, r: 2.5 })); });
-    return svg;
   }
 
-  // ------------------------------------------------------------------ detail
-  function backLink() {
-    var back = { view: "models", id: "", route: "", q: state.q, provider: state.provider, access: "", evidence: "",
-                 availability: "", sort: state.sort };
-    return el("p", { class: "back" }, link(Dir.encodeState(back), "← Tested models"));
+  // Recent comparable movements, as links that select that model and setup in the workspace. Shown only when one
+  // qualifies (the existing 40-question, consecutive-day, fully gradeable, fresh, latest-attempt rules).
+  function drawMoves() {
+    var node = live.moves && live.moves.node;
+    if (!node) return;
+    var moves = M.movements(focusModels(), Date.now());
+    var key = moves.map(function (m) { return m.series.series_id + "|" + m.latest.date; }).join(",");
+    if (key === live.moves.key) return;
+    live.moves.key = key;
+    while (node.firstChild) node.removeChild(node.firstChild);
+    if (!moves.length) { node.setAttribute("hidden", ""); return; }
+    node.removeAttribute("hidden");
+    append(node, [el("h2", { class: "rail-title" }, "Recent comparable movement"),
+      el("ul", {}, moves.map(function (mv) {
+        var owner = seriesOwner[mv.series.series_id], c = mv.comparison;
+        var n = c.latest.correct - c.previous.correct;
+        return el("li", {}, link(entryLink(owner, mv.series.series_id), mv.model.measured.name + ": " + Chart.signed(n) +
+          (Math.abs(n) === 1 ? " correct answer, " : " correct answers, ") + shortDay(c.previous.date) + " to " + shortDay(c.latest.date)));
+      })),
+      el("p", { class: "rail-note" }, "Change within each model's own test, not a ranking of models.")]);
   }
 
-  function notFound(message) {
-    return el("section", { class: "notfound" }, [
-      el("h1", {}, "Not found"), el("p", {}, message),
-      el("p", {}, link("#models", "See the models Baseline has tested"))
-    ]);
+  // ---------------------------------------------------------------- the workspace
+  function workspaceView(sel) {
+    var ws = el("section", { class: "workspace", "aria-labelledby": "model-title" });
+    if (sel && sel.notFound) {
+      return append(ws, [el("h1", { id: "model-title" }, "Not found"), el("p", {}, sel.notFound),
+        el("p", {}, link("#models", "See the models Baseline has tested"))]);
+    }
+    if (!sel) {
+      return append(ws, [el("h1", { id: "model-title" }, "No tested models yet"), el("p", { class: "lede" },
+        TESTS.calibration_runs ? "Baseline has published only a one-off setup test so far. Models are listed here " +
+          "once Baseline publishes repeated test results; the setup test is on its model's page."
+        : "Baseline has no scored test result of its own to show yet. A model is listed here once Baseline has a " +
+          "scored result for it.")]);
+    }
+    if (!hasOwnRecords(sel.entry)) return append(ws, unmeasuredContent(sel.entry, sel.group));
+    return append(ws, measuredContent(sel.entry, sel.group, sel.setup));
   }
 
   function statusBlock(st) {
@@ -437,17 +470,54 @@
     ]);
   }
   // One daily series as an SVG graph (T13). Layout comes from site/results-chart.js; this only draws it.
-  var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·", failed: "!" };
-  // The graph is the page's main visual: about 320px tall on a wide screen and 240px on a phone, drawn at that
-  // size so labels stay readable (no sideways scrolling). The 0 to total scale is never cropped.
-  function dailyChart(series) {
-    var narrow = window.matchMedia ? window.matchMedia("(max-width: 720px)").matches : false;
-    var lay = Chart.layout(series, narrow ? { width: 320, height: 240, trim: true } : { width: 960, height: 320, trim: true });
+  // "~" also marks a scored run the Change view leaves out (not fully gradeable): visible, selectable, explained.
+  var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·", failed: "!",
+                      not_comparable: "~" };
+  var STACKED = 960;               // below this width the rail becomes one selector above the workspace (styles.css)
+  // The width the graph is shown at, from the page's own layout: the workspace beside a 240px rail, or the full
+  // column when stacked. The SVG is laid out at that size, so 12px labels render at about 12px.
+  function plotWidth() {
+    var vw = window.innerWidth || 1366;
+    var pad = vw <= STACKED ? 12 : Math.min(32, Math.max(12, Math.round(vw * 0.03)));
+    var column = Math.min(1280, vw - 2 * pad);
+    var width = vw <= STACKED ? column : column - 240 - 28;
+    return Math.max(300, Math.round(width - 2));
+  }
+  function chartSize(width) {
+    var w = width || plotWidth();
+    return { width: w, height: Math.max(280, Math.min(380, Math.round(w * 0.42))), trim: true };
+  }
+  // Draws (or redraws) the selected series' graph into its slot, keeping the view and the selected point.
+  function drawChart(slot, series, mode, selectedDate, width) {
+    while (slot.firstChild) slot.removeChild(slot.firstChild);
+    var size = chartSize(width);
+    live.chart = { slot: slot, series: series, mode: mode, selected: selectedDate || null, width: size.width };
+    slot.appendChild(dailyChart(series, mode, size, selectedDate));
+  }
+  // After a render or a resize: redraw only when the shown width has really changed.
+  function fitChart() {
+    var c = live.chart;
+    if (!c || !c.slot) return;
+    var shown = c.slot.clientWidth ? Math.round(c.slot.clientWidth - 2) : plotWidth();
+    if (Math.abs(shown - c.width) > 8) drawChart(c.slot, c.series, c.mode, c.selected, Math.max(300, shown));
+  }
+  // The graph is the workspace's main visual: about 380px tall on a wide screen and 280px on a phone, drawn at that
+  // size so labels stay readable (no sideways scrolling). Score view keeps the full 0 to total scale; Change view
+  // (results-chart.js changeLayout) shows correct answers gained or lost since the first fully gradeable result.
+  function dailyChart(series, mode, size, selectedDate) {
+    var opts = size || chartSize();
+    var change = mode === "change" ? Chart.changeLayout(series, opts) : null;
+    var lay = change && !change.unavailable ? change : Chart.layout(series, opts);
+    var isChange = lay.mode === "change";
     var puter = isPuter(series), reference = isReference(series);
     var detail = el("p", { class: "point-detail", "aria-live": "polite" },
       lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
-    var svg = s("svg", { class: "chart daily-chart fit", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
-      "aria-label": reference ? series.route.label + ", reference evaluations: correct answers out of " + lay.max +
+    var svg = s("svg", { class: "chart daily-chart fit", "data-mode": isChange ? "change" : "score",
+      viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
+      "aria-label": isChange ? "Change in correct answers out of " + lay.max + " since " + Chart.fullDay(lay.anchor.date) +
+        " (" + lay.anchor.correct + " of " + lay.max + "), from " + Chart.signed(-lay.extent) + " to " + Chart.signed(lay.extent) +
+        ". " + lay.points.length + " fully gradeable results and " +
+        lay.marks.filter(function (m) { return m.kind !== "pending"; }).length + " dates without a change point." : reference ? series.route.label + ", reference evaluations: correct answers out of " + lay.max +
         " by finish date. " + lay.points.length + (lay.points.length === 1 ? " complete evaluation" : " complete evaluations") +
         " and " + lay.marks.length + " without a score." : (puter ? series.route.label + ", small sample of " + lay.max +
         " questions. Model identity not confirmed unless stated per day. " : "") +
@@ -455,47 +525,97 @@
         (lay.points.length === 1 ? " daily score" : " daily scores") + " and " +
         lay.marks.filter(function (m) { return m.kind !== "pending"; }).length + " dates without a score." });
     lay.yTicks.forEach(function (t) {
-      svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: t.y, y2: t.y, class: "gridline" }));
-      svg.appendChild(s("text", { x: lay.left - 6, y: t.y + 4, "text-anchor": "end" }, String(t.value)));
+      svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: t.y, y2: t.y, class: t.value === 0 && isChange ? "zero-line" : "gridline" }));
+      svg.appendChild(s("text", { x: lay.left - 6, y: t.y + 4, "text-anchor": "end", class: "tick" }, t.label || String(t.value)));
     });
     svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: lay.plotBottom, y2: lay.plotBottom, class: "axis" }));
     lay.xTicks.forEach(function (t) {
+      var edge = t.x > lay.right - 24 ? "end" : "middle";       // the last date stays inside the plot
       svg.appendChild(s("line", { x1: t.x, x2: t.x, y1: lay.plotBottom, y2: lay.plotBottom + 5, class: "axis" }));
-      svg.appendChild(s("text", { x: t.x, y: lay.plotBottom + 17, "text-anchor": "middle" }, t.label));
+      svg.appendChild(s("text", { x: edge === "end" ? t.x + 4 : t.x, y: lay.plotBottom + 17, "text-anchor": edge }, t.label));
     });
-    svg.appendChild(s("text", { x: 4, y: lay.laneY + 4, "text-anchor": "start", class: "lane-label" }, "no score"));
+    // The lane label ends before the plot area, so a mark on the first date never runs into it.
+    svg.appendChild(s("text", { x: lay.left - 8, y: lay.laneY + 4, "text-anchor": "end", class: "lane-label" },
+      isChange ? "not plotted" : "no score"));
     svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: lay.laneY - 11, y2: lay.laneY - 11, class: "lane" }));
     lay.segments.forEach(function (seg) {
       svg.appendChild(s("polyline", { class: "score-line", fill: "none",
         points: seg.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") }));
     });
-    function selectable(node, label) {
+    // Hover, keyboard focus and touch select the same detail; a selection stays until another is made. The selected
+    // point is labelled directly; the latest point always is.
+    var selLabel = s("text", { class: "point-label selected-label", "text-anchor": "middle" }, "");
+    var selected = null, shows = {};
+    function pointText(p) { return isChange ? Chart.signed(p.delta) : p.correct + "/" + lay.max; }
+    function selectable(node, label, p) {
       node.setAttribute("tabindex", "0");
       node.setAttribute("role", "button");
       node.setAttribute("aria-label", label);
       node.appendChild(s("title", {}, label));
-      function show() { detail.textContent = label; }
+      function show() {
+        detail.textContent = label;
+        if (selected) selected.removeAttribute("data-selected");
+        selected = node;
+        node.setAttribute("data-selected", "true");
+        if (live.chart) live.chart.selected = node.getAttribute("data-date");
+        if (p && p !== lastPoint) {
+          selLabel.setAttribute("x", p.x); selLabel.setAttribute("y", labelY(p)); selLabel.textContent = pointText(p);
+        } else selLabel.textContent = "";
+      }
+      if (node.getAttribute("data-date")) shows[node.getAttribute("data-date")] = show;
       node.addEventListener("click", show);
+      node.addEventListener("mouseenter", show);
+      node.addEventListener("focus", show);
       node.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); show(); }
       });
       return node;
     }
+    var lastPoint = lay.points.length ? lay.points[lay.points.length - 1] : null;
+    function labelY(p) { return p.y - 12 < lay.top + 4 ? p.y + 20 : p.y - 12; }   // never clipped at the top edge
+    // Invisible hit areas (review R3): 40px where dates allow, never under 24px, never larger than half the gap to
+    // the nearest other date, so crowded dates stay separately selectable. The visible dots keep their size.
+    var xs = lay.points.map(function (p) { return p.x; }).concat(lay.marks.filter(function (m) { return m.kind !== "pending"; })
+      .map(function (m) { return m.x; })).sort(function (a, b) { return a - b; });
+    var gap = Infinity;
+    for (var i = 1; i < xs.length; i++) if (xs[i] - xs[i - 1] > 0.5) gap = Math.min(gap, xs[i] - xs[i - 1]);
+    var hit = Math.max(12, Math.min(20, Math.floor(gap / 2)));
     lay.marks.forEach(function (m) {
-      var g = s("g", { class: "mark", "data-kind": m.kind });
-      g.appendChild(s("text", { x: m.x, y: lay.laneY + 4, "text-anchor": "middle" }, MARK_GLYPHS[m.kind]));
+      var g = s("g", { class: "mark", "data-kind": m.kind, "data-date": m.date });
+      if (m.kind !== "pending") {
+        g.appendChild(s("rect", { x: m.x - hit, y: lay.laneY - 14, width: 2 * hit, height: 28, class: "hit" }));
+      }
+      g.appendChild(s("text", { x: m.x, y: lay.laneY + 4, "text-anchor": "middle" }, MARK_GLYPHS[m.kind] || "?"));
       svg.appendChild(m.kind === "pending" ? g : selectable(g, m.label));
     });
     lay.points.forEach(function (p) {
-      var g = s("g", { class: "score-point" });
+      var g = s("g", { class: "score-point" + (isChange && p.date === lay.anchor.date ? " anchor" : ""), "data-date": p.date });
+      g.appendChild(s("circle", { cx: p.x, cy: p.y, r: hit, class: "hit" }));
       g.appendChild(s("circle", { cx: p.x, cy: p.y, r: 5, class: "point" }));
-      svg.appendChild(selectable(g, p.label));
+      svg.appendChild(selectable(g, p.label, p));
     });
+    if (lastPoint) {                                    // the latest result, labelled directly
+      var nearRight = lastPoint.x > lay.right - 60;
+      svg.appendChild(s("text", { x: lastPoint.x + (nearRight ? -10 : 10), y: labelY(lastPoint), class: "point-label",
+        "text-anchor": nearRight ? "end" : "start" }, pointText(lastPoint) + (isChange ? " (" + lastPoint.correct + "/" + lay.max + ")" : "")));
+    }
+    svg.appendChild(selLabel);
+    if (selectedDate && shows[selectedDate]) shows[selectedDate]();   // a redraw keeps the selection (resize, view)
     if (lay.message) {
       svg.appendChild(s("text", { x: (lay.left + lay.right) / 2, y: (lay.top + lay.plotBottom) / 2, "text-anchor": "middle",
                                   class: "chart-message" }, lay.message));
     }
-    var legend = reference ? el("ul", { class: "chart-legend" }, [
+    var legend = isChange ? el("ul", { class: "chart-legend" }, [
+      el("li", {}, "● a fully gradeable result: correct answers gained (+) or lost (−) since " + Chart.fullDay(lay.anchor.date) +
+        ", when this setup's first fully gradeable result scored " + lay.anchor.correct + " of " + lay.max + ". That first " +
+        "result is a reference point, not an established baseline or launch performance."),
+      el("li", {}, "The vertical range is symmetric about zero, at least " + Chart.signed(-lay.extent).replace("\u2212", "±") +
+        " answers; the score scale in Score view is never cropped."),
+      el("li", {}, "~ not plotted: an incomplete run, or a scored run that was not fully gradeable (a refusal, an " +
+        "error or an unreadable answer). Its count is in Score view; it is never a change point or the starting point."),
+      el("li", {}, "x a missed day, ! a run with no gradeable answer, ? evidence unavailable, o a run still open: no point."),
+      el("li", {}, reference ? "Separate evaluations are never joined into a line." : "Lines join consecutive days only.")
+    ]) : reference ? el("ul", { class: "chart-legend" }, [
       el("li", {}, "● a complete evaluation: all " + lay.max + " questions answered and gradeable, with no model mismatch, " +
         "placed at its finish date. Separate evaluations are never joined into a line."),
       el("li", {}, "~ a partial, stopped or expired evaluation: shown with its counts, not as a score.")
@@ -511,7 +631,9 @@
       el("li", {}, "· a later date: not yet tested or not yet published.")
     ]);
     return el("figure", { class: "own-chart" }, [
-      el("p", { class: "axis-title" }, reference ? "Correct answers out of " + lay.max + ", by evaluation finish date (UTC)"
+      el("p", { class: "axis-title" }, isChange ? "Change from " + shortDay(lay.anchor.date) + ": " + lay.anchor.correct + "/" +
+        lay.max + " · correct answers gained or lost, out of " + lay.max + ", by test date (UTC)"
+        : reference ? "Correct answers out of " + lay.max + ", by evaluation finish date (UTC)"
         : puter ? "Correct answers out of " + lay.max + ", by test date (UTC)"
         : "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
       el("div", { class: "chart-scroll" }, svg),
@@ -548,31 +670,62 @@
       " questions · " + (service ? service + " · " : "") + "scheduled " + dayText(d.schedule.start_date) + " to " +
       dayText(d.schedule.end_date) + ", daily " + windowText(d.schedule) + (config ? " · configuration " + config : "");
   }
-  // The model page's graph area (9 October 2026): the selected test's name, route qualifier and graph come first;
-  // settings, provenance, tables and method text follow under disclosure. One setup at a time; setups are never
-  // stacked, merged or joined. An explicit ?setup= link is respected; otherwise the page opens on a full test with
-  // a result, then a quick check (site/measured.js), so a new setup without results never hides older ones.
-  function dailyBlock(rec, e) {
-    var list = rec.daily_series || [];
-    var graph = el("div", { class: "daily-selected" });
-    var more = el("div", { class: "daily-details" });
-    function showSetup(index) {
+  // The workspace for one model (11 October 2026): its name; test size, date and identity; the latest raw score with
+  // the observed change only where the comparison rules allow it; Score and Change views; the graph; a short caveat;
+  // then details. One setup at a time; setups and services are never stacked, merged or joined. An explicit ?setup=
+  // link is respected; otherwise a full test with a result opens, then a quick check (site/measured.js), so a newer
+  // setup without results never hides an older scored one. Other setups and routes are under test details.
+  function measuredContent(e, group, setupId) {
+    var rec = testsOf(e), list = seriesOf(e);
+    var kicker = el("p", { class: "ws-kicker" });
+    var body = el("div", { class: "ws-body" });
+    var more = el("div", { class: "ws-details" });
+    var parts = [kicker, el("h1", { id: "model-title" }, displayName(group)), body, more];
+    if (!list.length) {
+      append(body, [el("p", { class: "context" }, e.maker + " · " + accessText(e) + " · requested model " + e.exact_identifier),
+        el("h2", { id: "our-tests" }, "No repeated test results yet"),
+        el("p", {}, "Waiting for daily results. No daily test results have been published for this model yet.")]);
+    }
+    var seriesDetails = el("div", { class: "series-details" });
+    function showSeries(index, fromSelector) {
       if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
       var d = list[index];
-      while (graph.firstChild) graph.removeChild(graph.firstChild);
-      while (more.firstChild) more.removeChild(more.firstChild);
-      append(graph, [el("h2", { class: "test-name", id: "our-tests" }, testName(d)),
-        el("p", { class: "sub route-disclosure" }, routeQualifier(e, d) + (isReference(d)
-          ? " · all " + d.planned_items + " questions, sent in batches" : isPuter(d) ? " · " + d.planned_items + "-question sample" : "")),
-        dailyChart(d)]);
-      var caption = seriesCaption(d);
-      if (caption) {
-        append(graph, caption);
-        live.caption = { node: caption, series: d, key: captionState(d).key };
-      } else live.caption = null;
+      while (body.firstChild) body.removeChild(body.firstChild);
+      while (seriesDetails.firstChild) seriesDetails.removeChild(seriesDetails.firstChild);
+      var obs = M.observation(d, Date.now());
+      var available = M.changeAvailable(d);
+      var mode = chartMode === "score" ? "score" : chartMode === "change" ? (available ? "change" : "score")
+        : (available ? "change" : "score");
+      var chartSlot = el("div", { class: "chart-slot" });
+      drawChart(chartSlot, d, mode, null);
+      var readout = readoutView(d, obs);
+      live.readout = { node: readout, series: d, key: obs ? obs.key : "" };
+      live.kicker = { node: kicker, series: d };
+      kicker.textContent = kickerText(d);
+      append(body, [contextView(e, d, obs), readout,
+        modeControls(d, available, mode, function (next) {
+          chartMode = next;
+          drawChart(chartSlot, d, next, live.chart ? live.chart.selected : null);
+        }),
+        chartSlot, el("p", { class: "caveat" }, caveatText(d))]);
       var details = el("details", { class: "evidence test-details" }, [
-        el("summary", {}, "Test details, results table and schedule"),
-        el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e))]);
+        el("summary", {}, "Test details, other setups and results table")]);
+      if (list.length > 1) {
+        var selector = el("select", { id: "daily-setup" }, list.map(function (x, i) {
+          return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(x, e));
+        }));
+        selector.value = String(index);
+        selector.addEventListener("change", function () {
+          var i = Number(selector.value);
+          go(Object.assign({}, state, { view: "model", id: group.id, service: e.id, setup: list[i].series_id, route: "" }), true);
+          showSeries(i, true);
+        });
+        append(details, el("div", { class: "setup-choice" }, [
+          el("label", { for: "daily-setup" }, "Test setup"),
+          el("p", { class: "sub" }, "Choose a test setup. Different setups are kept separate and are never joined into one trend."),
+          selector]));
+      }
+      append(details, el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e)));
       if (isPuter(d)) append(details, puterLabels(d));
       if (isReference(d)) append(details, referenceLabels(d));
       append(details, [checkedNote(d), isReference(d) ? referenceSection(d) : dailySection(d)]);
@@ -580,70 +733,130 @@
         "Four questions are a small sample and are not comparable with the 40-question tests."));
       append(details, el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an " +
         "overall change in model quality. Not enough repeated tests to judge a change."));
-      append(more, details);
+      seriesDetails.appendChild(details);
+      if (fromSelector) {                               // keep the open disclosure and the focus on the selector
+        details.setAttribute("open", "");
+        var again = document.getElementById("daily-setup");
+        if (again) again.focus();
+      }
     }
-    var initial = M.defaultIndex(list, state.setup);
-    var parts = [graph];
-    if (list.length > 1) {
-      var selector = el("select", { id: "daily-setup" }, list.map(function (d, i) {
-        return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(d, e));
+    if (list.length) showSeries(M.defaultIndex(list, setupId), false);
+    append(more, seriesDetails);
+    var routes = group.members.filter(measuredMember);
+    if (routes.length > 1) {
+      var access = el("select", { id: "model-service" }, routes.map(function (member) {
+        return el("option", { value: member.id }, member.service_provider + " · " +
+          (Dir.ACCESS_LABELS[member.access_kind] || member.access_kind));
       }));
-      selector.value = String(initial);
-      selector.addEventListener("change", function () { showSetup(Number(selector.value)); });
-      parts.push(el("div", { class: "setup-choice" }, [
-        el("label", { for: "daily-setup" }, "Test setup"),
-        el("p", { class: "sub" }, "Choose a test setup. Different setups are kept separate and are never joined into one trend."),
-        selector]));
+      access.value = e.id;
+      access.addEventListener("change", function () {
+        pendingFocus = "model-service";
+        go(Object.assign({}, state, { view: "model", id: group.id, service: access.value, route: "", setup: "" }), false);
+      });
+      append(more, el("details", { class: "evidence" }, [el("summary", {}, "Other routes for this model"),
+        el("div", { class: "setup-choice" }, [el("label", { for: "model-service" }, "Access route"), access,
+          el("p", { class: "sub" }, "Showing results for this route only. Other services may behave differently; their results are kept separate.")])]));
     }
-    showSetup(initial);
-    parts.push(more);
+    if ((rec.calibration || []).length) {             // open when it is the only scored result to read
+      var setup = el("details", { class: "evidence" }, [el("summary", {}, "One-off setup test")].concat(setupSection(rec.calibration)));
+      if (!measuredMember(e)) setup.setAttribute("open", "");
+      append(more, setup);
+    }
+    append(more, el("details", { class: "evidence" }, [el("summary", {}, "Status and how these results were checked"),
+      statusBlock(ownStatus(e)),
+      el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
+        "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
+        "approved. Prompts and raw responses stay private, so individual answers cannot be checked from this page. ",
+        link("#how-we-test", "How we test")])]));
+    append(more, el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)]));
     return parts;
   }
 
-  // What this series shows now, in the same descriptive terms as the home page; never a verdict.
-  var SERIES_HEADINGS = { movement: "Latest comparable movement", latest: "Latest result", first: "First measurement",
-                          quick: "Latest quick check" };
-  function captionState(d) {
-    var latest = M.latestScored(d);
-    if (!latest) return null;
-    var c = M.comparison(d, Date.now());
-    var kind = !M.isFull(d) ? "quick" : c.eligible && c.change !== 0 ? "movement"
-      : M.scoredRows(d).length === 1 ? "first" : "latest";
-    return { kind: kind, latest: latest, comparison: c, later: M.laterAttempt(d),
-             key: [kind, latest.date, c.previous ? c.previous.date : ""].join("|") };
-  }
-  function seriesCaption(d) {
-    var h = captionState(d);
-    if (!h) return null;
-    return el("p", { class: "chart-caption" }, [el("strong", {}, SERIES_HEADINGS[h.kind] + ": "), M.caption(h)]);
+  // Why the home opened on this model, while it still applies: the existing focus wording for the shown series.
+  function kickerText(d) {
+    if (state.view !== "models") return "";
+    var h = currentFocus();
+    return h && h.series.series_id === d.series_id ? M.HEADINGS[h.kind] : "";
   }
 
-  // The minute timer and a return to the tab call this. Within the 48-hour window nothing is touched, so search
-  // text, filters, the selected setup, open disclosures, keyboard focus and a selected graph point stay as they
-  // are. At the boundary only the focus text (or, for another series, the focus itself) and the caption change.
+  function contextView(e, d, obs) {
+    var identity = isPuter(d) || isReference(d) ? (identityConfirmed(d) ? "model identity reported as requested"
+      : "model identity not confirmed") : "";
+    var size = isPuter(d) ? "Quick check: " + d.planned_items + " questions"
+      : isReference(d) ? "Reference test: all " + d.planned_items + " questions, in batches" : testName(d);
+    return el("p", { class: "context" }, [el("span", { class: "test-name" }, size),
+      " · through " + serviceText(e) + " · requested model ", el("code", {}, e.exact_identifier),
+      obs ? " · latest test " + dayText(obs.latest.date) : " · no scored result yet",
+      identity ? [" · ", el("span", { class: "identity" }, identity)] : null]);
+  }
+
+  // The latest raw score next to what changed, never only below the graph or in a tooltip.
+  function readoutView(d, obs) {
+    if (!obs) return el("div", { class: "readout" }, el("p", { class: "observation" }, "No scored result yet in this setup."));
+    var later = obs.later && obs.comparison.reason !== "later_attempt"
+      ? "A later attempt, on " + dayText(obs.later.date) + ", has no score; the graph shows it." : "";
+    return el("div", { class: "readout", "data-change": obs.comparison.eligible ? String(obs.change) : "" }, [
+      el("p", { class: "score" }, [el("strong", {}, scoreText(obs.latest)),
+        el("span", { class: "score-date" }, "correct · " + shortDay(obs.latest.date))]),
+      el("div", { class: "readout-text" }, [
+        el("p", { class: "observation" }, obs.text.replace(/\.?$/, ".")),
+        obs.caution ? el("p", { class: "caution" }, obs.caution) : null,
+        later ? el("p", { class: "caution" }, later) : null])]);
+  }
+
+  // Score and Change since first test. Change needs two fully gradeable results in this setup; the control says why
+  // when it is unavailable. The visitor's choice is kept across models while it is valid.
+  function modeControls(d, available, mode, onChange) {
+    var count = M.comparableRows(d).length;
+    var buttons = [["score", "Score"], ["change", "Change since first test"]].map(function (m) {
+      var b = el("button", { type: "button", class: "mode", "data-mode": m[0], "aria-pressed": String(mode === m[0]) }, m[1]);
+      if (m[0] === "change" && !available) {
+        b.setAttribute("aria-disabled", "true");
+        b.setAttribute("aria-describedby", "change-note");
+      }
+      b.addEventListener("click", function () {
+        if (m[0] === "change" && !available) return;
+        buttons.forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+        onChange(m[0]);
+      });
+      return b;
+    });
+    return el("div", { class: "modes" }, [el("div", { class: "mode-group", role: "group", "aria-label": "Graph view" }, buttons),
+      available ? null : el("p", { id: "change-note", class: "mode-note" }, count === 1
+        ? "Change view needs a second fully gradeable result in this setup."
+        : "Change view needs two fully gradeable results in this setup; there are none yet.")]);
+  }
+
+  function caveatText(d) {
+    if (isPuter(d)) {
+      return "Quick check: " + d.planned_items + " fixed questions through " + d.route.service_provider + ". A small " +
+        "sample, never compared with the 40-question tests or entered in movement highlights.";
+    }
+    if (isReference(d)) {
+      return "All " + d.planned_items + " questions, sent through " + d.route.service_provider + " in batches. " +
+        "Separate evaluations are never joined; the service does not confirm which model answered.";
+    }
+    return "One fixed set of " + d.panel_items + " questions through this route. A difference between tests can be " +
+      "ordinary variation; it is not a verdict on the model.";
+  }
+
+  // The minute timer and a return to the tab call this. The selected model, setup, view and every control stay; only
+  // the readout, the home's reason line and the movement links change, and only when their text would.
   function refreshLive() {
-    if (live.focus) {
-      var h = currentFocus(), key = focusKey(h);
-      if (key !== live.focus.key) {
-        var slot = live.focus.slot, old = slot.firstChild;
-        if (h && old && old.liveParts && old.liveParts.series === h.series.series_id && old.liveParts.latest === h.latest.date) {
-          old.liveParts.kicker.textContent = M.HEADINGS[h.kind];
-          old.liveParts.caption.textContent = M.caption(h);
-        } else {
-          while (slot.firstChild) slot.removeChild(slot.firstChild);
-          if (h) slot.appendChild(focusView(h));
-        }
-        live.focus.key = key;
+    if (live.readout && live.readout.node.parentNode) {
+      var obs = M.observation(live.readout.series, Date.now());
+      var key = obs ? obs.key : "";
+      if (key !== live.readout.key) {
+        var fresh = readoutView(live.readout.series, obs);
+        live.readout.node.parentNode.replaceChild(fresh, live.readout.node);
+        live.readout = { node: fresh, series: live.readout.series, key: key };
       }
     }
-    if (live.caption && live.caption.node.parentNode) {
-      var state = captionState(live.caption.series);
-      if (state && state.key !== live.caption.key) {
-        var fresh = seriesCaption(live.caption.series);
-        live.caption.node.parentNode.replaceChild(fresh, live.caption.node);
-        live.caption = { node: fresh, series: live.caption.series, key: state.key };
-      }
+    if (live.kicker) {
+      var text = kickerText(live.kicker.series);
+      if (text !== live.kicker.node.textContent) live.kicker.node.textContent = text;
     }
+    drawMoves();
   }
 
   // ------------------------------------------------------------------ Puter four-question series
@@ -807,70 +1020,26 @@
     else if (state.route) {
       e = group.members.filter(function (member) { return member.route_ids.indexOf(state.route) !== -1; })[0] || e;
     }
-    return hasOwnRecords(e) ? measuredView(e, group) : unmeasuredView(e, group);
+    return monitorView({ entry: e, group: group, setup: state.setup });
   }
 
-  function measuredView(e, group) {
-    var rec = testsOf(e);
-    var st = ownStatus(e);
-    var wrap = el("article", { class: "detail", "aria-labelledby": "model-title" }, backLink());
-    append(wrap, el("header", { class: "identity" }, [
-      el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
-      el("h1", { id: "model-title" }, group.canonical.name.replace(/ via Puter$/, ""))]));
-    var scored = measuredMember(e);
-    append(wrap, el("section", { class: "own-results", "aria-labelledby": "our-tests" }, seriesOf(e).length
-      ? dailyBlock(rec, e)
-      : [el("h2", { id: "our-tests" }, "No repeated test results yet"),
-         el("p", {}, "Waiting for daily results. No daily test results have been published for this model yet.")]));
-    var routes = group.members.filter(measuredMember);
-    if (routes.length > 1) {
-      var access = el("select", { id: "model-service" }, routes.map(function (member) {
-        return el("option", { value: member.id }, member.service_provider + " · " +
-          (Dir.ACCESS_LABELS[member.access_kind] || member.access_kind));
-      }));
-      access.value = e.id;
-      access.addEventListener("change", function () {
-        go(Object.assign({}, state, { id: group.id, service: access.value, route: "", setup: "" }), false);
-        render(false);
-      });
-      append(wrap, el("div", { class: "setup-choice" }, [el("label", { for: "model-service" }, "Access route"), access,
-        el("p", { class: "sub" }, "Showing results for this route only. Other services may behave differently; their results are kept separate.")]));
-    }
-    if ((rec.calibration || []).length) {             // open when it is the only scored result to read
-      var setup = el("details", { class: "evidence" }, [el("summary", {}, "One-off setup test")].concat(setupSection(rec.calibration)));
-      if (!scored) setup.setAttribute("open", "");
-      append(wrap, setup);
-    }
-    append(wrap, el("details", { class: "evidence" }, [el("summary", {}, "Status and how these results were checked"),
-      statusBlock(st),
-      el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
-        "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
-        "approved. Prompts and raw responses stay private, so individual answers cannot be checked from this page. ",
-        link("#how-we-test", "How we test")])]));
-    append(wrap, el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)]));
-    return wrap;
-  }
-
-  // An entry without a scored Baseline result (an old catalogue, app or other-route link): an honest explanation,
-  // links to the tested models, and never another model's, service's or app's results in its place.
-  function unmeasuredView(e, group) {
+  // An entry without own records (an old catalogue, app or other-route link): an honest explanation, links to the
+  // tested models, and never another model's, service's or app's results in its place.
+  function unmeasuredContent(e, group) {
     var others = group.members.filter(function (member) { return member !== e && measuredMember(member); });
-    var name = e.access_kind === "consumer_app" ? e.name : group.canonical.name.replace(/ via Puter$/, "");
-    return el("article", { class: "detail", "aria-labelledby": "model-title" }, [backLink(),
-      el("header", { class: "identity" }, [
-        el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
-        el("h1", { id: "model-title" }, name),
-        el("div", { class: "status-block", "data-status": "not_tested" }, [
-          el("p", { class: "status-label" }, Dir.STATUS.not_tested),
-          el("p", {}, "Baseline has no scored test of " + name + " through " + serviceText(e) + " to show. This site shows only Baseline's own measurements; catalogue " +
-            "listings and results published by others are no longer displayed.")])]),
+    var name = e.access_kind === "consumer_app" ? e.name : displayName(group);
+    return [el("p", { class: "context" }, e.maker + " · " + accessText(e)),
+      el("h1", { id: "model-title" }, name),
+      el("div", { class: "status-block", "data-status": "not_tested" }, [
+        el("p", { class: "status-label" }, Dir.STATUS.not_tested),
+        el("p", {}, "Baseline has no scored test of " + name + " through " + serviceText(e) + " to show. This site shows " +
+          "only Baseline's own measurements; catalogue listings and results published by others are no longer displayed.")]),
       others.length ? el("p", {}, ["Baseline has tested the same requested model through another service. Results " +
         "through different services may differ and are kept separate: ", others.map(function (member, i) {
           return [i ? " · " : "", link(entryLink(member, ""), name + " — " + accessText(member))];
         })]) : null,
       el("p", {}, link("#models", "See the models Baseline has tested")),
-      el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)])
-    ]);
+      el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)])];
   }
 
   function modelFacts(e) {

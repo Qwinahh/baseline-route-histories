@@ -6,6 +6,9 @@
 // real browser. Test use only. RENDER_NOW (an ISO time in the environment) fixes the page clock for fixtures;
 // RENDER_ADVANCE then moves that clock after the first render and refreshes the open page the way a browser would
 // (RENDER_REFRESH "tick": the minute timer, "visibility": a return from a background tab), keeping the same DOM.
+// RENDER_MODE ("score" or "change") presses that graph-view button first, as a visitor would.
+// RENDER_WIDTH sets the viewport width the page lays its graph out for; RENDER_PICK chooses a model id in the
+// phone selector (the resulting hash is reported); RENDER_SEARCH types into the rail search first.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -56,6 +59,7 @@ global.document = {
 };
 
 if (process.env.RENDER_NOW) { const fixed = Date.parse(process.env.RENDER_NOW); Date.now = () => fixed; }
+if (process.env.RENDER_WIDTH) global.innerWidth = Number(process.env.RENDER_WIDTH);
 const dir = process.argv[2];
 for (const name of ["freshness.js", "directory.js", "results-chart.js", "measured.js", "data.js", "app.js"]) {
   vm.runInThisContext(fs.readFileSync(path.join(dir, name), "utf8"), { filename: name });
@@ -65,6 +69,23 @@ if (process.argv[4] !== undefined) {
   if (!selector) throw new Error("No setup selector");
   selector.value = process.argv[4];
   selector.dispatchEvent({ type: "change" });
+}
+function byClass(name) { return all().filter((n) => (n.getAttribute && (n.getAttribute("class") || "").split(/\s+/).includes(name))); }
+function text(n) { return n ? n.textContent : null; }
+if (process.env.RENDER_MODE) {
+  const button = all().find((n) => n.tagName === "button" && n.getAttribute("data-mode") === process.env.RENDER_MODE);
+  if (!button) throw new Error("No graph-view button " + process.env.RENDER_MODE);
+  button.dispatchEvent({ type: "click" });
+}
+if (process.env.RENDER_SEARCH !== undefined) {         // type into the rail search, as a visitor would
+  const q = all().find((n) => n.getAttribute("id") === "q");
+  q.value = process.env.RENDER_SEARCH;
+  q.dispatchEvent({ type: "input" });
+}
+if (process.env.RENDER_PICK) {
+  const pick = all().find((n) => n.getAttribute("id") === "model-picker");
+  pick.value = process.env.RENDER_PICK;
+  pick.dispatchEvent({ type: "change" });
 }
 let kept = null;
 if (process.env.RENDER_ADVANCE) {
@@ -82,18 +103,46 @@ if (process.env.RENDER_ADVANCE) {
 const svgs = all().filter((n) => n.tagName === "svg");
 const dailyCharts = svgs.filter((n) => (n.getAttribute("class") || "").split(/\s+/).includes("daily-chart")).length;
 const aria = all().map((n) => n.getAttribute("aria-label")).filter(Boolean);
-const modelRows = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "measured-row").map(n => {
-  const a = n.children[0].children[0];
-  return {name:a.textContent, href:a.getAttribute("href")};
+// The rail (one entry per tested model), the movement links and the selected model's workspace.
+const modelRows = byClass("rail-item").map((n) => {
+  const a = n.children[0];
+  return { name: a.children[0].textContent, href: a.getAttribute("href"), current: a.getAttribute("aria-current") === "true" };
 });
-const focus = all().find(n => n.tagName === "section" && n.getAttribute("class") === "focus");
-const focusInfo = focus ? { kicker: focus.children[0].textContent, name: focus.children[1].textContent,
-  href: focus.children[1].children[0].getAttribute("href"),
-  caption: focus.children.find(n => n.getAttribute && n.getAttribute("class") === "focus-caption").textContent } : null;
-const sparks = all().filter(n => n.tagName === "svg" && n.getAttribute("class") === "spark").length;
+const moves = byClass("rail-moves").filter((n) => !("hidden" in n.attrs)).flatMap((n) => n.walk ? (() => {
+  const out = []; n.walk((c) => { if (c.tagName === "a") out.push({ text: c.textContent, href: c.getAttribute("href") }); }); return out; })() : []);
+const picker = all().find((n) => n.getAttribute("id") === "model-picker");
+const pressed = all().find((n) => n.tagName === "button" && n.getAttribute("data-mode") && n.getAttribute("aria-pressed") === "true");
+const changeButton = all().find((n) => n.tagName === "button" && n.getAttribute("data-mode") === "change");
+const graph = svgs.find((n) => (n.getAttribute("class") || "").split(/\s+/).includes("daily-chart"));
+const workspace = byClass("workspace")[0];
+const selected = workspace ? {
+  kicker: text(byClass("ws-kicker")[0]) || "", name: text(workspace.children.find((n) => n.tagName === "h1")),
+  context: text(byClass("context")[0]), score: text((byClass("score")[0] || { children: [] }).children[0]),
+  observation: text(byClass("observation")[0]), cautions: byClass("caution").map(text),
+  mode: pressed ? pressed.getAttribute("data-mode") : null,
+  changeDisabled: changeButton ? changeButton.getAttribute("aria-disabled") === "true" : null,
+  changeNote: text(byClass("mode-note")[0]), graphMode: graph ? graph.getAttribute("data-mode") : null,
+  axisTitle: text(byClass("axis-title")[0]), caveat: text(byClass("caveat")[0]),
+  ticks: graph ? byClass("tick").map(text) : [], pointLabels: byClass("point-label").map(text).filter(Boolean),
+} : null;
 const service = all().find(n => n.getAttribute("id") === "model-service");
+// What the graph actually draws: each mark's kind and visible glyph, the lane label, the viewBox and hit areas.
+const chart = graph ? {
+  viewBox: graph.getAttribute("viewBox"),
+  marks: byClass("mark").map((g) => ({ kind: g.getAttribute("data-kind"),
+    glyph: (g.children.find((c) => c.tagName === "text") || { textContent: "" }).textContent,
+    label: g.getAttribute("aria-label"), focusable: g.getAttribute("tabindex") === "0" })),
+  lane: text(byClass("lane-label")[0]),
+  hits: byClass("hit").map((h) => Number(h.getAttribute("r") || h.getAttribute("width") / 2)),
+  points: byClass("score-point").length,
+} : null;
+const railLinks = byClass("rail-link").map((a) => a.getAttribute("href"));
+const moveLinks = byClass("rail-moves").flatMap((n) => { const out = []; n.walk((c) => { if (c.tagName === "a") out.push(c.getAttribute("href")); }); return out; });
 
 process.stdout.write(JSON.stringify({ text: body.textContent, aria, hash: location.hash, dailyCharts,
   totalCharts: svgs.length, selectedSetup: selector ? selector.value : null, modelRows,
   selectedService: service ? service.value : null,
-  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [], focus: focusInfo, sparks, kept }));
+  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [], selected, moves,
+  picker: picker ? { value: picker.value, options: picker.children.map((n) => n.getAttribute("value")).filter(Boolean) } : null,
+  chart, railLinks, moveLinks,
+  kept }));
