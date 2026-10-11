@@ -1,0 +1,190 @@
+{
+ "as_of": "2026-10-10T22:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 2,
+ "open_dates": [],
+ "records": [
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "c0cc84b90ebd35ebb2671741b6cd166ca00adba40146b4d57d6f53c70809711a",
+   "date": "2026-10-08",
+   "evidence": "verified",
+   "first_attempt_correct": 36,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 36,
+    "empty": 0,
+    "format_error": 1,
+    "incorrect": 3,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "calibration-v1",
+   "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+   "report_sha256": "1bb0f1e950725a374aa3b7f304ae9a30c5ac8619ccf529c8f11f5887c26eb2e2",
+   "requested_model": "gpt-oss-120b",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "groq.openai.gpt-oss-120b",
+   "run_id": "live-daily-20261008T115050Z-c0cc84b90e",
+   "scheduled_items": 40,
+   "series_id": "groq.openai.gpt-oss-120b--daily--c0cc84b90ebd",
+   "settings": {
+    "max_output_tokens": 1024,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "c0cc84b90ebd35ebb2671741b6cd166ca00adba40146b4d57d6f53c70809711a",
+   "date": "2026-10-09",
+   "evidence": "verified",
+   "first_attempt_correct": 38,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 38,
+    "empty": 0,
+    "format_error": 0,
+    "incorrect": 2,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "calibration-v1",
+   "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+   "report_sha256": "38b630bc3a81206104de426fdaf9384cbac9ce7b1c48c65d83d5509673c5b462",
+   "requested_model": "gpt-oss-120b",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "groq.openai.gpt-oss-120b",
+   "run_id": "live-daily-20261009T112016Z-c0cc84b90e",
+   "scheduled_items": 40,
+   "series_id": "groq.openai.gpt-oss-120b--daily--c0cc84b90ebd",
+   "settings": {
+    "max_output_tokens": 1024,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  },
+  {
+   "aggregate_version": 1,
+   "attempted_items": 40,
+   "config_fingerprint": "c0cc84b90ebd35ebb2671741b6cd166ca00adba40146b4d57d6f53c70809711a",
+   "date": "2026-10-10",
+   "evidence": "verified",
+   "first_attempt_correct": 37,
+   "first_attempt_outcomes": {
+    "answered_identity_mismatch": 0,
+    "answered_identity_unknown": 0,
+    "auth_error": 0,
+    "client_error": 0,
+    "correct": 37,
+    "empty": 0,
+    "format_error": 1,
+    "incorrect": 2,
+    "malformed": 0,
+    "not_sent": 0,
+    "provider_error": 0,
+    "rate_limited": 0,
+    "refusal": 0,
+    "timeout": 0,
+    "truncated": 0
+   },
+   "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+   "kind": "daily",
+   "panel_id": "calibration-v1",
+   "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+   "report_sha256": "da70fcd613948963ec7658d26b525319cccd0cea314e5c81aa4af92b4cd8d690",
+   "requested_model": "gpt-oss-120b",
+   "retry_recovered": {
+    "correct": 0,
+    "format_error": 0,
+    "incorrect": 0,
+    "other": 0
+   },
+   "route_id": "groq.openai.gpt-oss-120b",
+   "run_id": "live-daily-20261010T103719Z-c0cc84b90e",
+   "scheduled_items": 40,
+   "series_id": "groq.openai.gpt-oss-120b--daily--c0cc84b90ebd",
+   "settings": {
+    "max_output_tokens": 1024,
+    "temperature": 1.0,
+    "thinking_level": "LOW",
+    "timeout_seconds": 120
+   },
+   "status": "completed",
+   "valid_day": true
+  }
+ ],
+ "route": {
+  "access_kind": "intermediary",
+  "exact_identifier": "gpt-oss-120b",
+  "maker": "OpenAI",
+  "route_id": "groq.openai.gpt-oss-120b",
+  "service_provider": "Groq"
+ },
+ "series": {
+  "config_fingerprint": "c0cc84b90ebd35ebb2671741b6cd166ca00adba40146b4d57d6f53c70809711a",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "panel_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "panel_id": "calibration-v1",
+  "panel_items": 40,
+  "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+  "schedule": {
+   "end_date": "2026-10-14",
+   "start_date": "2026-10-08",
+   "type": "daily",
+   "window_minutes": 1080,
+   "window_start_utc": "04:00"
+  },
+  "series_id": "groq.openai.gpt-oss-120b--daily--c0cc84b90ebd",
+  "settings": {
+   "max_output_tokens": 1024,
+   "temperature": 1.0,
+   "thinking_level": "LOW",
+   "timeout_seconds": 120
+  }
+ }
+}
