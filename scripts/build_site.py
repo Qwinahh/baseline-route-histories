@@ -39,7 +39,7 @@ import registry  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 PUTER_PREVIEW = ("several-points.json", "gpt-several.json", "second-setup.json")
-SITE_FILES = ("index.html", "styles.css", "app.js", "freshness.js", "directory.js", "results-chart.js")
+SITE_FILES = ("index.html", "styles.css", "app.js", "freshness.js", "directory.js", "results-chart.js", "measured.js")
 OWNER_MARKER = ".baseline-build"
 OWNED_FILES = frozenset(SITE_FILES + ("data.js", OWNER_MARKER))
 # Series configuration fields whose change is shown as a configuration break.

@@ -46,14 +46,39 @@ nav.primary a { color: var(--muted); text-decoration: none; padding: 4px 0; bord
 nav.primary a:hover { color: var(--ink); }
 nav.primary a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
 
-/* Directory hero: short, with the dot composition beside it */
-.hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 28px 0 20px; }
+/* Home (9 October 2026): the question, the focus history, then the measured models. */
+.home-head { margin: 28px 0 16px; }
 .lede { color: var(--muted); margin: 0; }
-.ascii {
-  font-family: var(--mono); font-size: 13px; line-height: 1.25; color: var(--accent);
-  margin: 0; opacity: 0.75; white-space: pre; user-select: none; flex: none;
+.focus { background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; padding: 16px 18px 8px; margin: 0 0 28px; }
+.focus h2 { margin: 2px 0 2px; font-size: 1.5rem; }
+.focus h2 a { color: var(--ink); text-decoration-color: var(--accent); }
+.focus-kicker { color: var(--accent); font-weight: 650; font-size: 0.9rem; margin: 0; }
+.focus-meta { color: var(--muted); font-size: 0.9rem; margin: 0 0 6px; max-width: none; }
+.focus-caption { margin: 0 0 4px; }
+.focus .chart-scroll, .own-results .chart-scroll { border: 0; border-radius: 0; background: transparent; }
+.focus-link { margin: 4px 0 8px; }
+.measured h2 { margin-top: 8px; }
+.measured-controls { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px; align-items: end; }
+@media (max-width: 720px) { .measured-controls { grid-template-columns: 1fr 1fr; } .measured-controls .search { grid-column: 1 / -1; } }
+.measured-rows { list-style: none; margin: 0; padding: 0; }
+.measured-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 132px 10.5em; gap: 8px 20px; align-items: center;
+  padding: 12px 16px; border-top: 1px solid var(--divider);
 }
-@media (max-width: 640px) { .ascii { display: none; } }
+.measured-row:first-child { border-top: 0; }
+.mr-name a { font-weight: 600; overflow-wrap: anywhere; }
+.mr-latest { margin: 0; }
+.mr-latest strong { font-variant-numeric: tabular-nums; font-size: 1.05rem; }
+.spark { display: block; overflow: visible; }
+.spark .spark-floor { stroke: var(--divider); stroke-width: 1; }
+.spark polyline { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.spark circle { fill: var(--ink); }
+@media (max-width: 720px) {
+  .measured-row { grid-template-columns: 132px minmax(0, 1fr); padding: 12px 14px; }
+  .measured-row .mr-name { grid-column: 1 / -1; }
+}
+.chart-caption { margin: 4px 0 8px; }
+.own-results h2.test-name { margin: 8px 0 2px; }
 
 /* Search and filters */
 .controls { background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; padding: 16px; }
@@ -151,6 +176,7 @@ details summary { cursor: pointer; font-weight: 600; }
 /* Chart */
 .chart-scroll { overflow-x: auto; background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; }
 .chart { display: block; width: 100%; min-width: 640px; height: auto; }
+.chart.fit { min-width: 0; }                 /* drawn at the screen's own size: no sideways scrolling */
 .chart text { font-family: var(--sans); font-size: 11px; fill: var(--muted); }
 .chart .axis { stroke: var(--ink); stroke-width: 1; }
 .chart .gridline { stroke: var(--divider); stroke-width: 1; }
@@ -215,20 +241,8 @@ ul.chart-legend { list-style: none; padding: 0; margin: 6px 0 12px; color: var(-
 ul.chart-legend li { margin: 2px 0; }
 .chart-empty { border: 1px dashed var(--divider); border-radius: 10px; padding: 12px 16px; margin: 8px 0; }
 
-/* Featured and New releases (T14) */
-.highlights { margin: 8px 0 24px; }
-.highlights h2 { margin-top: 24px; }
-ul.feature-groups { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
-.feature-group { background: var(--surface); border: 1px solid var(--divider); border-radius: 10px; padding: 10px 14px; }
-.feature-group h3 { margin: 0 0 4px; font-size: 1rem; }
-.feature-list { list-style: none; padding: 0; margin: 8px 0 0; }
-ol.feature-list { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-.feature-card { display: flex; flex-direction: column; gap: 2px; padding: 6px 0; border-top: 1px solid var(--divider); }
-.feature-group .feature-card:first-child { border-top: 0; }
-.feature-card a { font-weight: 600; overflow-wrap: anywhere; }
-.tag[data-evidence="none"], .tag[data-evidence="scheduled"] { color: var(--muted); }
-.highlights h2.all-models { border-top: 1px solid var(--divider); padding-top: 16px; }
 /* Puter four-question series (synthetic preview banner and labels); same restrained look. */
 .notice.synthetic { font-weight: 600; border-color: var(--ink); }
 .puter-labels .labels { margin: 8px 0 4px; }
 .tag[data-kind="sample"], .tag[data-kind="identity"] { font-weight: 600; color: var(--ink); }
+@media (max-width: 720px) { .focus { padding: 12px 12px 6px; } .focus h2 { font-size: 1.3rem; } }

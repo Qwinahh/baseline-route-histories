@@ -9,6 +9,10 @@
    result breaks it. Rows without a score are marks in a separate "no score" lane, so
    they can never be read as a zero. Nothing is interpolated or carried forward.
 
+   opts.trim (the measured site, 9 October 2026): the x axis ends at the latest checked date (the newest row or
+   as_of, at least a week after the start) instead of the campaign's last scheduled date, so recorded history
+   fills the graph. Later scheduled dates are not drawn; the page lists how many are not yet due.
+
    Puter four-question series (contract puter-subset-v1): the scale is 0 to 4, a point needs all
    four questions attempted and gradeable with no identity mismatch, and every description says
    whether the returned model identity was confirmed. Grading and identity stay separate. */
@@ -25,7 +29,8 @@
     partial: "Incomplete run: not every question was attempted",
     unavailable: "Run evidence unavailable: no score shown",
     open: "Run still open or unresolved when last checked: no score yet",
-    pending: "Not yet tested or not yet published"
+    pending: "Not yet tested or not yet published",
+    failed: "Run finished without a gradeable answer (every question failed or was not answered): no score shown"
   };
   var REQUEST_ERRORS = ["timeout", "provider_error", "rate_limited", "auth_error", "client_error"];
   var ANSWER_PROBLEMS = ["truncated", "empty", "malformed", "answered_identity_mismatch", "answered_identity_unknown"];
@@ -44,9 +49,17 @@
     return keys.reduce(function (n, k) { return n + ((o && o[k]) || 0); }, 0);
   }
 
-  // Row kind for drawing: "point" or one of the MARK_LABELS keys.
+  // Gradeable answers: correct, incorrect or wrong format (review R1); refusals and failures are not.
+  function gradeable(r) {
+    var o = r.first_attempt_outcomes;
+    if (o) return (o.correct || 0) + (o.incorrect || 0) + (o.format_error || 0);
+    return typeof r.answered === "number" ? r.answered : 0;
+  }
+
+  // Row kind for drawing: "point" or one of the MARK_LABELS keys. An eligible run with no gradeable answer is a
+  // failure (for example every request failed), never a score of zero; forty wrong answers stay a real zero.
   function rowKind(row) {
-    if (row.eligible) return "point";
+    if (row.eligible) return row.record && gradeable(row.record) === 0 ? "failed" : "point";
     if (row.state === "gap") return "gap";
     if (row.state === "open") return "open";
     if (row.state === "no_record" || !row.record) return "no_record";
@@ -123,6 +136,10 @@
         (d.answer_problems ? ", " + d.answer_problems + " cut off or unreadable" : "") +
         (d.retry_correct ? "; " + d.retry_correct + " more correct on a retry (not counted)" : "") + ".";
     }
+    if (d.kind === "failed") {
+      return head + "no gradeable answer: " + d.request_errors + " request errors, " + d.refusals + " refused" +
+        (d.answer_problems ? ", " + d.answer_problems + " cut off, missing or unreadable" : "") + ". Not plotted as a score.";
+    }
     if (d.kind === "partial") {
       return head + "incomplete run (" + d.status + "): " + d.attempted + " of " + d.scheduled +
         " questions attempted, " + d.correct + " correct. Not plotted as a daily score.";
@@ -144,6 +161,12 @@
     var L = 58, R = 16, T = 18, B = 62;                 // left room for the "no score" lane label; bottom for dates and lane
     var max = series.panel_items;
     var first = dayNumber(series.schedule.start_date), last = dayNumber(series.schedule.end_date);
+    if (opts.trim) {
+      var seen = (series.rows || []).reduce(function (n, row) { return Math.max(n, dayNumber(row.date)); }, first);
+      if (series.as_of) seen = Math.max(seen, dayNumber(series.as_of));
+      last = Math.min(last, Math.max(seen, first + 6));
+    }
+    var endDate = new Date(last * DAY_MS).toISOString().slice(0, 10);
     var span = Math.max(last - first, 1);
     var plotBottom = H - B;
     function x(date) { return L + (dayNumber(date) - first) / span * (W - L - R); }
@@ -158,8 +181,9 @@
       var iso = new Date(n * DAY_MS).toISOString().slice(0, 10);
       xTicks.push({ date: iso, x: x(iso), label: dayLabel(iso) });
     }
-    if (xTicks[xTicks.length - 1].date !== series.schedule.end_date && last - first >= 4) {
-      xTicks.push({ date: series.schedule.end_date, x: x(series.schedule.end_date), label: dayLabel(series.schedule.end_date) });
+    if (xTicks[xTicks.length - 1].date !== endDate && last - first >= 4) {
+      if (last - dayNumber(xTicks[xTicks.length - 1].date) < 3) xTicks.pop();     // never two labels on top of each other
+      xTicks.push({ date: endDate, x: x(endDate), label: dayLabel(endDate) });
     }
 
     var points = [], marks = [], segments = [], current = null, previous = null;
@@ -179,6 +203,7 @@
       }
     });
     (series.pending_dates || []).forEach(function (date) {
+      if (dayNumber(date) > last) return;                 // beyond a trimmed axis: listed on the page, not drawn
       marks.push({ date: date, kind: "pending", x: x(date), label: fullDay(date) + ": " + MARK_LABELS.pending + "." });
     });
     marks.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });

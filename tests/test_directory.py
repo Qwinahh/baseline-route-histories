@@ -17,6 +17,17 @@ class DirectoryHelperTests(unittest.TestCase):
 
 
 @unittest.skipUnless(shutil.which("node"), "node not available")
+class MeasuredHelperTests(unittest.TestCase):
+    """Runs tests/test_measured.js: the measured set, default setup and descriptive comparison (9 October 2026)."""
+
+    def test_measured_helpers(self):
+        result = subprocess.run(["node", str(ROOT / "tests" / "test_measured.js")], capture_output=True,
+                                text=True, timeout=60, encoding="utf-8", errors="replace")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("all assertions passed", result.stdout)
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
 class ResultsChartTests(unittest.TestCase):
     """Runs tests/test_results_chart.js against daily series built from the labelled graph fixtures (T13)."""
 

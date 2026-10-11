@@ -3,7 +3,9 @@
 // argv[4] selects a daily test setup (the #daily-setup selector's value) and fires its change event;
 // the output then also counts daily and total chart SVGs and reports the selected setup.
 // Only the primitives the app uses are provided; interactive behaviour is checked in a
-// real browser. Test use only.
+// real browser. Test use only. RENDER_NOW (an ISO time in the environment) fixes the page clock for fixtures;
+// RENDER_ADVANCE then moves that clock after the first render and refreshes the open page the way a browser would
+// (RENDER_REFRESH "tick": the minute timer, "visibility": a return from a background tab), keeping the same DOM.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -48,10 +50,14 @@ global.document = {
   getElementById: (id) => all().find((n) => n.getAttribute("id") === id) || null,
   querySelectorAll: () => [],
   querySelector: () => null,
+  hidden: false,
+  listeners: {},
+  addEventListener(type, fn) { (this.listeners[type] || (this.listeners[type] = [])).push(fn); },
 };
 
+if (process.env.RENDER_NOW) { const fixed = Date.parse(process.env.RENDER_NOW); Date.now = () => fixed; }
 const dir = process.argv[2];
-for (const name of ["freshness.js", "directory.js", "results-chart.js", "data.js", "app.js"]) {
+for (const name of ["freshness.js", "directory.js", "results-chart.js", "measured.js", "data.js", "app.js"]) {
   vm.runInThisContext(fs.readFileSync(path.join(dir, name), "utf8"), { filename: name });
 }
 const selector = all().find((n) => n.getAttribute("id") === "daily-setup");
@@ -60,17 +66,34 @@ if (process.argv[4] !== undefined) {
   selector.value = process.argv[4];
   selector.dispatchEvent({ type: "change" });
 }
+let kept = null;
+if (process.env.RENDER_ADVANCE) {
+  const nodes = all(), charts = nodes.filter((n) => n.tagName === "svg");
+  const later = Date.parse(process.env.RENDER_ADVANCE);
+  Date.now = () => later;
+  if (process.env.RENDER_REFRESH === "visibility") {
+    document.hidden = true; (document.listeners.visibilitychange || []).forEach((fn) => fn({ type: "visibilitychange" }));
+    document.hidden = false; (document.listeners.visibilitychange || []).forEach((fn) => fn({ type: "visibilitychange" }));
+  } else window.BaselinePage.tick();
+  const after = new Set(all());
+  kept = { nodes: nodes.filter((n) => after.has(n)).length, of: nodes.length,
+           charts: charts.filter((n) => after.has(n)).length, chartsBefore: charts.length };
+}
 const svgs = all().filter((n) => n.tagName === "svg");
 const dailyCharts = svgs.filter((n) => (n.getAttribute("class") || "").split(/\s+/).includes("daily-chart")).length;
 const aria = all().map((n) => n.getAttribute("aria-label")).filter(Boolean);
-const modelRows = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "row").map(n => {
+const modelRows = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "measured-row").map(n => {
   const a = n.children[0].children[0];
   return {name:a.textContent, href:a.getAttribute("href")};
 });
+const focus = all().find(n => n.tagName === "section" && n.getAttribute("class") === "focus");
+const focusInfo = focus ? { kicker: focus.children[0].textContent, name: focus.children[1].textContent,
+  href: focus.children[1].children[0].getAttribute("href"),
+  caption: focus.children.find(n => n.getAttribute && n.getAttribute("class") === "focus-caption").textContent } : null;
+const sparks = all().filter(n => n.tagName === "svg" && n.getAttribute("class") === "spark").length;
 const service = all().find(n => n.getAttribute("id") === "model-service");
-const featureLinks = all().filter(n => n.tagName === "li" && n.getAttribute("class") === "feature-card")
-  .map(n => n.children[0]).filter(a => a && a.tagName === "a").map(a => [a.textContent, a.getAttribute("href")]);
+
 process.stdout.write(JSON.stringify({ text: body.textContent, aria, hash: location.hash, dailyCharts,
   totalCharts: svgs.length, selectedSetup: selector ? selector.value : null, modelRows,
   selectedService: service ? service.value : null,
-  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [], featureLinks }));
+  serviceOptions: service ? service.children.map(n=>n.getAttribute("value")) : [], focus: focusInfo, sparks, kept }));

@@ -37,10 +37,13 @@ FORBIDDEN_MARKERS = (b"- dirname:", b'"data_file"', b"simulated_trial", b"draft_
 # that is true both before and after activation (review T05 R3).
 DEPLOYMENT_CLAIMS = ("not published", "local preview", "no schedule", "manual checks only",
                      "being monitored now")
+# Honesty wording the page code must keep (measured site, 9 October 2026: third-party results are no longer
+# displayed, so their gap wording is replaced by the unmeasured-page and comparison caveats).
 REQUIRED_PAGE_TEXT = ("Baseline's own recurring tests have not started yet.", "Not tested by Baseline",
-                      "We don't yet have our own repeated tests for this model.", "No Baseline test history yet.",
-                      "API results are never shown as app results", "no recorded evidence",
-                      "No observations are recorded here")
+                      "We don't yet have our own repeated tests for this model.", "Baseline has no scored test of",
+                      "API results are never shown as app results", "results published by others are no longer displayed",
+                      "not a confirmed change", "does not mean the model is stable")
+PAGE_CODE = ("app.js", "measured.js")
 # Test fixtures for Baseline status states carry this label and must never ship (T08).
 FIXTURE_LABEL = "FIXTURE-NOT-FOR-PUBLICATION"
 
@@ -70,7 +73,7 @@ def inspect_bundle(out_dir: Path, data: dict, records: dict, own_data_path: Path
         for marker in FORBIDDEN_MARKERS:
             if marker in content:
                 problems.append(f"{path} contains forbidden text {marker.decode()!r}")
-    app = files.get("app.js").read_text(encoding="utf-8") if "app.js" in files else ""
+    app = "".join(files[name].read_text(encoding="utf-8") for name in PAGE_CODE if name in files)
     for text in REQUIRED_PAGE_TEXT:
         if text not in app:
             problems.append(f"page is missing required wording {text!r}")

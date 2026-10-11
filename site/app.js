@@ -1,6 +1,6 @@
-/* Baseline: model directory, model detail, sources and "How we test" views (T07, T08).
-   Renders window.BASELINE_DATA. All text goes through textContent. Ages, badges and the
-   chart's "no recorded evidence" band are recomputed from the viewer's clock every minute.
+/* Baseline: Baseline's own measurements, model pages, sources and "How we test" (T07, T08; measured site,
+   9 October 2026). Renders window.BASELINE_DATA. All text goes through textContent. Only models with a scored
+   Baseline result are listed; catalogue entries and third-party results are kept in the data but not shown.
    URL state lives in the hash (site/directory.js), so back/forward and shared links work. */
 (function () {
   "use strict";
@@ -8,36 +8,20 @@
   var F = window.BaselineFreshness;
   var Dir = window.BaselineDirectory;
   var Chart = window.BaselineResultsChart;
+  var M = window.BaselineMeasured;
   var app = document.getElementById("app");
   var SVGNS = "http://www.w3.org/2000/svg";
   var REPO = "https://github.com/Qwinahh/baseline-route-histories/blob/main/";
-  var SOURCE_LABELS = { "aider-polyglot": "Aider coding results" };
-  // Directory note for the selected order (T08 review: never claim the default order after a change).
+  // List note for the selected order (T08 review: never claim the default order after a change).
   var SORT_NOTES = {
-    release: "Sorted by newest release; entries without a verified release date are listed last.",
+    release: "Sorted by newest release; models without a cited release date are listed last.",
     name: "Sorted by name (A–Z).",
     provider: "Sorted by provider, then name.",
-    date: "Sorted by latest published test; entries without one are listed last."
+    date: "Sorted by latest Baseline result."
   };
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  // Age wording follows the newest measurement date (never Baseline's retrieval time).
-  var AGE_NOTE = {
-    recent: "The newest measurement is from the last " + F.RECENT_DAYS + " days.",
-    aging: "The newest measurement is " + F.RECENT_DAYS + " to " + F.AGING_DAYS + " days old.",
-    stale: "The newest measurement is more than " + F.AGING_DAYS + " days old.",
-    unknown: "The measurement age is unknown."
-  };
-  var ASCII = [
-    "          .",
-    "      .   :   .",
-    "    . : . + . : .",
-    "  . : + * o * + : .",
-    "    . : . + . : .",
-    "      .   :   .",
-    "          ."
-  ].join("\n");
 
-  if (!D || !F || !Dir || !Chart) {
+  if (!D || !F || !Dir || !Chart || !M) {
     app.appendChild(el("p", { class: "notice" }, "The page data could not be loaded. Reload the page to try again."));
     return;
   }
@@ -67,15 +51,8 @@
     var external = /^https:\/\//.test(href);
     return el("a", external ? { href: href, rel: "noopener noreferrer" } : { href: href }, text);
   }
-  function pct(m) { return (100 * m.numerator / m.denominator).toFixed(1) + "%"; }
   function utc(value) { return value.replace("T", " ").replace("Z", " UTC"); }
-  function dateText(o) { return o.precision === "day" ? o.observed_at + " (date only)" : utc(o.observed_at); }
-  function fmt(v) { return v === null || v === undefined ? "not stated" : typeof v === "object" ? JSON.stringify(v) : String(v); }
   function liveAge(value) { return el("span", { "data-age": value, class: "live" }, F.describeAge(value, Date.now())); }
-  function liveStatus(value) {
-    var st = F.measurementStatus(value, Date.now());
-    return el("span", { class: "badge", "data-status-of": value, "data-status": st.key }, st.label);
-  }
   // "22 Sep 2026" (day precision) or "Sep 2026" (month precision), from the cited date only.
   function dayText(date) {
     var parts = String(date).slice(0, 10).split("-");
@@ -85,16 +62,10 @@
   function releaseText(release) {
     return dayText(release.date);   // "YYYY-MM-DD" or "YYYY-MM", as validated
   }
-  function settingsText(settings) {
-    var keys = Object.keys(settings || {});
-    return keys.length ? keys.map(function (k) { return k.replace("_", " ") + " " + settings[k]; }).join(", ") : "default settings";
-  }
 
   // ------------------------------------------------------------------ data
   var routeById = {};
   D.routes.forEach(function (r) { routeById[r.id] = r; });
-  var sourceById = {};
-  D.sources.forEach(function (x) { sourceById[x.id] = x; });
   var entries = D.catalog.map(function (e) {
     var copy = {};
     Object.keys(e).forEach(function (k) { copy[k] = e[k]; });
@@ -103,31 +74,47 @@
   });
   var entryById = {};
   entries.forEach(function (e) { entryById[e.id] = e; });
-  var makers = Dir.distinct(entries, "maker");
-  var measured = entries.filter(function (e) { return e.routes.length; });
-  // Baseline's own tests (T12): admitted daily results and one-off setup tests, kept apart.
-  // No entry record means "Not tested by Baseline".
+  // Baseline's own tests (T12): admitted daily, quick-check and reference results and one-off setup tests.
   var TESTS = D.baseline_tests || { runs: 0, calibration_runs: 0, entries: {}, methods: [] };
   var METHODS = TESTS.methods || [];
   var modelGroups = Dir.modelGroups(entries, TESTS);
   var groupByEntry = {};
   modelGroups.forEach(function (g) { g.members.forEach(function (e) { groupByEntry[e.id] = g; }); });
-  function displayEntry(e) {
-    var g = groupByEntry[e.id];
-    return Object.assign({}, g.preferred, { name: g.canonical.name.replace(/ via Puter$/, ""),
-      release: g.canonical.release || g.preferred.release, model_group: g });
-  }
   function ownStatus(e) { return Dir.baselineStatus(e, TESTS, Date.now()); }
-  // Data-derived coverage (8 October 2026): the exact models with at least one published Baseline daily
-  // result in any of their daily setups, computed from the admitted results and never from an editorial
-  // list. A catalogue-only, scheduled-only, calibration-only or third-party-measured entry is not counted;
-  // each result stays on its own route and setup (review R1: a new empty setup never hides older results).
-  function latestResult(e) { return Dir.latestDailyResult(TESTS.entries[e.id]); }
-  function hasDailyResult(e) { return latestResult(e) !== null; }
-  var testedGroups = modelGroups.filter(function (g) { return g.members.some(hasDailyResult); })
-    .sort(function (a, b) { return displayEntry(a.preferred).name.localeCompare(displayEntry(b.preferred).name); });
-  var lastRuns = {};
-  D.runs.forEach(function (run) { if (!run.superseded) lastRuns[run.source_id] = run; });
+  function testsOf(e) { return TESTS.entries ? TESTS.entries[e.id] || null : null; }
+  function seriesOf(e) { var rec = testsOf(e); return (rec && rec.daily_series) || []; }
+  // Measured (9 October 2026): an entry with a scored Baseline result in one of its series (site/measured.js).
+  // A schedule, a gap, a partial or error-only run, a one-off setup test, a catalogue listing or a third-party
+  // observation is not one. Computed from the admitted results, never from an editorial list.
+  function measuredMember(e) { return M.isMeasured(testsOf(e)); }
+  // Own records of any kind (a schedule, a one-off setup test or scored results): the entry has its own page,
+  // which says exactly what was published. Only scored results put a model in the list and the focus.
+  function hasOwnRecords(e) {
+    var rec = testsOf(e);
+    return !!rec && (seriesOf(e).length > 0 || (rec.calibration || []).length > 0);
+  }
+  var seriesOwner = {};
+  // One entry per measured exact model (a model group). It opens on the route and series holding the model's
+  // preferred result: a full 40-question test before a quick check, then the newest result. A route's newer
+  // setup without a result never hides an older measured one.
+  var measuredModels = modelGroups.map(function (g) {
+    var leads = g.members.filter(measuredMember).map(function (member) {
+      var list = seriesOf(member), index = M.defaultIndex(list, "");
+      list.forEach(function (series) { seriesOwner[series.series_id] = member; });
+      return { entry: member, series: list[index], latest: M.latestScored(list[index]) };
+    });
+    if (!leads.length) return null;
+    leads.sort(function (a, b) {
+      return (M.isFull(b.series) - M.isFull(a.series)) || (b.latest.at - a.latest.at) || (a.entry.id < b.entry.id ? -1 : 1);
+    });
+    var top = leads[0];
+    return { id: g.id, group: g, entry: top.entry, series: top.series, latest: top.latest, leads: leads,
+             name: g.canonical.name.replace(/ via Puter$/, ""), maker: top.entry.maker,
+             exact_identifier: top.entry.exact_identifier, family: top.entry.family,
+             service_provider: top.entry.service_provider, access_kind: top.entry.access_kind,
+             release: g.canonical.release || top.entry.release };
+  }).filter(Boolean);
+  var makers = Dir.distinct(measuredModels, "maker");
 
   // ------------------------------------------------------------------ routing
   var state = Dir.parseState(window.location.hash);
@@ -139,7 +126,12 @@
     else window.location.hash = hash;
   }
 
+  // The comparison depends on the clock (the 48-hour rule), so the open page keeps a handle on the two places that
+  // show it: the home focus and the model page's caption (review R2). `refreshLive` replaces only what changed.
+  var live = { focus: null, caption: null };
+
   function render(focusHeading) {
+    live = { focus: null, caption: null };
     while (app.firstChild) app.removeChild(app.firstChild);
     document.querySelectorAll("nav.primary a").forEach(function (a) {
       var current = a.getAttribute("data-view") === (state.view === "model" ? "models" : state.view);
@@ -154,7 +146,7 @@
         state.view = "model"; state.id = owner.id; state.route = legacyRoute;
         window.history.replaceState(null, "", Dir.encodeState(state));
       } else {
-        app.appendChild(notFound("That link does not match a model or route in this directory."));
+        app.appendChild(notFound("That link does not match a model or route on this site."));
         return;
       }
     }
@@ -168,71 +160,60 @@
     }
   }
 
+  // Graphs are drawn at the screen's own size: crossing the phone breakpoint (a rotation) redraws the page.
+  if (window.matchMedia) {
+    var narrowQuery = window.matchMedia("(max-width: 720px)");
+    var redraw = function () { render(false); };
+    if (narrowQuery.addEventListener) narrowQuery.addEventListener("change", redraw);
+    else if (narrowQuery.addListener) narrowQuery.addListener(redraw);
+  }
+
   window.addEventListener("hashchange", function () {
     state = Dir.parseState(window.location.hash);
     render(true);
   });
 
-  // ------------------------------------------------------------------ directory
+  // ------------------------------------------------------------------ home
+  // One continuous hierarchy (9 October 2026): the question, the focus history, the measured models.
   function directoryView() {
-    var counts = { apps: entries.filter(function (e) { return e.access_kind === "consumer_app"; }).length };
     var wrap = el("section", { class: "directory", "aria-labelledby": "directory-title" });
-    append(wrap, el("div", { class: "hero" }, [
-      el("div", { class: "hero-text" }, [
-        el("h1", { id: "directory-title" }, "Follow changes in AI model performance."),
-        el("p", { class: "lede" }, TESTS.runs
-          ? "Baseline publishes results from its own repeated tests for some models; each entry shows its status. Browse models and other published results below."
-          : TESTS.calibration_runs
-            ? "Baseline has published a one-off setup test of its own; no repeated daily results are published yet. Browse models and other published results below."
-            : "Baseline's own recurring tests have not started yet. Browse models and other published results below.")
-      ]),
-      el("pre", { class: "ascii", "aria-hidden": "true" }, ASCII)
+    append(wrap, el("header", { class: "home-head" }, [
+      el("h1", { id: "directory-title" }, "What changed in our latest model tests?"),
+      el("p", { class: "lede" }, measuredModels.length
+        ? "Baseline runs its own fixed tests on a small set of exact models and publishes every result, including " +
+          "missed and incomplete runs. Only models Baseline has tested are listed here."
+        : TESTS.calibration_runs ? "Baseline has published only a one-off setup test so far. Models are listed here " +
+          "once Baseline publishes repeated test results; the setup test is on its model's page."
+        : "Baseline has no scored test result of its own to show yet. A model is listed here once Baseline has a " +
+          "scored result for it.")
     ]));
+    var focus = currentFocus();
+    var slot = el("div", { class: "focus-slot" }, focus ? focusView(focus) : null);
+    live.focus = { slot: slot, key: focusKey(focus) };
+    append(wrap, slot);
+    if (!measuredModels.length) return wrap;
 
     var search = el("input", { type: "search", id: "q", name: "q", autocomplete: "off", spellcheck: "false",
-                               placeholder: "Search models or providers", value: state.q });
+                               placeholder: "Search tested models or providers", value: state.q });
     search.value = state.q;
-    var controls = el("form", { class: "controls", role: "search", "aria-label": "Find models" }, [
+    var controls = el("form", { class: "controls measured-controls", role: "search", "aria-label": "Find tested models" }, [
       el("div", { class: "search" }, [el("label", { for: "q" }, "Search"), search]),
-      el("div", { class: "filters primary-filters" }, [
-        select("provider", "Provider", [["", "All providers"]].concat(makers.map(function (m) { return [m, m]; }))),
-        select("access", "App or API", [["", "Apps and APIs"]].concat(Object.keys(Dir.ACCESS_LABELS).filter(function (k) {
-          return entries.some(function (e) { return e.access_kind === k; });
-        }).map(function (k) { return [k, Dir.ACCESS_LABELS[k]]; })))
-      ]),
-      filterPanel([
-        select("sort", "Sort", [["release", "Newest release"], ["name", "Name (A–Z)"], ["provider", "Provider"],
-                                ["date", "Latest published test"]]),
-        select("evidence", "Other published tests", [["", "Any"], ["measured", "Available"], ["none", "None recorded"]]),
-        select("availability", "Availability", [["", "Any availability"], ["available", "Available"],
-                                                ["retired", "Retired"], ["unknown", "Unknown"]])
-      ])
+      select("provider", "Provider", [["", "All providers"]].concat(makers.map(function (m) { return [m, m]; }))),
+      select("sort", "Sort", [["release", "Newest release"], ["name", "Name (A–Z)"], ["provider", "Provider"],
+                              ["date", "Latest result"]])
     ]);
-    var highlights = highlightsView();
-    if (highlights && !pristine()) highlights.setAttribute("hidden", "");
     controls.addEventListener("submit", function (ev) { ev.preventDefault(); });
     search.addEventListener("input", function () { update({ q: search.value }); });
     var status = el("p", { class: "result-count", role: "status", "aria-live": "polite" });
     var results = el("div", { class: "results" });
-    append(wrap, [controls, highlights, status, results]);   // search first, then Featured / New releases
     var sortNote = el("span", { class: "sort-note" }, SORT_NOTES[state.sort] || SORT_NOTES.release);
-    append(wrap, el("p", { class: "fine" }, [
-      sortNote,
-      " Release dates are cited from each maker's announcements, release notes or model pages. ",
-      "Apps (" + counts.apps + ") are listed separately from APIs; API results are never shown as app results. ",
-      "Other published tests are limited to the sources listed under ", link("#sources", "Sources"), ". This is not an exhaustive list."
-    ]));
+    append(wrap, el("section", { class: "measured", "aria-labelledby": "measured-title" }, [
+      el("h2", { id: "measured-title" }, "Models tested by Baseline"), controls, status, results,
+      el("p", { class: "fine" }, [sortNote, " Each entry is one exact model through one named service; results " +
+        "through different services are never combined. Release dates are cited from each maker's announcements, " +
+        "release notes or model pages. ", link("#how-we-test", "How we test")])]));
     drawResults(results, status);
 
-    // Secondary filters: one labelled disclosure, open on wide screens or when one is set
-    // (small screens keep results near the top).
-    function filterPanel(fields) {
-      var active = ["evidence", "availability"].some(function (k) { return state[k]; }) || state.sort !== Dir.DEFAULT_SORT;
-      var wide = window.matchMedia ? window.matchMedia("(min-width: 721px)").matches : true;
-      var panel = el("details", { class: "filter-panel" }, [el("summary", {}, "More filters and sorting"), el("div", { class: "filters" }, fields)]);
-      if (active || wide) panel.setAttribute("open", "");
-      return panel;
-    }
     function select(key, label, options) {
       var id = "f-" + key;
       var node = el("select", { id: id, name: key });
@@ -247,180 +228,129 @@
     }
     function update(patch) {
       Object.keys(patch).forEach(function (k) { state[k] = patch[k]; });
+      state.access = ""; state.evidence = ""; state.availability = "";   // retired filters never linger in links
       go(state, true);
       sortNote.textContent = SORT_NOTES[state.sort] || SORT_NOTES.release;
       drawResults(results, status);
-      if (highlights) {
-        if (pristine()) highlights.removeAttribute("hidden"); else highlights.setAttribute("hidden", "");
-      }
     }
     return wrap;
   }
 
-  // Featured and New releases (T14) appear only on the unfiltered directory; any search,
-  // filter or other sort shows the full matching list alone.
-  function pristine() {
-    return !state.q && !state.provider && !state.access && !state.evidence && !state.availability &&
-      (!state.sort || state.sort === Dir.DEFAULT_SORT);
-  }
-
   function entryLink(e, setup) {
-    var g = e.model_group || groupByEntry[e.id];
+    var g = groupByEntry[e.id];
     return Dir.encodeState({ view: "model", id: g.id, service: e.id, setup: setup || "", route: "", q: "", provider: "",
                              access: "", evidence: "", availability: "", sort: Dir.DEFAULT_SORT });
-  }
-
-  function highlightCard(e) {
-    e = displayEntry(e);
-    var ev = Dir.evidenceKind(e, TESTS, Date.now());
-    return el("li", { class: "feature-card" }, [
-      link(entryLink(e), e.name),
-      el("span", { class: "sub" }, e.maker + " · " + accessText(e) + (Dir.releaseDate(e) ? " · released " + releaseText(e.release) : "")),
-      el("span", { class: "tag", "data-evidence": ev.key }, ev.label)
-    ]);
-  }
-
-  function highlightsView() {
-    var featured = D.featured;
-    var grouped = Dir.groupedEntries(entries, TESTS, Dir.emptyState());
-    var newest = Dir.newReleases(grouped, 8);
-    var featuredSeen = new Set();
-    var parts = [testedView(featuredSeen)];
-    if (featured) {
-      parts.push(el("section", { class: "featured", "aria-labelledby": "featured-title" }, [
-        el("h2", { id: "featured-title" }, "Featured"),
-        el("p", { class: "sub" }, featured.explanation),
-        el("ul", { class: "feature-groups" }, featured.groups.map(function (g) {
-          return el("li", { class: "feature-group" }, [
-            el("h3", {}, g.family),
-            el("p", { class: "sub" }, g.reason),
-            el("ul", { class: "feature-list" }, g.entries.map(function (id) { return entryById[id]; })
-              .filter(Boolean).filter(function (e) {
-                var id = groupByEntry[e.id].id;
-                if (featuredSeen.has(id)) return false;
-                featuredSeen.add(id); return true;
-              }).map(highlightCard))
-          ]);
-        }))
-      ]));
-    }
-    if (newest.length) {
-      parts.push(el("section", { class: "new-releases", "aria-labelledby": "new-releases-title" }, [
-        el("h2", { id: "new-releases-title" }, "New releases"),
-        el("p", { class: "sub" }, "The newest cited release dates across all makers, newest first. A release date is " +
-          "when the maker released the model, not when anyone tested it."),
-        el("ol", { class: "feature-list" }, newest.map(highlightCard))
-      ]));
-    }
-    parts.push(el("h2", { class: "all-models" }, "All models"));
-    return el("div", { class: "highlights" }, parts);
-  }
-
-  // One measured model: the route and setup holding its newest published result, named, labelled and
-  // linked from that same result (review R1), never from a newer setup without results.
-  function measuredCard(g) {
-    var best = null;
-    g.members.forEach(function (member) {
-      var hit = latestResult(member);
-      if (hit && (!best || hit.date > best.date)) best = { entry: member, series: hit.series, date: hit.date };
-    });
-    var e = Object.assign({}, best.entry, { name: g.canonical.name.replace(/ via Puter$/, ""),
-      release: g.canonical.release || best.entry.release, model_group: g });
-    var setups = TESTS.entries[best.entry.id].daily_series || [];
-    var newer = setups.length && setups[0].series_id !== best.series.series_id;
-    return el("li", { class: "feature-card" }, [
-      link(entryLink(e, best.series.series_id), e.name),
-      el("span", { class: "sub" }, e.maker + " · " + accessText(e) + (Dir.releaseDate(e) ? " · released " + releaseText(e.release) : "")),
-      el("span", { class: "sub test-name" }, testName(best.series) + " · scheduled " +
-        dayText(best.series.schedule.start_date) + " to " + dayText(best.series.schedule.end_date) +
-        " · latest result " + dayText(best.date) +
-        (newer ? " · a newer test setup has no result yet" : "")),
-      el("span", { class: "tag", "data-evidence": "ours" }, Dir.EVIDENCE_KINDS.ours)
-    ]);
-  }
-
-  // The measured models, each with the test of its newest result; computed, never curated.
-  function testedView(seen) {
-    var cards = testedGroups.map(function (g) {
-      seen.add(g.id);
-      return measuredCard(g);
-    });
-    var n = testedGroups.length;
-    return el("section", { class: "tested", "aria-labelledby": "tested-title" }, [
-      el("h2", { id: "tested-title" }, "Measured by Baseline"),
-      el("p", { class: "sub" }, n
-        ? n + (n === 1 ? " exact model has" : " exact models have") + " published Baseline daily results. This list " +
-          "is computed from those results. A result belongs only to the route it was measured on; every other " +
-          "entry is a catalogue listing until Baseline publishes a test of it."
-        : "No model has published Baseline daily results yet. Every entry is a catalogue listing until Baseline " +
-          "publishes a test of it."),
-      n ? el("ul", { class: "feature-list" }, cards) : null
-    ]);
   }
 
   function accessText(e) {
     var label = Dir.ACCESS_LABELS[e.access_kind] || e.access_kind;
     return e.access_kind === "intermediary" ? label + " (" + e.service_provider + ")" : label;
   }
+  // "the Anthropic API", "Puter (a third-party host)", "this app": the service a result or its absence is about.
+  function serviceText(e) {
+    return e.access_kind === "direct_api" ? "the " + e.service_provider + " API"
+      : e.access_kind === "intermediary" ? e.service_provider + " (a third-party host)"
+      : e.access_kind === "consumer_app" ? "this app" : accessText(e);
+  }
+  // The concise route and identity qualifier shown wherever a result is: which service, which requested model,
+  // and, for an intermediary, whether the returned model was confirmed. Graphs never merge services.
+  function routeQualifier(e, series) {
+    var intermediary = isPuter(series) || isReference(series);
+    return e.maker + " · " + accessText(e) + " · requested model " + e.exact_identifier +
+      (intermediary && !identityConfirmed(series) ? " · model identity not confirmed" : "");
+  }
+
+  // The focus: a real history, named, sized and dated, with a short descriptive caption (site/measured.js).
+  function currentFocus() {
+    return M.highlight(measuredModels.map(function (m) {
+      return { id: m.id, measured: m, series: [].concat.apply([], m.leads.map(function (l) { return seriesOf(l.entry); })) };
+    }), Date.now());
+  }
+  // What the focus says: its kind, series, result and compared result. Equal keys mean nothing visible changed.
+  function focusKey(h) {
+    return h ? [h.kind, h.series.series_id, h.latest.date, h.comparison ? h.comparison.previous.date : ""].join("|") : "";
+  }
+  function focusView(h) {
+    var m = h.model.measured, owner = seriesOwner[h.series.series_id];
+    var href = entryLink(owner, h.series.series_id);
+    var kicker = el("p", { class: "focus-kicker" }, M.HEADINGS[h.kind]);
+    var caption = el("p", { class: "focus-caption" }, M.caption(h));
+    var section = el("section", { class: "focus", "aria-labelledby": "focus-title" }, [
+      kicker,
+      el("h2", { id: "focus-title" }, link(href, m.name)),
+      el("p", { class: "focus-meta" }, routeQualifier(owner, h.series) + " · " + testName(h.series) +
+        " · latest result " + dayText(h.latest.date)),
+      dailyChart(h.series, "focus"),
+      caption,
+      el("p", { class: "focus-link" }, link(href, "Full history and test details for " + m.name))
+    ]);
+    section.liveParts = { series: h.series.series_id, latest: h.latest.date, kicker: kicker, caption: caption };
+    return section;
+  }
 
   function drawResults(results, status) {
     while (results.firstChild) results.removeChild(results.firstChild);
-    var list = Dir.groupedEntries(entries, TESTS, state, Date.now());
-    status.textContent = list.length === 1 ? "1 model or app" : list.length + " models and apps";
+    var list = Dir.filterEntries(measuredModels, { q: state.q, provider: state.provider,
+                                                   sort: state.sort === "date" ? "name" : state.sort }, Date.now());
+    if (state.sort === "date") list.sort(function (a, b) { return b.latest.at - a.latest.at; });   // stable: by name
+    var n = measuredModels.length;
+    status.textContent = list.length === n ? n + (n === 1 ? " tested model" : " tested models")
+      : list.length + " of " + n + " tested models";
     if (!list.length) {
       var clear = el("button", { type: "button", class: "button" }, "Clear search and filters");
       clear.addEventListener("click", function () {
-        var fresh = Dir.emptyState();
-        go(fresh, true);
+        go(Dir.emptyState(), true);
         render(false);
         var q = document.getElementById("q");
         if (q) q.focus();
       });
-      append(results, el("div", { class: "empty" }, [el("p", {}, "No entries match your search."), clear]));
+      append(results, el("div", { class: "empty" }, [el("p", {}, "No tested model matches your search."), clear]));
       return;
     }
-    var head = el("div", { class: "row head", "aria-hidden": "true" },
-                  ["Model", "Released", "Baseline tests", "Other published tests"].map(function (h) { return el("span", {}, h); }));
-    var ul = el("ul", { class: "rows", "aria-label": "Models" });
-    list.forEach(function (e) {
-      var cov = Dir.coverage(e, Date.now());
-      var st = ownStatus(e);
-      var target = Dir.encodeState({ view: "model", id: e.model_group.id, service: e.id, route: "", q: state.q, provider: state.provider,
-                                     access: state.access, evidence: state.evidence,
-                                     availability: state.availability, sort: state.sort });
-      ul.appendChild(el("li", { class: "row" }, [
-        el("span", { class: "cell name" }, [link(target, e.name),
-          e.exact_identifier && e.exact_identifier !== e.name ? el("code", { class: "sub" }, e.exact_identifier) : null,
-          el("span", { class: "sub" }, e.maker + " · " + accessText(e) +
-            (e.model_group.members.length > 1 ? " · " + e.model_group.members.length + " access routes" : "")),
-          e.identity_kind === "exact" ? null : el("span", { class: "sub" }, e.identity_kind === "automatic"
-            ? "model chosen by the app" : "family entry, exact version not verified")]),
-        el("span", { class: "cell", "data-label": "Released" }, Dir.releaseDate(e)
-          ? releaseText(e.release) : el("span", { class: "muted" }, "No verified date")),
-        el("span", { class: "cell", "data-label": "Baseline tests" }, [
-          el("span", { class: "status", "data-status": st.key }, st.label),
-          st.key === "calibration" ? el("span", { class: "sub" }, setupScore(st.calibration))
-            : st.latest ? el("span", { class: "sub" }, "latest daily test " + dayText(st.latest)) : null]),
-        el("span", { class: "cell", "data-label": "Other published tests" }, cov.kind === "none"
-          ? el("span", { class: "muted" }, "None recorded")
-          : [el("span", { class: "tag", "data-kind": cov.kind }, "Other published tests available"),
-             el("span", { class: "sub" }, "latest test " + dayText(cov.newest))])
-      ]));
+    append(results, el("ul", { class: "measured-rows", "aria-label": "Models tested by Baseline" }, list.map(measuredRow)));
+  }
+
+  // One compact entry per measured exact model: its mini history, latest correct/total and test date.
+  function measuredRow(m) {
+    var setups = seriesOf(m.entry);
+    var newer = setups.length && setups[0].series_id !== m.series.series_id && !M.latestScored(setups[0]);
+    var others = m.leads.slice(1).map(function (l) { return l.entry.service_provider; });
+    return el("li", { class: "measured-row" }, [
+      el("div", { class: "mr-name" }, [link(entryLink(m.entry, m.series.series_id), m.name),
+        el("span", { class: "sub" }, routeQualifier(m.entry, m.series)),
+        el("span", { class: "sub test-name" }, testName(m.series) + (newer ? " · a newer test setup has no result yet" : "") +
+          (others.length ? " · also tested through " + others.join(", ") + " (kept separate)" : ""))]),
+      sparkline(m.series, m.name),
+      el("p", { class: "mr-latest" }, [el("strong", {}, m.latest.correct + " of " + m.latest.total),
+        el("span", { class: "sub" }, "latest result " + dayText(m.latest.date))])
+    ]);
+  }
+
+  function sparkline(series, name) {
+    var sp = M.sparkline(series, 132, 40);
+    var svg = s("svg", { class: "spark", viewBox: "0 0 " + sp.width + " " + sp.height, width: sp.width, height: sp.height,
+      role: "img", "aria-label": "History of " + name + ", " + testName(series) + ": " + sp.points.map(function (p) {
+        return p.correct + " of " + p.total + " on " + dayText(p.date); }).join("; ") +
+        (sp.points.length === 1 ? " (one result)" : "") });
+    svg.appendChild(s("line", { x1: 0, x2: sp.width, y1: sp.height - 4, y2: sp.height - 4, class: "spark-floor" }));
+    sp.segments.forEach(function (seg) {
+      svg.appendChild(s("polyline", { points: seg.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") }));
     });
-    append(results, [head, ul]);
+    sp.points.forEach(function (p) { svg.appendChild(s("circle", { cx: p.x, cy: p.y, r: 2.5 })); });
+    return svg;
   }
 
   // ------------------------------------------------------------------ detail
   function backLink() {
-    var back = { view: "models", id: "", route: "", q: state.q, provider: state.provider, access: state.access,
-                 evidence: state.evidence, availability: state.availability, sort: state.sort };
-    return el("p", { class: "back" }, link(Dir.encodeState(back), "← All models"));
+    var back = { view: "models", id: "", route: "", q: state.q, provider: state.provider, access: "", evidence: "",
+                 availability: "", sort: state.sort };
+    return el("p", { class: "back" }, link(Dir.encodeState(back), "← Tested models"));
   }
 
   function notFound(message) {
     return el("section", { class: "notfound" }, [
       el("h1", {}, "Not found"), el("p", {}, message),
-      el("p", {}, link("#models", "Go to the model directory"))
+      el("p", {}, link("#models", "See the models Baseline has tested"))
     ]);
   }
 
@@ -507,13 +437,16 @@
     ]);
   }
   // One daily series as an SVG graph (T13). Layout comes from site/results-chart.js; this only draws it.
-  var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·" };
+  var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·", failed: "!" };
+  // The graph is the page's main visual: about 320px tall on a wide screen and 240px on a phone, drawn at that
+  // size so labels stay readable (no sideways scrolling). The 0 to total scale is never cropped.
   function dailyChart(series) {
-    var lay = Chart.layout(series, { width: 720, height: 250 });
+    var narrow = window.matchMedia ? window.matchMedia("(max-width: 720px)").matches : false;
+    var lay = Chart.layout(series, narrow ? { width: 320, height: 240, trim: true } : { width: 960, height: 320, trim: true });
     var puter = isPuter(series), reference = isReference(series);
     var detail = el("p", { class: "point-detail", "aria-live": "polite" },
       lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
-    var svg = s("svg", { class: "chart daily-chart", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
+    var svg = s("svg", { class: "chart daily-chart fit", viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
       "aria-label": reference ? series.route.label + ", reference evaluations: correct answers out of " + lay.max +
         " by finish date. " + lay.points.length + (lay.points.length === 1 ? " complete evaluation" : " complete evaluations") +
         " and " + lay.marks.length + " without a score." : (puter ? series.route.label + ", small sample of " + lay.max +
@@ -573,6 +506,7 @@
       el("li", {}, puter ? "~ a partial or ungradeable run, or a model mismatch: shown with its counts, not as a score."
         : "~ an incomplete run: shown with its attempted count, not as a score."),
       el("li", {}, "? run evidence unavailable: no score shown."),
+      el("li", {}, "! a run with no gradeable answer, for example every request failed: a failure, not a score of zero."),
       el("li", {}, "o a run still open or unresolved when last checked: no score yet, not counted as missed."),
       el("li", {}, "· a later date: not yet tested or not yet published.")
     ]);
@@ -614,38 +548,42 @@
       " questions · " + (service ? service + " · " : "") + "scheduled " + dayText(d.schedule.start_date) + " to " +
       dayText(d.schedule.end_date) + ", daily " + windowText(d.schedule) + (config ? " · configuration " + config : "");
   }
+  // The model page's graph area (9 October 2026): the selected test's name, route qualifier and graph come first;
+  // settings, provenance, tables and method text follow under disclosure. One setup at a time; setups are never
+  // stacked, merged or joined. An explicit ?setup= link is respected; otherwise the page opens on a full test with
+  // a result, then a quick check (site/measured.js), so a new setup without results never hides older ones.
   function dailyBlock(rec, e) {
-    var list = rec.daily_series || (rec.daily ? [rec.daily] : []);
-    var parts = [el("h3", {}, "Daily test scores")];
-    if (!list.length) {
-      return parts.concat(el("div", { class: "chart-empty" }, [
-        el("p", {}, "Waiting for daily results."),
-        el("p", {}, "No daily test results have been published for this model yet.")]));
-    }
-    var content = el("div", { class: "daily-selected" });
+    var list = rec.daily_series || [];
+    var graph = el("div", { class: "daily-selected" });
+    var more = el("div", { class: "daily-details" });
     function showSetup(index) {
       if (!Number.isInteger(index) || index < 0 || index >= list.length) return;
       var d = list[index];
-      while (content.firstChild) content.removeChild(content.firstChild);
-      append(content, el("p", { class: "test-name" }, testName(d)));
-      if (isPuter(d) || isReference(d)) append(content, el("p", { class: "sub route-disclosure" },
-        "Tested through " + d.route.service_provider + " · " +
-        (identityConfirmed(d) ? "model identity reported as requested" : "model identity unverified") +
-        " · " + (isReference(d) ? "all " + d.planned_items + " questions, sent in batches"
-          : d.planned_items + "-question sample")));
-      append(content, dailyChart(d));
+      while (graph.firstChild) graph.removeChild(graph.firstChild);
+      while (more.firstChild) more.removeChild(more.firstChild);
+      append(graph, [el("h2", { class: "test-name", id: "our-tests" }, testName(d)),
+        el("p", { class: "sub route-disclosure" }, routeQualifier(e, d) + (isReference(d)
+          ? " · all " + d.planned_items + " questions, sent in batches" : isPuter(d) ? " · " + d.planned_items + "-question sample" : "")),
+        dailyChart(d)]);
+      var caption = seriesCaption(d);
+      if (caption) {
+        append(graph, caption);
+        live.caption = { node: caption, series: d, key: captionState(d).key };
+      } else live.caption = null;
       var details = el("details", { class: "evidence test-details" }, [
-        el("summary", {}, "Test details"),
-        el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e))
-      ]);
+        el("summary", {}, "Test details, results table and schedule"),
+        el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e))]);
       if (isPuter(d)) append(details, puterLabels(d));
       if (isReference(d)) append(details, referenceLabels(d));
-      append(content, [details, checkedNote(d), isReference(d) ? referenceSection(d) : dailySection(d)]);
-      if (isPuter(d)) append(content, el("p", {},
+      append(details, [checkedNote(d), isReference(d) ? referenceSection(d) : dailySection(d)]);
+      if (isPuter(d)) append(details, el("p", {},
         "Four questions are a small sample and are not comparable with the 40-question tests."));
+      append(details, el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an " +
+        "overall change in model quality. Not enough repeated tests to judge a change."));
+      append(more, details);
     }
-    // A link may name one setup (?setup=<series id>, from a measured card); otherwise the latest is shown.
-    var initial = Math.max(0, list.map(function (d) { return d.series_id; }).indexOf(state.setup));
+    var initial = M.defaultIndex(list, state.setup);
+    var parts = [graph];
     if (list.length > 1) {
       var selector = el("select", { id: "daily-setup" }, list.map(function (d, i) {
         return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(d, e));
@@ -658,10 +596,54 @@
         selector]));
     }
     showSetup(initial);
-    parts.push(content);
-    parts.push(el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an overall " +
-      "change in model quality. Not enough repeated tests to judge a change."));
+    parts.push(more);
     return parts;
+  }
+
+  // What this series shows now, in the same descriptive terms as the home page; never a verdict.
+  var SERIES_HEADINGS = { movement: "Latest comparable movement", latest: "Latest result", first: "First measurement",
+                          quick: "Latest quick check" };
+  function captionState(d) {
+    var latest = M.latestScored(d);
+    if (!latest) return null;
+    var c = M.comparison(d, Date.now());
+    var kind = !M.isFull(d) ? "quick" : c.eligible && c.change !== 0 ? "movement"
+      : M.scoredRows(d).length === 1 ? "first" : "latest";
+    return { kind: kind, latest: latest, comparison: c, later: M.laterAttempt(d),
+             key: [kind, latest.date, c.previous ? c.previous.date : ""].join("|") };
+  }
+  function seriesCaption(d) {
+    var h = captionState(d);
+    if (!h) return null;
+    return el("p", { class: "chart-caption" }, [el("strong", {}, SERIES_HEADINGS[h.kind] + ": "), M.caption(h)]);
+  }
+
+  // The minute timer and a return to the tab call this. Within the 48-hour window nothing is touched, so search
+  // text, filters, the selected setup, open disclosures, keyboard focus and a selected graph point stay as they
+  // are. At the boundary only the focus text (or, for another series, the focus itself) and the caption change.
+  function refreshLive() {
+    if (live.focus) {
+      var h = currentFocus(), key = focusKey(h);
+      if (key !== live.focus.key) {
+        var slot = live.focus.slot, old = slot.firstChild;
+        if (h && old && old.liveParts && old.liveParts.series === h.series.series_id && old.liveParts.latest === h.latest.date) {
+          old.liveParts.kicker.textContent = M.HEADINGS[h.kind];
+          old.liveParts.caption.textContent = M.caption(h);
+        } else {
+          while (slot.firstChild) slot.removeChild(slot.firstChild);
+          if (h) slot.appendChild(focusView(h));
+        }
+        live.focus.key = key;
+      }
+    }
+    if (live.caption && live.caption.node.parentNode) {
+      var state = captionState(live.caption.series);
+      if (state && state.key !== live.caption.key) {
+        var fresh = seriesCaption(live.caption.series);
+        live.caption.node.parentNode.replaceChild(fresh, live.caption.node);
+        live.caption = { node: fresh, series: live.caption.series, key: state.key };
+      }
+    }
   }
 
   // ------------------------------------------------------------------ Puter four-question series
@@ -815,255 +797,95 @@
     });
     return parts;
   }
-  function ownTestsSection(e, st) {
-    var rec = TESTS.entries ? TESTS.entries[e.id] : null;
-    var body;
-    if (!rec) {
-      body = el("p", {}, ["No Baseline test history yet. ", link("#how-we-test", "How we test")]);
-    } else if (rec.daily === undefined && rec.calibration === undefined) {
-      body = el("p", {}, st.runs + (st.runs === 1 ? " Baseline run" : " Baseline runs") + (st.latest ? "; latest test " + dayText(st.latest) + "." : "."));
-    } else {
-      body = [
-        dailyBlock(rec, e),
-        setupSection(rec.calibration || []),
-        el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
-          "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
-          "approved. Prompts and raw responses stay private, so individual answers cannot be checked from this page. ",
-          link("#how-we-test", "How we test")])
-      ];
-    }
-    return el("section", { class: "part", "aria-labelledby": "our-tests" }, [el("h2", { id: "our-tests" }, "Our tests"), body]);
-  }
-
   function modelView() {
     var e = entryById[state.id];
-    if (!e) return notFound("There is no entry with the id “" + state.id + "”. It may have been renamed.");
+    if (!e) return notFound("There is no model with the id “" + state.id + "” on this site. It may have been renamed.");
     var group = groupByEntry[e.id];
-    // Canonical model links open the measured route. Old route-specific links still work.
+    // An explicit service or old route link names one member; otherwise the entry itself. Never substituted.
     var chosen = group.members.filter(function (member) { return member.id === state.service; })[0];
     if (chosen) e = chosen;
     else if (state.route) {
       e = group.members.filter(function (member) { return member.route_ids.indexOf(state.route) !== -1; })[0] || e;
-    } else if (e.id === group.id) e = group.preferred;
-    var routes = e.routes.slice().sort(function (a, b) { return settingsText(a.settings) < settingsText(b.settings) ? -1 : 1; });
-    var route = routes.filter(function (r) { return r.id === state.route; })[0] || routes[0];
+    }
+    return hasOwnRecords(e) ? measuredView(e, group) : unmeasuredView(e, group);
+  }
+
+  function measuredView(e, group) {
+    var rec = testsOf(e);
     var st = ownStatus(e);
     var wrap = el("article", { class: "detail", "aria-labelledby": "model-title" }, backLink());
     append(wrap, el("header", { class: "identity" }, [
       el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
-      el("h1", { id: "model-title" }, group.canonical.name.replace(/ via Puter$/, "")),
-      e.exact_identifier && e.exact_identifier !== e.name ? el("p", { class: "ident" }, el("code", {}, e.exact_identifier)) : null,
-      el("p", { class: "released" }, e.release
-        ? ["Released " + releaseText(e.release) + " · ", link(e.release.source.url, "release source")]
-        : "No verified release date recorded"),
-      statusBlock(st)
-    ]));
-
-    if (group.members.length > 1) {
-      var access = el("select", { id: "model-service" }, group.members.map(function (member) {
+      el("h1", { id: "model-title" }, group.canonical.name.replace(/ via Puter$/, ""))]));
+    var scored = measuredMember(e);
+    append(wrap, el("section", { class: "own-results", "aria-labelledby": "our-tests" }, seriesOf(e).length
+      ? dailyBlock(rec, e)
+      : [el("h2", { id: "our-tests" }, "No repeated test results yet"),
+         el("p", {}, "Waiting for daily results. No daily test results have been published for this model yet.")]));
+    var routes = group.members.filter(measuredMember);
+    if (routes.length > 1) {
+      var access = el("select", { id: "model-service" }, routes.map(function (member) {
         return el("option", { value: member.id }, member.service_provider + " · " +
-          (Dir.ACCESS_LABELS[member.access_kind] || member.access_kind) + " · " + Dir.evidenceKind(member, TESTS).label);
+          (Dir.ACCESS_LABELS[member.access_kind] || member.access_kind));
       }));
       access.value = e.id;
       access.addEventListener("change", function () {
-        go(Object.assign({}, state, { id: group.id, service: access.value, route: "" }), false);
+        go(Object.assign({}, state, { id: group.id, service: access.value, route: "", setup: "" }), false);
         render(false);
       });
       append(wrap, el("div", { class: "setup-choice" }, [el("label", { for: "model-service" }, "Access route"), access,
         el("p", { class: "sub" }, "Showing results for this route only. Other services may behave differently; their results are kept separate.")]));
     }
-    append(wrap, ownTestsSection(e, st));
-
-    var other = el("section", { class: "part", "aria-labelledby": "other-tests" }, el("h2", { id: "other-tests" }, "Other published tests"));
-    if (!route) {
-      append(other, el("p", {}, e.access_kind === "consumer_app"
-        ? "No other published results are recorded here for this app. Results for the maker's API models are separate entries; API results are never shown as app results."
-        : "No other published results are recorded here. That is missing evidence, not a score of zero and not evidence of stability."));
-    } else {
-      var cov = Dir.coverage(e, Date.now());
-      var src = sourceById[route.source_ids[0]] || {};
-      var count = e.routes.reduce(function (n, r) { return n + r.observations.length; }, 0);
-      append(other, el("p", { class: "summary" }, [
-        el("strong", {}, SOURCE_LABELS[src.id] || (src.author || "Third-party") + " results"),
-        " · latest test " + dayText(cov.newest) + " · " + count + (count === 1 ? " run" : " runs") + ", not run by Baseline"]));
-      var more = el("details", { class: "evidence" }, el("summary", {}, "View dated results and sources"));
-      if (state.route) more.setAttribute("open", "");
-      if (routes.length > 1) {
-        var nav = el("nav", { class: "routes", "aria-label": "Setup" }, el("span", { class: "label" }, "Setup:"));
-        routes.forEach(function (r) {
-          var target = Dir.encodeState({ view: "model", id: e.id, route: r.id, q: state.q, provider: state.provider,
-                                         access: state.access, evidence: state.evidence, availability: state.availability, sort: state.sort });
-          var a = link(target, settingsText(r.settings));
-          if (r === route) a.setAttribute("aria-current", "true");
-          nav.appendChild(a);
-        });
-        append(more, nav);
-      }
-      append(more, history(route));
-      append(other, more);
+    if ((rec.calibration || []).length) {             // open when it is the only scored result to read
+      var setup = el("details", { class: "evidence" }, [el("summary", {}, "One-off setup test")].concat(setupSection(rec.calibration)));
+      if (!scored) setup.setAttribute("open", "");
+      append(wrap, setup);
     }
-    append(wrap, other);
-
-    append(wrap, el("section", { class: "part", "aria-labelledby": "model-details" }, [
-      el("h2", { id: "model-details" }, "Model details"),
-      el("dl", { class: "facts" }, [
-        el("dt", {}, "Identity"), el("dd", {}, e.identity_kind === "exact" ? el("code", {}, e.exact_identifier)
-          : e.identity_kind === "automatic" ? "Chosen by the app; not an exact model version" : "Family entry; exact version not verified"),
-        el("dt", {}, "Service"), el("dd", {}, e.service_provider + (e.access_kind === "intermediary" ? " (made by " + e.maker + ")" : "")),
-        el("dt", {}, "Availability"), el("dd", {}, e.availability === "unknown" ? "Unknown" : e.availability === "retired" ? "Retired" : "Available"),
-        el("dt", {}, "Release date"), el("dd", {}, e.release ? [releaseText(e.release) + " — ", link(e.release.source.url, e.release.source.claim),
-          el("span", { class: "sub" }, " (checked " + e.release.source.checked_at.slice(0, 10) + ")")]
-          : "No verified release date recorded."),
-        el("dt", {}, "Listed from"), el("dd", {}, e.sources.map(function (src, i) {
-          return [i ? " · " : "", link(src.url, src.claim), el("span", { class: "sub" }, " (checked " + src.checked_at.slice(0, 10) + ")")];
-        }))
-      ]),
-      e.notes ? el("p", { class: "note" }, e.notes) : null
-    ]));
+    append(wrap, el("details", { class: "evidence" }, [el("summary", {}, "Status and how these results were checked"),
+      statusBlock(st),
+      el("p", { class: "note" }, ["These counts come from Baseline's private run records. Before publication they were " +
+        "checked against stored file hashes, either by a person or automatically under a publication policy a person " +
+        "approved. Prompts and raw responses stay private, so individual answers cannot be checked from this page. ",
+        link("#how-we-test", "How we test")])]));
+    append(wrap, el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)]));
     return wrap;
   }
 
-  function history(r) {
-    var dates = r.observations.map(function (o) { return o.observed_at; });
-    var newest = F.newest(dates);
-    var newestObs = r.observations.filter(function (o) { return o.observed_at === newest; })[0];
-    var firstRetrieved = r.observations.map(function (o) { return o.retrieved_at; }).sort()[0];
-    var src = sourceById[r.source_ids[0]] || {};
-    var run = lastRuns[r.source_ids[0]];
-    var sorted = dates.slice().sort();
-    var section = el("section", { class: "history", id: r.id, "aria-label": "History for " + r.requested_model });
-    append(section, [
-      el("div", { class: "panel" }, el("dl", { class: "fresh" }, [
-        el("div", {}, [el("dt", {}, "Newest measurement"), el("dd", {}, [
-          el("span", { class: "big" }, liveAge(newest)), dateText(newestObs), liveStatus(newest)])]),
-        el("div", {}, [el("dt", {}, "Copied by Baseline"), el("dd", {}, [
-          el("span", { class: "big" }, liveAge(firstRetrieved)), utc(firstRetrieved), el("br"),
-          el("span", { class: "sub" }, "When we saved the source, not when it was measured.")])]),
-        el("div", {}, [el("dt", {}, "Source last checked"), el("dd", {}, src.last_successful_check ? [
-          el("span", { class: "big" }, liveAge(src.last_successful_check)), utc(src.last_successful_check), el("br"),
-          el("span", { class: "sub" }, run && run.status === "failed"
-            ? "The most recent check failed; the evidence shown is unchanged."
-            : "The latest successful check of the source for new results.")] : "never checked")])
-      ])),
-      el("div", { class: "limits", role: "note" }, [
-        el("strong", {}, "Read before comparing. "),
-        "These results come from " + (src.author || "a third-party source") + ", measured through " +
-        r.service.split(",")[0] + ", not by Baseline. " + AGE_NOTE[F.measurementStatus(newest, Date.now()).key] + " " +
-        r.observations.length + (r.observations.length === 1 ? " run" : " runs") +
-        " recorded; each lettered setup is a separate configuration, so its records in the table are never joined into a trend."
-      ]),
-      // One graph per model (owner decision, 6 October 2026): third-party records are tables, not a second graph.
-      el("p", { class: "caption" }, [
-        "These third-party results use a different test and are not included in Baseline's graph. " +
-        "The dated records and sources are retained below; missing dates are not filled in. ",
-        r.observations.length + (r.observations.length === 1 ? " run on " + sorted[0] + ". " :
-          " runs between " + sorted[0] + " and " + sorted[sorted.length - 1] + ". Longest gap between runs: " +
-          F.longestGapDays(dates) + " days. "),
-        "No observations are recorded here between these runs or after the latest one. " +
-        "This covers only the evidence Baseline holds: other measurements may exist elsewhere, and the source may have runs it did not publish."
-      ]),
-      el("h2", {}, "Runs"),
-      el("p", { class: "caption", id: r.id + "-table-note" },
-        "Pass rate counts exercises passed within two tries, out of those run. “Not run” counts exercises missing from the run."),
-      el("div", { class: "table-scroll" }, table(r)),
-      el("details", {}, [el("summary", {}, "What changed between runs"), breaks(r)]),
-      el("details", {}, [el("summary", {}, "Route and setup details"), el("dl", { class: "facts" }, [
-        el("dt", {}, "Requested model"), el("dd", {}, el("code", {}, r.requested_model)),
-        el("dt", {}, "Service"), el("dd", {}, r.service),
-        el("dt", {}, "Settings"), el("dd", {}, settingsText(r.settings)),
-        el("dt", {}, "Route notes"), el("dd", {}, r.notes || "none"),
-        el("dt", {}, "Mapping decision"), el("dd", {}, link(REPO + "docs/AIDER_ROUTE_REVIEW.md", "Aider route review"))
-      ])]),
-      el("details", {}, [el("summary", {}, "Source and licence"), sourceBlock(src)])
+  // An entry without a scored Baseline result (an old catalogue, app or other-route link): an honest explanation,
+  // links to the tested models, and never another model's, service's or app's results in its place.
+  function unmeasuredView(e, group) {
+    var others = group.members.filter(function (member) { return member !== e && measuredMember(member); });
+    var name = e.access_kind === "consumer_app" ? e.name : group.canonical.name.replace(/ via Puter$/, "");
+    return el("article", { class: "detail", "aria-labelledby": "model-title" }, [backLink(),
+      el("header", { class: "identity" }, [
+        el("p", { class: "eyebrow" }, e.maker + " · " + accessText(e)),
+        el("h1", { id: "model-title" }, name),
+        el("div", { class: "status-block", "data-status": "not_tested" }, [
+          el("p", { class: "status-label" }, Dir.STATUS.not_tested),
+          el("p", {}, "Baseline has no scored test of " + name + " through " + serviceText(e) + " to show. This site shows only Baseline's own measurements; catalogue " +
+            "listings and results published by others are no longer displayed.")])]),
+      others.length ? el("p", {}, ["Baseline has tested the same requested model through another service. Results " +
+        "through different services may differ and are kept separate: ", others.map(function (member, i) {
+          return [i ? " · " : "", link(entryLink(member, ""), name + " — " + accessText(member))];
+        })]) : null,
+      el("p", {}, link("#models", "See the models Baseline has tested")),
+      el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)])
     ]);
-    return section;
   }
 
-  function chart(r) {
-    var W = 720, H = 250, L = 46, R = 20, T = 30, B = 38;
-    var now = Date.now();
-    var times = r.observations.map(function (o) { return F.parseMoment(o.observed_at).time; });
-    var t0 = Math.min.apply(null, times) - 30 * F.DAY_MS;
-    var t1 = Math.max(now, Math.max.apply(null, times)) + 20 * F.DAY_MS;
-    function x(t) { return L + (t - t0) / (t1 - t0) * (W - L - R); }
-    function y(v) { return T + (1 - v / 100) * (H - T - B); }
-    var pid = "hatch-" + r.id.replace(/[^a-z0-9]/gi, "");
-    var svg = s("svg", { class: "chart", viewBox: "0 0 " + W + " " + H, role: "img", "data-chart-for": r.id,
-      "aria-label": "Pass rate for " + r.requested_model + ": " + r.observations.map(function (o) {
-        return o.series_letter + " " + o.observed_at + " " + pct(o.metric); }).join(", ") + ". Points are not connected. " +
-      "Hatched band: no observations recorded here after " + r.observations[r.observations.length - 1].observed_at + "." });
-    var defs = s("defs");
-    var pat = s("pattern", { id: pid, width: 8, height: 8, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
-    pat.appendChild(s("line", { x1: 0, y1: 0, x2: 0, y2: 8, class: "hatch-line" }));
-    defs.appendChild(pat);
-    svg.appendChild(defs);
-    [0, 25, 50, 75, 100].forEach(function (v) {
-      svg.appendChild(s("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), class: "gridline" }));
-      svg.appendChild(s("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end" }, v + "%"));
-    });
-    var d = new Date(t0); d = new Date(Date.UTC(d.getUTCFullYear(), Math.floor(d.getUTCMonth() / 3) * 3 + 3, 1));
-    while (d.getTime() < t1) {
-      var tx = x(d.getTime());
-      svg.appendChild(s("line", { x1: tx, x2: tx, y1: H - B, y2: H - B + 5, class: "axis" }));
-      svg.appendChild(s("text", { x: tx, y: H - B + 18, "text-anchor": "middle" }, MONTHS[d.getUTCMonth()] + " " + d.getUTCFullYear()));
-      d = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 3, 1));
-    }
-    svg.appendChild(s("line", { x1: L, x2: W - R, y1: H - B, y2: H - B, class: "axis" }));
-    var last = Math.max.apply(null, times);
-    var gx0 = x(last + F.DAY_MS), gx1 = x(now);
-    if (gx1 > gx0) {
-      svg.appendChild(s("rect", { x: gx0, y: T, width: gx1 - gx0, height: H - T - B, fill: "url(#" + pid + ")", opacity: 0.55, "data-gap": "trailing" }));
-      if (gx1 - gx0 > 110) {
-        svg.appendChild(s("text", { x: (gx0 + gx1) / 2, y: T + 16, "text-anchor": "middle", class: "gap-label" },
-          "no recorded evidence · " + Math.floor((now - last) / F.DAY_MS) + " days"));
-      }
-    }
-    svg.appendChild(s("line", { x1: x(now), x2: x(now), y1: T - 8, y2: H - B, class: "today" }));
-    svg.appendChild(s("text", { x: x(now), y: T - 12, "text-anchor": "middle", class: "today-label" }, "today"));
-    r.observations.forEach(function (o, i) {
-      var px = x(F.parseMoment(o.observed_at).time), py = y(100 * o.metric.numerator / o.metric.denominator);
-      if (i > 0 && o.breaks.length) svg.appendChild(s("line", { x1: px, x2: px, y1: T, y2: H - B, class: "break" }));
-      svg.appendChild(s("text", { x: px, y: T - 12 + (i % 2 ? 11 : 0), "text-anchor": "middle", class: "letter" }, o.series_letter));
-      var c = s("circle", { cx: px, cy: py, r: 6, class: "point" });
-      c.appendChild(s("title", {}, o.series_letter + " · " + o.observed_at + " · " + (o.source_label || "no label") + " · " +
-        o.metric.numerator + "/" + o.metric.denominator + " (" + pct(o.metric) + ")"));
-      svg.appendChild(c);
-      svg.appendChild(s("text", { x: px + 9, y: py + 4, class: "value" }, pct(o.metric)));
-    });
-    return svg;
-  }
-
-  function table(r) {
-    var head = ["Setup", "Measured", "Source's model label", "Passed by 2nd try", "Share", "Not run", "Test tool", "Edit format", "Evidence"];
-    var tbody = el("tbody");
-    r.observations.forEach(function (o) {
-      var sd = o.source_details;
-      var series = r.series.filter(function (x) { return x.id === o.series_id; })[0];
-      var cells = [el("span", { class: "letter-chip" }, o.series_letter), dateText(o), o.source_label || "not stated",
-        o.metric.numerator + " / " + o.metric.denominator, pct(o.metric), String(o.exclusions.missing || 0),
-        series.harness, sd.edit_format || "not stated", link(o.evidence_url, "source line ↗")];
-      var tr = el("tr");
-      cells.forEach(function (c, i) { tr.appendChild(el("td", { "data-label": head[i], class: i >= 3 && i <= 5 ? "num" : "" }, c)); });
-      tbody.appendChild(tr);
-    });
-    return el("table", { "aria-describedby": r.id + "-table-note" }, [
-      el("thead", {}, el("tr", {}, head.map(function (h) { return el("th", { scope: "col" }, h); }))), tbody]);
-  }
-
-  function breaks(r) {
-    var list = el("ul", { class: "breaks" });
-    r.observations.forEach(function (o, i) {
-      if (i === 0) return;
-      var prev = r.observations[i - 1];
-      var li = el("li", {}, [el("strong", {}, prev.series_letter + " → " + o.series_letter + ": ")]);
-      if (!o.breaks.length) append(li, "same setup (runs join one series)");
-      o.breaks.forEach(function (b, k) {
-        append(li, [k ? "; " : "", el("span", { class: "change" }, b.field + ": " + fmt(b.from) + " → " + fmt(b.to))]);
-      });
-      list.appendChild(li);
-    });
-    if (!list.children.length) list.appendChild(el("li", {}, "Only one run; nothing to compare."));
-    return list;
+  function modelFacts(e) {
+    return el("dl", { class: "facts" }, [
+      el("dt", {}, "Identity"), el("dd", {}, e.identity_kind === "exact" ? el("code", {}, e.exact_identifier)
+        : e.identity_kind === "automatic" ? "Chosen by the app; not an exact model version" : "Family entry; exact version not verified"),
+      el("dt", {}, "Service"), el("dd", {}, e.service_provider + (e.access_kind === "intermediary" ? " (made by " + e.maker + ")" : "")),
+      el("dt", {}, "Availability"), el("dd", {}, e.availability === "unknown" ? "Unknown" : e.availability === "retired" ? "Retired" : "Available"),
+      el("dt", {}, "Release date"), el("dd", {}, e.release ? [releaseText(e.release) + " — ", link(e.release.source.url, e.release.source.claim),
+        el("span", { class: "sub" }, " (checked " + e.release.source.checked_at.slice(0, 10) + ")")]
+        : "No verified release date recorded."),
+      el("dt", {}, "Listed from"), el("dd", {}, e.sources.map(function (src, i) {
+        return [i ? " · " : "", link(src.url, src.claim), el("span", { class: "sub" }, " (checked " + src.checked_at.slice(0, 10) + ")")];
+      }))
+    ]);
   }
 
   function sourceBlock(src) {
@@ -1101,7 +923,9 @@
     });
     return el("section", { class: "page", "aria-labelledby": "sources-title" }, [
       el("h1", { id: "sources-title" }, "Sources"),
-      el("h2", {}, "Measurement sources"),
+      el("h2", {}, "Third-party measurement sources (not displayed)"),
+      el("p", {}, "Results from these sources were copied earlier and stay in the project's evidence files with " +
+        "their attribution. This site shows only Baseline's own measurements, so they are no longer displayed."),
       D.sources.map(sourceBlock),
       el("h2", {}, "Where the model list comes from"),
       el("p", {}, "Model and app entries were taken from each maker's official model listing. Routes through an intermediary service (for example Puter) are listed under that service, from its own model listing; such a listing does not confirm which model answers a request. A listing shows what exists, not how a model performs."),
@@ -1176,7 +1000,8 @@
     return el("section", { class: "page", "aria-labelledby": "how-title" }, [
       el("h1", { id: "how-title" }, "How we test"),
       el("p", { class: "lede" }, TESTS.runs
-        ? "Baseline publishes results from its own repeated tests for some models. Each model page shows the status below. Models without an entry of their own are not tested by Baseline."
+        ? "Baseline publishes results from its own repeated tests of a small set of exact models, and this site " +
+          "shows only those. A model without a published Baseline result is not tested by Baseline and is not listed."
         : TESTS.calibration_runs
           ? "Baseline has published a one-off setup test of its own; no repeated daily results are published yet. Every other model is marked “Not tested by Baseline”, and no Baseline trend or change is shown."
           : "Baseline's own recurring tests have not started yet. Until they do, every model is marked “Not tested by Baseline”, and no Baseline score, trend or change is shown."),
@@ -1192,23 +1017,28 @@
           el("li", {}, "An app is tested only as an app. API results are never shown as app results.")
         ])],
       referenceMethod(),
-      el("h2", {}, "Other published tests"),
-      el("p", {}, "Some models have results published by others. They are shown by their measurement date, linked to their source, and kept separate from Baseline's own tests."),
+      el("h2", {}, "The highlighted movement"),
       el("ul", {}, [
-        el("li", {}, "Apps, direct APIs, third-party hosts and open weights are separate entries. A result belongs only to the exact route it was measured on."),
-        el("li", {}, "Each lettered setup is one exact configuration: route, settings, test tool version and commit, edit format and suite size. Different setups are not directly comparable, so points are never joined."),
-        el("li", {}, "Measured dates are shown as the source gives them. This source gives a date only, with no time or timezone, so ages are about a day either way."),
-        el("li", {}, "Freshness labels use the newest measurement's age: Recent up to " + F.RECENT_DAYS + " days, Aging up to " + F.AGING_DAYS + " days, Stale after that. This is a display convention, not a statistical test."),
-        el("li", {}, "“Copied by Baseline” is when we saved the source. A copy made today of an old result is still an old result."),
-        el("li", {}, "No confidence intervals are shown: the source reports one run per setup, which is not enough to estimate run-to-run variation."),
-        el("li", {}, "Rises and falls are shown the same way. Nothing here says whether a provider changed a model deliberately."),
-        el("li", {}, "An entry with no results has missing evidence, not a score of zero.")
-      ]),
+        el("li", {}, "The home page shows the largest observed movement in our latest comparable tests: the biggest " +
+          "change, in percentage points, between two complete 40-question results of one model on consecutive UTC " +
+          "dates in one unchanged test setup (the same questions, grader, route and settings)."),
+        el("li", {}, "The newer result must be no more than 48 hours old, and neither may report a different model " +
+          "from the one requested; an unconfirmed identity stays visible. Rises and falls are chosen by the same " +
+          "rule. Ties go to the newest result, then to the model's id."),
+        el("li", {}, "It describes what we observed on a small fixed test, within one model's own history. It is not " +
+          "a statistical test, not a verdict that a model changed, and not a ranking of models against each other. " +
+          "Equal scores do not show that a model is stable."),
+        el("li", {}, "Without such a pair, the home page shows the latest measurement instead. Four-question quick " +
+          "checks and partial, failed, stale or setup-changed runs are never compared.")]),
+      el("h2", {}, "Results published by others"),
+      el("p", {}, "Earlier versions of this site also listed catalogue entries and showed results published by " +
+        "others. It now shows only Baseline's own measurements. The copied third-party records stay in the " +
+        "project's evidence files with their sources, but they are not displayed or compared here. A model " +
+        "without a Baseline result has missing evidence, not a score of zero."),
       el("h2", {}, "Release dates"),
-      el("p", {}, "The directory lists the newest releases first. A release date is shown only when a maker's announcement, changelog or model page states it, and each date links to that page. Dates are never guessed from a model's name, from when we checked a page, or from when a test was run. Entries without a cited date are listed last."),
+      el("p", {}, "The list can be sorted by release date. A release date is shown only when a maker's announcement, changelog or model page states it, and each date links to that page. Dates are never guessed from a model's name, from when we checked a page, or from when a test was run. Models without a cited date are listed last."),
       el("h2", {}, "Methods and decisions"),
       el("ul", { class: "plain" }, [
-        el("li", {}, link(REPO + "docs/AIDER_ROUTE_REVIEW.md", "Which benchmark rows are included, and why others are excluded")),
         el("li", {}, link(REPO + "docs/CATALOG_SOURCES.md", "How the model list and release dates were checked")),
         el("li", {}, link(REPO + "docs/SOURCES.md", "Source reuse permissions")),
         el("li", {}, link(REPO + "docs/DATA_CONTRACT.md", "Data rules")),
@@ -1243,11 +1073,12 @@
       n.setAttribute("data-status", st.key);
       if (n.classList.contains("badge")) n.textContent = st.label;
     });
-    document.querySelectorAll("[data-chart-for]").forEach(function (old) {
-      var r = routeById[old.getAttribute("data-chart-for")];
-      if (r) old.parentNode.replaceChild(chart(r), old);
-    });
+    refreshLive();
   }
   window.setInterval(tick, 60000);
+  // Timers are slowed in background tabs: a return to the tab refreshes at once.
+  if (document.addEventListener) {
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) tick(); });
+  }
   window.BaselinePage = { tick: tick, state: function () { return state; } };
 })();

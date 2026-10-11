@@ -1,15 +1,13 @@
 # Baseline — AI model tests
 
-Follow changes in AI model performance. A directory of AI models across providers,
-newest releases first, with other published test results shown by date and source.
+Baseline's own repeated tests of a small set of exact AI models: every published result with its date, test size
+and full history, and the largest observed movement in our latest comparable tests (descriptive, not a verdict).
 
-**Current status:** Baseline publishes results of its own tests only after review, from
-`own_results/` (method and rules in `docs/OWN_RESULTS_FORMAT.md`); every model without an
-admitted result is marked "Not tested by Baseline". The directory lists models and apps from ten makers,
-taken from their official model listings; release dates are shown only where a maker's
-announcement, changelog or model page states them. Other test results shown are
-third-party results, copied with permission and shown with their measurement dates. No
-observation here says whether a provider changed a model on purpose.
+**Current status:** the site shows only models with a scored Baseline result, published after review from
+`own_results/` (method and rules in `docs/OWN_RESULTS_FORMAT.md`). Any other model link says "Not tested by
+Baseline" and links to the tested models. The catalogue of models and apps from ten makers and the copied
+third-party results stay in this repository as evidence, but the site no longer displays third-party scores. No
+result here says whether a provider changed a model on purpose.
 
 ## What is here
 
@@ -23,7 +21,8 @@ observation here says whether a provider changed a model on purpose.
   they are rebuilt from; `scripts/own_results.py` checks and imports them.
 - `evidence/snapshots/`: unchanged copies of permitted source files, each stored with
   its licence and a manifest of hashes.
-- `site/`: the static directory and model pages. `scripts/build_site.py` builds them
+- `site/`: the static home and model pages (`site/measured.js` selects the tested models and the
+  highlighted comparison). `scripts/build_site.py` builds them
   into `dist/`.
 - `scripts/`: the validators, source importer, reviewed route mappings, refresh and
   publication check.

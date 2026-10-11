@@ -279,69 +279,33 @@ class RenderedCoverageWordingTests(unittest.TestCase):
     def measured_entries(self):
         return [e for e in self.data["catalog"] if e["route_ids"]]
 
-    def test_directory_lists_every_entry_honestly(self):
-        page = self.render("#models")
-        self.assertIn(f"{len(page['modelRows'])} models and apps", page["text"])
-        self.assertEqual(len({r["href"].split("?")[0] for r in page["modelRows"]}), len(page["modelRows"]))
-        self.assertIn("Baseline's own recurring tests have not started yet.", page["text"])
-        self.assertIn("API results are never shown as app results", page["text"])
-        self.assertEqual(page["text"].count("Not tested by Baseline"), len(page["modelRows"]))
-        self.assertLess(len(page["modelRows"]), len(self.data["catalog"]))
-        for row in page["modelRows"]:
-            self.assertIn(row["name"], page["text"])
-            self.assertIn("#model/", row["href"])
-
-    def test_every_measured_route_uses_scoped_gap_wording(self):
-        routes = {r["id"]: r for r in self.data["routes"]}
-        for entry in self.measured_entries():
-            for route_id in entry["route_ids"]:
-                with self.subTest(route=route_id):
-                    page = self.render(f"#model/{entry['id']}?route={route_id}")
-                    route = routes[route_id]
-                    latest = route["observations"][-1]["observed_at"]
-                    self.assertIn("No observations are recorded here between these runs or after the latest one",
-                                  page["text"])
-                    self.assertIn("other measurements may exist elsewhere", page["text"])
-                    self.assertIn("Not tested by Baseline", page["text"])
-                    self.assertIn("No Baseline test history yet.", page["text"])
-                    self.assertIn("Aider coding results", page["text"])
-                    # One graph per model (6 October 2026): third-party records are a dated table, never a chart.
-                    self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
-                    self.assertEqual(page["totalCharts"], 0)
-                    self.assertIn("are not included in Baseline's graph", page["text"])
-                    self.assertIn(latest + (" (date only)" if route["observations"][-1]["precision"] == "day" else ""),
-                                  page["text"])
-                    for obs in route["observations"]:
-                        self.assertIn(obs["observed_at"] + (" (date only)" if obs["precision"] == "day" else ""),
-                                      page["text"])
-
-    def test_featured_and_new_releases_on_the_unfiltered_directory(self):
-        """T14: editorial shortlist with reasons, global newest releases, evidence tags; hidden when filtering."""
-        text = self.render("#models")["text"]
-        featured = self.data["featured"]
-        self.assertIn("Featured", text)
-        self.assertIn(featured["explanation"], text)
-        for group in featured["groups"]:
-            self.assertIn(group["family"], text)
-            self.assertIn(group["reason"], text)
-        groq = self.render("#model/openai-groq.gpt-oss-120b?service=openai-groq.gpt-oss-120b")
-        self.assertIn("Third-party host (Groq)", groq["text"])  # available in its route selector
-        dated = sorted((e for e in self.data["catalog"] if e.get("release")),
-                       key=lambda e: (e["release"]["date"], e["name"].lower()), reverse=True)
-        section = text[text.index("New releases"):text.index("All models")]
-        self.assertIn("not when anyone tested it", section)
-        positions = [section.index(e["name"]) for e in dated[:3]]
-        self.assertEqual(positions, sorted(positions))                        # newest first, across makers
-        tested = {k for k, r in self.data["baseline_tests"]["entries"].items() if r["runs"] or r["calibration"]}
-        self.assertEqual(text.count("Tested by Baseline"),
-                         sum(1 for g in featured["groups"] for i in g["entries"] if i in tested) +
-                         sum(1 for e in dated[:8] if e["id"] in tested))
-        self.assertEqual(text.count("Not tested by Baseline"), len(self.render("#models")["modelRows"]))   # list statuses unchanged
-        for hash_ in ("#models?q=claude", "#models?sort=name", "#models?access=consumer_app"):
+    def test_the_home_lists_only_tested_models(self):
+        """9 October 2026: with no scored Baseline result the home lists no model, no catalogue entry and no
+        third-party result; retired filter links still open it."""
+        for hash_ in ("#models", "#models?evidence=measured&access=consumer_app&availability=retired&sort=date"):
             with self.subTest(view=hash_):
-                filtered = self.render(hash_)["text"]
-                self.assertNotIn("New releases", filtered)
-                self.assertNotIn(featured["explanation"], filtered)
+                page = self.render(hash_)
+                self.assertEqual((page["modelRows"], page["focus"], page["sparks"], page["dailyCharts"]), ([], None, 0, 0))
+                self.assertIn("Baseline has no scored test result of its own to show yet.", page["text"])
+                for gone in ("Featured", "New releases", "All models", "Other published tests", "Catalogue listing only",
+                             "Aider", "models and apps", "Not tested by Baseline"):
+                    self.assertNotIn(gone, page["text"])
+
+    def test_third_party_results_stay_in_the_data_but_are_never_rendered(self):
+        """Only Baseline's own measurements are product content: an entry with only outside results gets the honest
+        explanation, no chart, no dated outside table and no outside score (owner decision, 9 October 2026)."""
+        routes = {r["id"]: r for r in self.data["routes"]}
+        self.assertTrue(any(r["observations"] for r in routes.values()))       # the evidence is still built
+        for entry in self.measured_entries():
+            with self.subTest(entry=entry["id"]):
+                page = self.render(f"#model/{entry['id']}?route={entry['route_ids'][0]}")
+                self.assertIn("Not tested by Baseline", page["text"])
+                self.assertIn("results published by others are no longer displayed", page["text"])
+                self.assertEqual((page["totalCharts"], page["dailyCharts"]), (0, 0))
+                for gone in ("Aider coding results", "Pass rate", "not run by Baseline", "View dated results",
+                             "Passed by 2nd try", "Source and licence", "Other published tests"):
+                    self.assertNotIn(gone, page["everything"])
+                self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
 
     def test_no_unscoped_absence_or_deployment_claims(self):
         for hash_ in ("#models", "#sources", "#about", "#how-we-test", "#model/openai-app.chatgpt",
@@ -359,10 +323,10 @@ class RenderedCoverageWordingTests(unittest.TestCase):
                 continue
             with self.subTest(app=entry["id"]):
                 page = self.render(f"#model/{entry['id']}")
-                self.assertIn("No other published results are recorded here for this app", page["text"])
-                self.assertIn("never shown as app results", page["text"])
                 self.assertIn("Not tested by Baseline", page["text"])
+                self.assertIn("Baseline has no scored test of " + entry["name"] + " through this app to show.", page["text"])
                 self.assertNotIn("Pass rate", page["text"])
+                self.assertEqual(page["totalCharts"], 0)
                 self.assertFalse([a for a in page["aria"] if a.startswith("Pass rate for ")])
 
     def variant(self, mutate):
@@ -383,78 +347,20 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         render.folder = folder / "dist"
         return render
 
-    def test_age_wording_follows_measurement_dates(self):
-        """T07 R3: all-old, mixed-age, fresh-only and no-measurement data; wording and badges agree."""
-        today = datetime.now(timezone.utc).date().isoformat()
-        measured = self.measured_entries()
-        fresh_entry, old_entry = measured[0], measured[-1]
-        fresh_routes = set(fresh_entry["route_ids"])
-
-        def set_dates(data, route_ids, day):
-            for route in data["routes"]:
-                if route["id"] in route_ids:
-                    for obs in route["observations"]:
-                        obs["observed_at"] = day
-        all_ids = {r["id"] for r in self.data["routes"]}
-        old_day = "2025-01-02"  # explicit dates: the test must not depend on the evolving registry
-        cases = {
-            "all old": lambda d: set_dates(d, all_ids, old_day),
-            "mixed": lambda d: (set_dates(d, all_ids, old_day), set_dates(d, fresh_routes, today)),
-            "fresh only": lambda d: set_dates(d, all_ids, today),
-        }
-        for label, mutate in cases.items():
-            with self.subTest(case=label):
-                render = self.variant(mutate)
-                directory = render("#models")
-                self.assertNotIn("historical results", directory)
-                self.assertIn("Baseline's own recurring tests have not started yet.", directory)
-                self.assertIn("Other published tests available", directory)
-                fresh = render(f"#model/{fresh_entry['id']}")
-                old = render(f"#model/{old_entry['id']}")
-                self.assertIn("These results come from Aider project", fresh)  # from the source record
-                # The directory shows each entry's latest outside test date, never an age verdict.
-                self.assertNotIn("Recent measurements", directory)
-                self.assertNotIn("Historical evidence only", directory)
-                if label == "all old":
-                    self.assertIn("more than 30 days old", fresh)
-                    self.assertIn("latest test 2 Jan 2025", directory)
-                else:
-                    self.assertIn("The newest measurement is from the last 7 days.", fresh)
-                    self.assertNotIn("more than 30 days old", fresh)
-                if label == "mixed":
-                    self.assertIn("more than 30 days old", old)
-                    self.assertIn("latest test 2 Jan 2025", directory)
-                if label == "fresh only":
-                    self.assertNotIn("latest test 2 Jan 2025", directory)
-                for page in (fresh, old):
-                    self.assertIn("No Baseline test history yet.", page)
-                    self.assertIn("Not tested by Baseline", page)
-                    self.assertIn("each lettered setup is a separate configuration", page)
-
-        def no_measurements(data):
-            data["routes"] = []
-            for entry in data["catalog"]:
-                entry["route_ids"] = []
-        render = self.variant(no_measurements)
-        directory = render("#models")
-        self.assertNotIn("Other published tests available", directory)
-        self.assertGreaterEqual(directory.count("None recorded"), len(self.render("#models")["modelRows"]))  # plus the filter option
-        detail = render(f"#model/{fresh_entry['id']}")
-        self.assertIn("No other published results are recorded here.", detail)
-        self.assertNotIn("Pass rate", detail)
-
     def test_legacy_route_links_open_their_model(self):
         page = self.render("#deepseek-api.deepseek-chat")
         self.assertEqual(page["hash"], "#model/deepseek-api.deepseek-chat?route=deepseek-api.deepseek-chat")
         self.assertIn("deepseek-chat", page["text"])
-        self.assertIn("View dated results and sources", page["text"])            # the evidence table, not a chart
+        self.assertIn("Not tested by Baseline", page["text"])                  # an honest page, no outside table
+        self.assertIn("See the models Baseline has tested", page["text"])
+        self.assertNotIn("View dated results and sources", page["text"])
 
     def test_unknown_ids_get_a_usable_page(self):
         for hash_ in ("#model/no-such-model", "#model/%E0%A4%A", "#no-such-route"):
             with self.subTest(hash=hash_):
                 page = self.render(hash_)
                 self.assertIn("Not found", page["text"])
-                self.assertIn("Go to the model directory", page["text"])
+                self.assertIn("See the models Baseline has tested", page["text"])
 
     def test_sources_and_about_keep_attribution_and_limits(self):
         sources = self.render("#sources")["text"]
@@ -465,6 +371,7 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         self.assertIn("does not confirm which model answers a request", sources)
         self.assertIn("link only", sources)
         self.assertIn("Ingestion log", sources)
+        self.assertIn("Third-party measurement sources (not displayed)", sources)
         about = self.render("#about")["text"]          # the first release's About link still works
         self.assertEqual(about, self.render("#how-we-test")["text"])
         self.assertIn("How we test", about)
@@ -473,47 +380,33 @@ class RenderedCoverageWordingTests(unittest.TestCase):
 
     # ---------------------------------------------------------------- T08 monitoring-first
     def test_zero_baseline_runs_never_show_a_trend(self):
-        """With no Baseline runs every page says "Not tested by Baseline" and nothing more."""
+        """With no Baseline runs no page shows a score, a trend or a change; model pages say "Not tested by Baseline"."""
         self.assertEqual(self.data["baseline_tests"], own_results.EMPTY_TESTS)
         hashes = ["#models", "#model/openai-app.chatgpt", f"#model/{self.measured_entries()[0]['id']}",
                   "#model/anthropic-api.claude-opus-5-5"]
         judged = ("Collecting baseline", "Not enough evidence to judge", "Lower on our tests", "Higher on our tests",
-                  "No meaningful change detected", "Test unavailable", "% change", "0%")
+                  "No meaningful change detected", "Test unavailable", "% change", "0%", "percentage point",
+                  "Largest observed movement", "Latest measurement", "First measurement")
         for hash_ in hashes:
             with self.subTest(view=hash_):
                 text = self.render(hash_)["text"]
-                self.assertIn("Not tested by Baseline", text)
                 if hash_ != "#models":
-                    self.assertIn("We don't yet have our own repeated tests for this model.", text)
-                    self.assertIn("No Baseline test history yet.", text)
+                    self.assertIn("Not tested by Baseline", text)
+                    self.assertIn("Baseline has no scored test of", text)
                 for phrase in judged:
-                    if phrase == "0%" and hash_ == f"#model/{self.measured_entries()[0]['id']}":
-                        continue                            # the outside results' chart axis starts at 0%
                     self.assertNotIn(phrase, text)
-        unmeasured = self.render("#model/anthropic-api.claude-opus-5-5")
-        self.assertFalse([a for a in unmeasured["aria"] if a.startswith("Pass rate for ")])  # no empty plot
+                self.assertEqual(self.render(hash_)["totalCharts"], 0)
 
-    def test_release_dates_order_the_directory_and_unknowns_say_so(self):
+    def test_release_dates_are_cited_and_unknowns_say_so(self):
         dated = sorted((e for e in self.data["catalog"] if e.get("release")),
                        key=lambda e: e["release"]["date"], reverse=True)
         undated = [e for e in self.data["catalog"] if not e.get("release")]
         self.assertTrue(dated and undated)
-        text = self.render("#models")["text"]
         newest = self.render(f"#model/{dated[0]['id']}")["text"]
-        self.assertIn("release source", newest)
-        self.assertIn(dated[0]["release"]["source"]["claim"], newest)
-        first_unknown = text.index("No verified date")
-        self.assertLess(text.index(dated[0]["name"]), text.index(dated[-1]["name"]))
-        self.assertLess(text.index(dated[-1]["name"]), first_unknown)
+        self.assertIn(dated[0]["release"]["source"]["claim"], newest)        # under "Model details"
         unknown = self.render(f"#model/{undated[0]['id']}")["text"]
         self.assertIn("No verified release date recorded", unknown)
         self.assertNotIn("No release date was found", unknown)       # no claim of a search not documented
-        self.assertIn("Sorted by newest release", text)
-        by_name = self.render("#models?sort=name")["text"]
-        self.assertIn("Sorted by name (A–Z).", by_name)
-        self.assertNotIn("Sorted by newest release", by_name)          # the note follows the selected order
-        names = sorted((e["name"].lower(), e["id"]) for e in self.data["catalog"])
-        self.assertLess(by_name.index(self.data_name(names[0][1])), by_name.index(self.data_name(names[-1][1])))
 
     def test_review_example_sorts_by_its_cited_release(self):
         """T08 R1: Command A+ carries Cohere's own release note and sorts by that date."""
@@ -533,14 +426,14 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         self.assertTrue(all(d is None or d <= "2026-05-20" for d in dates[at + 1:]))
         self.assertIsNotNone(dates[at + 1])                               # dated entries follow, not only unknowns
         page = self.render(f"#model/{entry['id']}")["text"]
-        self.assertIn("Released 20 May 2026", page)
+        self.assertIn("20 May 2026 — ", page)
 
     def data_name(self, entry_id):
         return next(e["name"] for e in self.data["catalog"] if e["id"] == entry_id)
 
     def test_status_states_render_only_from_labelled_fixtures_and_never_ship(self):
         """Fixture data reaches every non-default state; the release gate refuses it."""
-        target = self.measured_entries()[0]["id"]
+        target = next(e for e in self.data["catalog"] if e["identity_kind"] == "exact" and e["access_kind"] == "direct_api")["id"]
         today = datetime.now(timezone.utc).date().isoformat()
         cases = {
             "Collecting baseline": {"runs": 3, "latest_run": today},
@@ -554,19 +447,34 @@ class RenderedCoverageWordingTests(unittest.TestCase):
         for label, rec in cases.items():
             with self.subTest(state=label):
                 def mutate(data, rec=rec):
+                    rec = dict(rec, daily_series=[fixture_series(today)], calibration=[])
                     data["baseline_tests"] = {"runs": rec["runs"], "label": release_check.FIXTURE_LABEL,
                                               "entries": {target: rec}}
                 render = self.variant(mutate)
                 detail = render(f"#model/{target}")
                 self.assertIn(label, detail)
                 self.assertNotIn("Not tested by Baseline", detail)
-                self.assertIn("Not tested by Baseline", render("#models"))   # other entries unchanged
+                self.assertIn("1 tested model", render("#models"))              # the fixture alone is listed
                 folder = render.folder
                 data = json.loads((folder / "data.js").read_text(encoding="utf-8")[len("window.BASELINE_DATA = "):]
                                   .rstrip().rstrip(";"))
                 problems = release_check.inspect_bundle(folder.resolve(), data, records, **self.own)
                 self.assertTrue(any("do not match the admitted own-results dataset" in p for p in problems), problems)
                 self.assertTrue(any("FIXTURE-NOT-FOR-PUBLICATION" in p for p in problems), problems)
+
+
+def fixture_series(day: str) -> dict:
+    """One labelled synthetic 40-question daily view with a single scored day (status-state fixtures only)."""
+    record = {"date": day, "status": "completed", "evidence": "verified", "valid_day": True, "first_attempt_correct": 30,
+              "scheduled_items": 40, "attempted_items": 40, "first_attempt_outcomes": {"correct": 30, "incorrect": 10},
+              "retry_recovered": {"correct": 0, "incorrect": 0, "format_error": 0, "other": 0}}
+    return {"series_id": "fixture--daily--000000000000", "as_of": day + "T12:00:00Z",
+            "schedule": {"type": "daily", "start_date": day, "end_date": day, "window_start_utc": "02:00",
+                         "window_minutes": 60},
+            "rows": [{"date": day, "state": "completed", "eligible": True, "record": record}], "not_yet_due": 0,
+            "pending_dates": [], "open_dates": [], "panel_items": 40, "panel_id": "fixture-panel",
+            "settings": {"temperature": 1, "thinking_level": "MINIMAL", "max_output_tokens": 4096, "timeout_seconds": 120},
+            "grader_version": "grader-v0", "config_fingerprint": "f" * 64}
 
 
 OWN_FIXTURES = ROOT / "tests" / "fixtures" / "own_results"
@@ -598,7 +506,7 @@ class OwnResultsPageTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.tmp.cleanup()
 
-    def site(self, bundles, preview=()):
+    def site(self, bundles, preview=(), now=None):
         """Build into a fresh folder with these bundles imported through a temporary review manifest."""
         folder = Path(tempfile.mkdtemp(dir=self.tmp.name))
         own = empty_own_results(folder / "own")
@@ -616,9 +524,12 @@ class OwnResultsPageTests(unittest.TestCase):
         out = folder / "dist"
         data = build_site.build(out, generated_at=GENERATED, own_preview=tuple(preview), now=FIXTURE_NOW, **own)
 
-        def page(hash_, setup=None):
+        def page(hash_, setup=None, advance=None, refresh="tick"):
             args = ["node", str(ROOT / "tests" / "render_page.js"), str(out), hash_] + ([] if setup is None else [setup])
-            result = subprocess.run(args, capture_output=True, text=True, timeout=60, encoding="utf-8")
+            env = dict(os.environ, RENDER_NOW=now) if now else None          # a fixed page clock for dated fixtures
+            if advance:                                    # then move the clock and refresh the same open page
+                env.update(RENDER_ADVANCE=advance, RENDER_REFRESH=refresh)
+            result = subprocess.run(args, capture_output=True, text=True, timeout=60, encoding="utf-8", env=env)
             self.assertEqual(result.returncode, 0, result.stderr)
             render.last_result = json.loads(result.stdout)
             return render.last_result
@@ -637,11 +548,9 @@ class OwnResultsPageTests(unittest.TestCase):
     def test_calibration_only_is_a_one_off_setup_test_not_monitoring(self):
         render = self.site([self.fixture("calibration.json")])
         directory = render("#models")
-        self.assertIn("One-off setup test", directory)
-        self.assertIn("31 of 40 correct on this test, 18 Sep 2026", directory)
-        self.assertIn("Baseline has published a one-off setup test of its own", directory)
+        self.assertIn("Baseline has published only a one-off setup test so far.", directory)
+        self.assertEqual(render.page("#models")["modelRows"], [])               # a setup test is not a history
         self.assertNotIn("Baseline's own recurring tests have not started yet.", directory)
-        self.assertEqual(directory.count("Not tested by Baseline"), len(render.page("#models")["modelRows"]) - 1)
         page = render(f"#model/{GEMINI}")
         for text in ("One-off setup test", "31 of 40 correct on this test", "measured 18 Sep 2026",
                      "Not enough repeated tests to judge a change", "not part of the daily history",
@@ -666,7 +575,7 @@ class OwnResultsPageTests(unittest.TestCase):
         render = self.site([self.fixture("daily-part1.json"), self.fixture("daily-part2.json"),
                             self.fixture("calibration.json")])
         page = render(f"#model/{GEMINI}")
-        for text in ("Daily test scores", "Daily results by date", "rows are not joined into a trend",
+        for text in ("Reference test: all 40 questions", "Daily results by date", "rows are not joined into a trend",
                      "Missed (recorded gap) — no run took place", "No record — nothing was recorded for this date",
                      "Stopped early — fewer than 90% attempted; not a usable day", "Interrupted — evidence unavailable",
                      "38 of 40", "37 of 40", "1 refused", "3 later scheduled dates were not yet due",
@@ -678,20 +587,19 @@ class OwnResultsPageTests(unittest.TestCase):
         self.assertIn("this is not current monitoring", page)
         self.assertNotIn("Collecting baseline", page)
         directory = render("#models")
-        self.assertIn("latest daily test 27 Sep 2026", directory)
-        self.assertIn("Baseline publishes results from its own repeated tests for some models", directory)
+        self.assertIn("38 of 40latest result 27 Sep 2026", directory)
+        self.assertIn("Baseline runs its own fixed tests on a small set of exact models", directory)
 
-    def test_own_and_outside_results_stay_in_separate_sections(self):
+    def test_own_results_show_and_outside_results_stay_out_of_the_page(self):
         build = self.site([])
         measured = next(e for e in build.data["catalog"] if e["route_ids"] and e["identity_kind"] == "exact"
                         and e["access_kind"] == "direct_api")
         render = self.site([retarget(self.fixture("calibration.json"), measured)])
         page = render(f"#model/{measured['id']}")
-        section = page.index("31 of 40 correct on this test · measured")
-        self.assertLess(page.index("Our tests"), section)
-        self.assertLess(section, page.index("Other published tests"))
-        self.assertIn("Aider coding results", page)
-        self.assertIn("not run by Baseline", page)
+        self.assertIn("31 of 40 correct on this test · measured", page)
+        self.assertNotIn("Not tested by Baseline", page)
+        for gone in ("Aider coding results", "not run by Baseline", "Other published tests"):
+            self.assertNotIn(gone, page)
 
     def test_a_review_copy_never_passes_the_release_gate(self):
         render = self.site([], preview=[OWN_FIXTURES / "calibration.json"])
@@ -725,7 +633,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
         render = self.site([self.graph("several-points.json")])
         result = render.page(f"#model/{GEMINI}")
         text, aria = result["text"], result["aria"]
-        for phrase in ("Daily test scores", "Correct answers out of 40 (first attempts), by test date (UTC)",
+        for phrase in ("Reference test: all 40 questions", "Correct answers out of 40 (first attempts), by test date (UTC)",
                        "Lines join consecutive days only", "x a missed day", "~ an incomplete run",
                        "These scores describe this fixed test. A rise or fall alone does not establish an overall "
                        "change in model quality.", "Results checked up to 2026-10-09 12:00:00 UTC.",
@@ -743,7 +651,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
         self.assertTrue(any("nothing was recorded" in a for a in marks))
         self.assertTrue(any("37 of 40 questions attempted" in a and "Not plotted" in a for a in marks))
         self.assertTrue(any("evidence unavailable" in a for a in marks))
-        ours = text[text.index("Our tests"):text.index("Other published tests")].lower()   # catalogue notes excluded
+        ours = text[:text.index("Model details")].lower().replace("that does not mean the model is stable", "")
         for word in ("stable", "nerf", "significan", "confidence interval", "declin", "improv"):
             self.assertNotIn(word, ours)
 
@@ -759,13 +667,15 @@ class DailyGraphPageTests(OwnResultsPageTests):
         render = self.site([self.graph("several-points.json"), groq])
         gemini_page = render(f"#model/{GEMINI}")
         groq_page = render("#model/openai-groq.gpt-oss-120b")
-        self.assertIn("Daily test scores", groq_page)
+        self.assertIn("Reference test: all 40 questions", groq_page)
         self.assertIn("Third-party host (Groq)", groq_page)
         self.assertIn("Results checked up to 2026-10-12 12:00:00 UTC.", groq_page)
         self.assertNotIn("Results checked up to 2026-10-12", gemini_page)
         self.assertIn("Results checked up to 2026-10-09 12:00:00 UTC.", gemini_page)
         for other in ("openai-app.chatgpt", "openai-openrouter.gpt-oss-120b"):
-            self.assertNotIn("Daily test scores", render(f"#model/{other}"))      # not ChatGPT, not another host
+            other_page = render(f"#model/{other}")                                 # not ChatGPT, not another host
+            self.assertNotIn("Reference test", other_page)
+            self.assertIn("Not tested by Baseline", other_page)
         self.assertEqual(render.problems(), [])
 
     def test_an_open_day_is_shown_unresolved_not_missed(self):
@@ -827,14 +737,14 @@ class DailyGraphPageTests(OwnResultsPageTests):
         newer = copy.deepcopy(self.graph("second-setup.json"))
         newer.update(records=[], format_version=2, open_dates=[])                 # scheduled, nothing collected yet
         render = self.site([self.graph("several-points.json"), newer])
-        latest = render.page(f"#model/{GEMINI}")
+        opened = render.page(f"#model/{GEMINI}")                                  # never hidden by the empty setup
+        self.assertEqual((opened["dailyCharts"], opened["selectedSetup"]), (1, "1"))
+        self.assertEqual(len([a for a in opened["aria"] if " correct on the first attempt" in a]), 4)
+        latest = render.page(f"#model/{GEMINI}?setup={newer['series']['series_id']}")   # an explicit link: respected
         self.assertEqual((latest["dailyCharts"], latest["selectedSetup"]), (1, "0"))
         self.assertIn("Waiting for daily results.", latest["text"])
         self.assertFalse([a for a in latest["aria"] if " correct on the first attempt" in a])   # no older score shown
         self.assertNotIn("0 of 40 correct", latest["text"])
-        older = render.page(f"#model/{GEMINI}", setup="1")
-        self.assertEqual(older["dailyCharts"], 1)
-        self.assertEqual(len([a for a in older["aria"] if " correct on the first attempt" in a]), 4)
 
     def test_calibration_and_unmeasured_app_entries_stay_outside_the_graph(self):
         render = self.site([self.fixture("calibration.json"), self.graph("several-points.json"),
@@ -842,23 +752,23 @@ class DailyGraphPageTests(OwnResultsPageTests):
         for setup in (None, "1"):
             text = render(f"#model/{GEMINI}", setup=setup)
             self.assertEqual(render.last_result["dailyCharts"], 1)
-            graph = text[text.index("Daily test scores"):text.index("One-off setup test")]
+            graph = text[text.index("Reference test: all 40 questions"):text.index("One-off setup test")]
             self.assertNotIn("correct on this test", graph)                       # calibration never in a setup
             self.assertIn("31 of 40 correct on this test", text[text.index("One-off setup test"):])
         app = render.page("#model/google-app.gemini")                             # similar name, different access
         self.assertEqual((app["dailyCharts"], app["selectedSetup"]), (0, None))
-        self.assertIn("No Baseline test history yet.", app["text"])
-        self.assertNotIn("Daily test scores", app["text"])
+        self.assertIn("Baseline has no scored test of", app["text"])
+        self.assertNotIn("Reference test", app["text"])
 
     def test_calibration_and_daily_stay_apart_and_entries_without_results_unchanged(self):
         render = self.site([self.fixture("calibration.json"), self.graph("several-points.json")])
         text = render(f"#model/{GEMINI}")
-        self.assertLess(text.index("Daily test scores"), text.index("One-off setup test"))
+        self.assertLess(text.index("Reference test: all 40 questions"), text.index("One-off setup test"))
         self.assertIn("31 of 40 correct on this test", text)
-        self.assertNotIn("31 of 40", text[text.index("Daily test scores"):text.index("One-off setup test")])
+        self.assertNotIn("31 of 40", text[text.index("Reference test: all 40 questions"):text.index("One-off setup test")])
         other = render("#model/google-app.gemini")
-        self.assertNotIn("Daily test scores", other)
-        self.assertIn("No Baseline test history yet.", other)
+        self.assertNotIn("Reference test", other)
+        self.assertIn("Baseline has no scored test of", other)
 
     def test_release_shape_setup_test_plus_schedule_only(self):
         """The first daily release: the setup test plus a schedule with no closed run yet (labelled fixtures)."""
@@ -918,12 +828,17 @@ class DailyGraphPageTests(OwnResultsPageTests):
                                       text)
                 if not rec["daily_series"]:
                     self.assertIn("No daily test results have been published for this model yet.", text)
-                # The initial page shows only the selected (latest) setup. Older setups are
-                # checked by the selector tests, not simultaneously rendered in this page.
-                for series in rec["daily_series"][:1]:
+                # The page opens on its measured setup (site/measured.js), never on a newer empty one. Other
+                # setups are checked by the selector tests, not simultaneously rendered in this page.
+                scored = [s for s in rec["daily_series"] if any(r["eligible"] for r in s["rows"])]
+                full = [s for s in scored if s.get("contract") != "puter-subset-v1"]    # a full test opens first
+                opened = full or scored or rec["daily_series"]
+                for series in opened[:1]:
                     points = sum(1 for row in series["rows"] if row["eligible"])
                     message = ({0: "No daily results yet.", 1: "Not enough history to show change."}
                                if series.get("contract") == "puter-subset-v1" else
+                               {0: "No complete reference evaluation yet.", 1: "Not enough history to show change."}
+                               if series.get("contract") == "puter-reference-v1" else
                                {0: "Waiting for daily results.", 1: "One daily test; more days are needed to show a pattern."})
                     if points in message:
                         self.assertIn(message[points], text)
@@ -931,7 +846,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
                         self.assertIn("Still open", text)
                     if any(row["state"] == "gap" for row in series["rows"]):
                         self.assertIn("Missed (recorded gap)", text)
-                self.assertIn("Daily test scores", text)
+                self.assertIn("Correct answers out of", text)
 
 
 PUTER_FIXTURES = OWN_FIXTURES / "puter"
@@ -976,29 +891,20 @@ class ThirdPartyEvidenceTests(OwnResultsPageTests):
         source = next(s for s in data["sources"] if s["id"] == route["source_ids"][0])
         return entry, route, source
 
-    def assert_evidence_kept(self, text, route, source):
-        self.assertIn("Other published tests", text)
-        self.assertIn("These third-party results use a different test and are not included in Baseline's graph. "
-                      "The dated records and sources are retained below; missing dates are not filled in.", text)
-        self.assertNotIn("Pass rate by run", text)
-        self.assertNotIn("Scroll the chart sideways", text)
-        self.assertIn("Runs", text)
-        for obs in route["observations"]:
-            self.assertIn(str(obs["metric"]["numerator"]), text)                 # every dated record still listed
-        self.assertIn(source["author"], text)                                    # attribution retained
-        if source.get("licence"):
-            self.assertIn(source["licence"]["name"], text)
-        self.assertIn("Source and licence", text)
+    def assert_evidence_not_rendered(self, text, route, source):
+        """The outside records stay in the bundle's data; the page shows none of them (9 October 2026)."""
+        for gone in ("Other published tests", "These third-party results use a different test", "Source and licence",
+                     "Passed by 2nd try", source["author"]):
+            self.assertNotIn(gone, text)
 
     def test_an_external_only_model_has_no_graph_and_an_honest_empty_state(self):
         render = self.site([])
         entry, route, source = self.external_entry(render.data)
         page = render.page(f"#model/{entry['id']}")
         self.assertEqual((page["totalCharts"], page["dailyCharts"], page["selectedSetup"]), (0, 0, None))
-        self.assertIn("No Baseline test history yet.", page["text"])
-        self.assertIn("We don't yet have our own repeated tests for this model.", page["text"])
-        self.assertNotIn("Daily test scores", page["text"])
-        self.assert_evidence_kept(page["text"], route, source)
+        self.assertIn("Not tested by Baseline", page["text"])
+        self.assertIn("results published by others are no longer displayed", page["text"])
+        self.assert_evidence_not_rendered(page["text"], route, source)
 
     def test_a_model_with_both_kinds_of_evidence_draws_only_baseline_s_graph(self):
         data = self.site([]).data
@@ -1006,8 +912,9 @@ class ThirdPartyEvidenceTests(OwnResultsPageTests):
         render = self.site([retarget(self.graph_fixture("several-points.json"), entry)])
         page = render.page(f"#model/{entry['id']}")
         self.assertEqual((page["totalCharts"], page["dailyCharts"]), (1, 1))
-        self.assertIn("Daily test scores", page["text"])
-        self.assert_evidence_kept(page["text"], route, source)
+        self.assertIn("Reference test: all 40 questions", page["text"])
+        self.assert_evidence_not_rendered(page["text"], route, source)
+        self.assertEqual(len(render.data["routes"]), len(data["routes"]))         # still in the data, unchanged
 
     def graph_fixture(self, name):
         return json.loads((GRAPH_FIXTURES / name).read_text(encoding="utf-8"))
@@ -1017,13 +924,14 @@ class ThirdPartyEvidenceTests(OwnResultsPageTests):
 class MeasuredCoverageTests(OwnResultsPageTests):
     """The measured list, test names and denominators come from published results (8 October 2026)."""
 
-    def published(self, route_prefix):
-        """The newest public admitted candidate of a route: genuine aggregates already published, re-imported here
-        through a temporary review manifest (never the production dataset)."""
+    def published(self, route_prefix, kind="daily"):
+        """The newest public admitted candidate of a route's `kind` of series (by default its four-question daily quick
+        check; a route can also publish reference evaluations): genuine aggregates already published, re-imported
+        here through a temporary review manifest (never the production dataset)."""
         found = []
         for path in sorted((ROOT / "own_results" / "admitted").glob("*.json")):
             bundle = json.loads(path.read_text(encoding="utf-8"))
-            if bundle["series"]["series_id"].startswith(route_prefix):
+            if bundle["series"]["series_id"].startswith(route_prefix) and bundle["series"].get("kind") == kind:
                 found.append(bundle)
         if not found:
             self.skipTest("no published candidate for " + route_prefix)
@@ -1031,34 +939,33 @@ class MeasuredCoverageTests(OwnResultsPageTests):
 
     @staticmethod
     def measured_section(text):
-        start = text.index("Measured by Baseline")
-        return text[start:text.index("Featured", start)]
+        start = text.index("Models tested by Baseline")
+        return text[start:text.index("Each entry is one exact model", start)]
 
     def test_the_measured_list_is_computed_from_published_results_as_they_grow(self):
         empty = self.site([])
-        section = self.measured_section(empty("#models"))
-        self.assertIn("No model has published Baseline daily results yet.", section)
-        self.assertIn("catalogue listing", section)
+        self.assertIn("Baseline has no scored test result of its own to show yet.", empty("#models"))
+        self.assertEqual(empty.page("#models")["modelRows"], [])
         one = self.site([self.fixture("daily-part1.json")])
         section = self.measured_section(one("#models"))
-        self.assertIn("1 exact model has published Baseline daily results.", section)
+        self.assertIn("1 tested model", section)
         self.assertIn("Reference test: all 40 questions", section)
         puter = [self.published(p) for p in ("puter-claude-sonnet-5-5--", "puter-gpt-6.1-sol--", "puter-x-ai-grok-4.7--")]
         four = self.site([self.fixture("daily-part1.json")] + puter)
         page = four.page("#models")
         section = self.measured_section(page["text"])
-        self.assertIn("4 exact models have published Baseline daily results.", section)
+        self.assertIn("4 tested models", section)
+        self.assertEqual(len(page["modelRows"]), 4)
+        self.assertEqual(page["sparks"], 4)                                  # one mini history per model
         for name in ("Claude Sonnet 5.5", "gpt-6.1-sol", "grok-4.7", "gemini-3.5-flash-lite"):   # canonical group names
             self.assertIn(name, section)
         self.assertEqual(section.count("Quick check: 4 of the 40 reference questions, through Puter"), 3)
         self.assertEqual(section.count("Reference test: all 40 questions"), 1)
         for app in ("Claude app", "ChatGPT", "Grok app", "Gemini app"):
-            self.assertNotIn(app, section)                               # apps are never measured by association
+            self.assertNotIn(app, page["text"])                          # apps are never measured by association
         tested = {k for k, r in four.data["baseline_tests"]["entries"].items() if r["runs"]}
         self.assertEqual(tested, {GEMINI, "puter.claude-sonnet-5-5", "puter.gpt-6.1-sol", "puter.x-ai-grok-4.7"})
-        self.assertIn("Catalogue listing only", page["text"])            # unmeasured cards say so explicitly
-        featured = page["text"][page["text"].index("Featured"):page["text"].index("New releases")]
-        self.assertNotIn("Grok 4.7Third-party host", featured.replace(" ", ""))   # not repeated under Featured
+        self.assertNotIn("Catalogue listing only", page["text"])
 
     def test_each_graph_names_its_test_and_keeps_its_own_denominator(self):
         grok, claude = self.published("puter-x-ai-grok-4.7--"), self.published("puter-claude-sonnet-5-5--")
@@ -1078,8 +985,8 @@ class MeasuredCoverageTests(OwnResultsPageTests):
 
     @staticmethod
     def card_link(render, name):
-        """The href of the home page's card named `name` (render_page.js reports card links)."""
-        return next(href for text, href in render.page("#models")["featureLinks"] if text == name)
+        """The href of the home page's measured entry named `name` (render_page.js reports them)."""
+        return next(row["href"] for row in render.page("#models")["modelRows"] if row["name"] == name)
 
     def test_review_r1_an_older_measured_setup_survives_a_new_empty_setup(self):
         """Codex's reproduction: two historical points, then a newer setup without results."""
@@ -1087,10 +994,9 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         tests = render.data["baseline_tests"]["entries"][GEMINI]
         self.assertEqual(tests["runs"], 0)                                   # the newest setup has no result yet
         section = self.measured_section(render("#models"))
-        self.assertNotIn("No model has published Baseline daily results yet.", section)
-        self.assertIn("1 exact model has published Baseline daily results.", section)
-        self.assertIn("Reference test: all 40 questions · scheduled 20 Sep 2026 to 30 Sep 2026 · latest result "
-                      "21 Sep 2026 · a newer test setup has no result yet", section)   # the measured setup's own dates
+        self.assertIn("1 tested model", section)
+        self.assertIn("Reference test: all 40 questions · a newer test setup has no result yet", section)
+        self.assertIn("37 of 40latest result 21 Sep 2026", section)          # the measured setup's own result
         href = self.card_link(render, "gemini-3.5-flash-lite")
         old = "gemini-api.gemini-3.5-flash-lite--daily--abababababab"
         self.assertIn("setup=" + old, href)                                  # the link opens the measured setup
@@ -1098,8 +1004,10 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         self.assertEqual(page["selectedSetup"], "1")                         # the older setup, not the empty one
         self.assertIn("Reference test: all 40 questions", page["text"])
         self.assertIn("21 Sep 2026", page["text"])
-        latest = render.page(f"#model/{GEMINI}")
-        self.assertEqual(latest["selectedSetup"], "0")                       # unchanged default: the latest setup
+        opened = render.page(f"#model/{GEMINI}")
+        self.assertEqual(opened["selectedSetup"], "1")                       # a new empty setup never hides it
+        empty = render.page(f"#model/{GEMINI}?setup=" + render.data["baseline_tests"]["entries"][GEMINI]["daily_series"][0]["series_id"])
+        self.assertEqual(empty["selectedSetup"], "0")                        # an explicit setup link is respected
 
     def test_review_r1_a_zero_score_counts_and_a_gap_or_calibration_does_not(self):
         zero = copy.deepcopy(self.published("puter-x-ai-grok-4.7--"))
@@ -1110,7 +1018,7 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         gap_only["as_of"] = "2026-10-05T03:00:00Z"
         render = self.site([zero, gap_only, self.fixture("calibration.json")])
         section = self.measured_section(render("#models"))
-        self.assertIn("1 exact model has published Baseline daily results.", section)   # Grok's genuine zero only
+        self.assertIn("1 tested model", section)                             # Grok's genuine zero only
         self.assertIn("grok-4.7", section)
         self.assertNotIn("gemini-3.5-flash-lite", section)                   # a gap or a one-off setup test is not one
         grok = render.page("#model/puter.x-ai-grok-4.7")
@@ -1120,8 +1028,8 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         claude = self.published("puter-claude-sonnet-5-5--")
         render = self.site([self.fixture("graph/several-points.json"), claude])
         section = self.measured_section(render("#models"))
-        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter · scheduled 7 Oct 2026 to 21 Oct "
-                      "2026 · latest result", section)
+        self.assertIn("Quick check: 4 of the 40 reference questions, through Puter", section)
+        self.assertIn("model identity not confirmed", section)
         href = self.card_link(render, "Claude Sonnet 5.5")
         self.assertIn("service=puter.claude-sonnet-5-5", href)
         self.assertIn("setup=" + claude["series"]["series_id"], href)
@@ -1226,6 +1134,250 @@ class ReferenceSetupTests(MeasuredCoverageTests):
         self.assertIn("Expired (not a score)", page["text"])
         self.assertIn("20 not sent", page["text"])
         self.assertNotIn("Measured by Baseline1 exact model", page["text"].replace(" ", ""))
+
+
+def several_points(changes=None, graded=True):
+    """The labelled several-points fixture (8 Oct 39/40, 9 Oct 38/40). Its 8 Oct run has one request timeout, so
+    by default that day is graded instead (39 correct, 1 incorrect): a fully gradeable pair that may be compared.
+    `changes` replaces other days by outcome counts; the shared contract must still accept the bundle."""
+    bundle = json.loads((GRAPH_FIXTURES / "several-points.json").read_text(encoding="utf-8"))
+    changes = dict({"2026-10-08": {"correct": 39, "incorrect": 1}} if graded else {}, **(changes or {}))
+    for r in bundle["records"]:
+        if r["date"] in changes:
+            outcomes = {k: 0 for k in r["first_attempt_outcomes"]}
+            outcomes.update(changes[r["date"]])
+            r.update(first_attempt_outcomes=outcomes, first_attempt_correct=outcomes["correct"],
+                     attempted_items=40 - outcomes["not_sent"], retry_recovered={k: 0 for k in r["retry_recovered"]})
+    own_results.validate_bundle(bundle)
+    return bundle
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class MeasuredSiteTests(unittest.TestCase):
+    """The measured site (9 October 2026): the focus history, its descriptive comparison, the measured list and
+    old links, rendered from labelled fixtures with a fixed page clock. Nothing here is production data."""
+    site = OwnResultsPageTests.site
+    fixture = OwnResultsPageTests.fixture
+    published = MeasuredCoverageTests.published
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def graph(self, name):
+        return json.loads((GRAPH_FIXTURES / name).read_text(encoding="utf-8"))
+
+    def groq(self, name="second-setup.json"):
+        bundle = copy.deepcopy(self.graph(name))
+        route_id = "groq.openai.gpt-oss-120b"
+        bundle["route"] = {"route_id": route_id, "maker": "OpenAI", "exact_identifier": "gpt-oss-120b",
+                           "access_kind": "intermediary", "service_provider": "Groq"}
+        bundle["series"]["series_id"] = f"{route_id}--daily--{bundle['series']['config_fingerprint'][:12]}"
+        for r in bundle["records"]:
+            r.update(route_id=route_id, requested_model="gpt-oss-120b", series_id=bundle["series"]["series_id"])
+        return bundle
+
+    def test_the_focus_is_the_first_element_and_shows_a_comparable_movement(self):
+        raw = self.site([self.graph("several-points.json")], now="2026-10-10T06:00:00Z").page("#models")
+        self.assertEqual(raw["focus"]["kicker"], "Latest measurement")          # 8 Oct had a request timeout
+        render = self.site([several_points()], now="2026-10-10T06:00:00Z")
+        home = render.page("#models")
+        focus = home["focus"]
+        self.assertEqual(focus["kicker"], "Largest observed movement in our latest comparable tests")
+        self.assertEqual(focus["name"], "gemini-3.5-flash-lite")
+        self.assertIn("service=" + GEMINI, focus["href"])
+        self.assertTrue(focus["caption"].startswith("Down 2.5 percentage points: 39 of 40 correct on 8 Oct 2026, then "
+                                                    "38 of 40 correct on 9 Oct 2026 (one UTC day apart)."))
+        self.assertIn("not a confirmed change", focus["caption"])
+        self.assertEqual(home["dailyCharts"], 1)                                 # the real history, drawn
+        text = home["text"]
+        self.assertLess(text.index("What changed in our latest model tests?"), text.index(focus["kicker"]))
+        self.assertLess(text.index("Correct answers out of 40"), text.index("Models tested by Baseline"))
+        self.assertIn("Reference test: all 40 questions · latest result 9 Oct 2026", text)   # size and result date
+        for banned in ("nerf", "best model", "confirmed decline", "significan"):
+            self.assertNotIn(banned, text.lower())
+        later = self.site([several_points()], now="2026-10-11T00:00:01Z").page("#models")
+        self.assertEqual(later["focus"]["kicker"], "Latest measurement")          # stale: never a movement
+        self.assertIn("38 of 40 correct on 9 Oct 2026", later["focus"]["caption"])
+        self.assertIn("does not mean the model is stable", later["focus"]["caption"])
+
+    def test_the_largest_movement_wins_and_rises_and_falls_share_the_rule(self):
+        render = self.site([several_points(), self.groq()], now="2026-10-12T12:00:00Z")
+        focus = render.page("#models")["focus"]
+        self.assertEqual(focus["name"], "gpt-oss-120b")                         # 31 to 29 on consecutive days
+        self.assertTrue(focus["caption"].startswith("Down 5 percentage points: 31 of 40 correct on 11 Oct 2026"))
+        rising = copy.deepcopy(self.groq())
+        for r in rising["records"]:
+            if r["date"] == "2026-10-12":                                       # 29 becomes 33: a rise of 5
+                r["first_attempt_correct"] = 33
+                r["first_attempt_outcomes"]["correct"] += 4
+                r["first_attempt_outcomes"]["incorrect"] -= 4
+        focus = self.site([several_points(), rising], now="2026-10-12T12:00:00Z").page("#models")["focus"]
+        self.assertTrue(focus["caption"].startswith("Up 5 percentage points: 31 of 40 correct on 11 Oct 2026, then "
+                                                    "33 of 40 correct on 12 Oct 2026"))
+
+    def test_a_returned_model_mismatch_is_never_compared(self):
+        bundle = several_points({"2026-10-09": {"correct": 38, "incorrect": 1, "answered_identity_mismatch": 1}})
+        focus = self.site([bundle], now="2026-10-10T06:00:00Z").page("#models")["focus"]
+        self.assertEqual(focus["kicker"], "Latest measurement")
+        self.assertNotIn("percentage point", focus["caption"])
+
+    def test_first_measurement_quick_check_and_nothing(self):
+        one = self.site([self.graph("one-point.json")], now="2026-10-03T00:00:00Z").page("#models")
+        self.assertEqual(one["focus"]["kicker"], "First measurement")
+        self.assertIn("first result of this test setup", one["focus"]["caption"])
+        self.assertIn("One daily test; more days are needed to show a pattern", one["text"])   # a point, not a line
+        quick = self.site([self.published("puter-claude-sonnet-5-5--")]).page("#models")
+        self.assertEqual(quick["focus"]["kicker"], "Latest quick check")
+        self.assertIn("4-question quick check is a small sample", quick["focus"]["caption"])
+        self.assertIn("Quick check: 4 of the 40 reference questions", quick["text"])
+        schedule = self.site([self.graph("schedule-only.json")]).page("#models")
+        self.assertEqual((schedule["focus"], schedule["modelRows"]), (None, []))   # a schedule is not a result
+
+    def test_a_complete_reference_model_is_listed_and_an_unfinished_one_is_not(self):
+        complete = self.site([reference_bundle([
+            {"id": "puter-ref1", "status": "complete", "started": "2026-10-12T23:50:00Z",
+             "finished": "2026-10-13T01:20:00Z", "batches": 4, "correct": 35}])], now="2026-10-13T06:00:00Z")
+        home = complete.page("#models")
+        self.assertEqual([r["name"] for r in home["modelRows"]], ["Claude Sonnet 5.5"])
+        self.assertEqual(home["focus"]["kicker"], "First measurement")
+        self.assertIn("Reference test: all 40 questions, through Puter, in batches", home["text"])
+        self.assertIn("35 of 40", home["text"])
+        self.assertNotIn("daily monitoring", home["text"].lower())
+        expired = self.site([reference_bundle([
+            {"id": "puter-ref1", "status": "expired", "started": "2026-10-12T04:00:00Z",
+             "finished": "2026-10-12T05:00:00Z", "batches": 2, "correct": 12, "not_sent": 20}])])
+        self.assertEqual(expired.page("#models")["modelRows"], [])
+        page = expired.page("#model/puter.claude-sonnet-5-5")                    # its own page stays truthful
+        self.assertIn("Expired (not a score)", page["text"])
+        self.assertNotIn("Not tested by Baseline", page["text"])
+
+    def test_search_provider_count_and_sort_use_only_the_measured_set(self):
+        puter = [self.published(p) for p in ("puter-claude-sonnet-5-5--", "puter-gpt-6.1-sol--", "puter-x-ai-grok-4.7--")]
+        render = self.site([self.fixture("daily-part1.json")] + puter)
+        claude = render.page("#models?q=claude")
+        self.assertEqual([r["name"] for r in claude["modelRows"]], ["Claude Sonnet 5.5"])
+        self.assertIn("1 of 4 tested models", claude["text"])
+        google = render.page("#models?provider=Google")
+        self.assertEqual([r["name"] for r in google["modelRows"]], ["gemini-3.5-flash-lite"])
+        none = render.page("#models?q=chatgpt")
+        self.assertEqual(none["modelRows"], [])
+        self.assertIn("No tested model matches your search.", none["text"])
+        names = [r["name"] for r in render.page("#models?sort=name")["modelRows"]]
+        self.assertEqual(names, sorted(names, key=str.lower))
+        self.assertIn("Sorted by name (A–Z).", render("#models?sort=name"))
+        text = render("#models")
+        for maker in ("DeepSeek", "Mistral", "Moonshot"):                       # providers come from tested models
+            self.assertNotIn(maker, text)
+
+    def test_old_links_never_substitute_another_service_or_an_app(self):
+        render = self.site([self.published("puter-claude-sonnet-5-5--")])
+        canonical = render.page("#model/anthropic-api.claude-sonnet-5-5")
+        self.assertEqual(canonical["dailyCharts"], 0)
+        self.assertIn("Baseline has no scored test of Claude Sonnet 5.5 through the Anthropic API to show.", canonical["text"])
+        self.assertIn("Claude Sonnet 5.5 — Third-party host (Puter)", canonical["text"])   # an explicit link instead
+        app = render.page("#model/anthropic-app.claude")
+        self.assertEqual(app["dailyCharts"], 0)
+        self.assertNotIn("Third-party host (Puter)", app["text"])
+        hosted = render.page("#model/anthropic-api.claude-sonnet-5-5?service=puter.claude-sonnet-5-5")
+        self.assertEqual(hosted["dailyCharts"], 1)
+        self.assertIn("model identity not confirmed", hosted["text"])
+        self.assertEqual(render.problems(), [])
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class MeasuredReviewFixTests(unittest.TestCase):
+    """Review R1 and R2 (docs/MEASURED_SITE_REVIEW_2026-10-09.md), end to end: schema-valid daily records go
+    through the real import, view generation, build and page; the clock moves on the same open page."""
+    site = OwnResultsPageTests.site
+    NOW = "2026-10-10T06:00:00Z"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    @staticmethod
+    def several(changes=None):
+        return several_points(changes)
+
+    def built(self, changes):
+        render = self.site([self.several(changes)], now=self.NOW)
+        rows = render.data["baseline_tests"]["entries"][GEMINI]["daily_series"][0]["rows"]
+        return render, {r["date"]: r["eligible"] for r in rows}
+
+    def test_r1_an_all_error_day_is_a_visible_failure_never_a_zero_or_a_headline(self):
+        render, eligible = self.built({"2026-10-08": {"correct": 36, "incorrect": 4},
+                                       "2026-10-09": {"correct": 0, "provider_error": 40}})
+        self.assertTrue(eligible["2026-10-09"])                # the shared contract calls it eligible: unchanged
+        home = render.page("#models")
+        self.assertNotEqual(home["focus"]["kicker"], "Largest observed movement in our latest comparable tests")
+        self.assertNotIn("90 percentage points", home["text"])
+        self.assertIn("A later attempt on 9 Oct 2026 has no score; the graph shows it.", home["focus"]["caption"])
+        page = render.page(f"#model/{GEMINI}")
+        self.assertTrue(any(a.startswith("9 Oct 2026: no gradeable answer: 40 request errors") for a in page["aria"]))
+        self.assertFalse([a for a in page["aria"] if a.startswith("9 Oct 2026: 0 of 40 correct")])
+        self.assertIn("! a run with no gradeable answer", page["text"])
+        only = self.site([dict(self.several(), records=[r for r in self.several(
+            {"2026-10-02": {"correct": 0, "provider_error": 40}})["records"] if r["date"] == "2026-10-02"],
+            as_of="2026-10-02T12:00:00Z")], now=self.NOW)
+        alone = only.page("#models")
+        self.assertEqual((alone["modelRows"], alone["focus"]), ([], None))   # an outage alone is not a measurement
+        failed = only.page(f"#model/{GEMINI}")
+        self.assertNotIn("Not tested by Baseline", failed["text"])         # its own page shows the failure
+        self.assertTrue(any("no gradeable answer" in a for a in failed["aria"]))
+
+    def test_r1_forty_incorrect_answers_remain_a_genuine_zero(self):
+        render, _ = self.built({"2026-10-08": {"correct": 36, "incorrect": 4}, "2026-10-09": {"correct": 0, "incorrect": 40}})
+        page = render.page(f"#model/{GEMINI}")
+        self.assertTrue(any(a.startswith("9 Oct 2026: 0 of 40 correct on the first attempt") for a in page["aria"]))
+        focus = render.page("#models")["focus"]
+        self.assertTrue(focus["caption"].startswith("Down 90 percentage points: 36 of 40 correct on 8 Oct 2026"))
+
+    def test_r1_mixed_operational_failures_stay_visible_but_are_never_promoted(self):
+        render, _ = self.built({"2026-10-08": {"correct": 36, "incorrect": 4}, "2026-10-09": {"correct": 30, "timeout": 10}})
+        focus = render.page("#models")["focus"]
+        self.assertEqual(focus["kicker"], "Latest measurement")
+        self.assertNotIn("percentage point", focus["caption"])
+        page = render.page(f"#model/{GEMINI}")
+        self.assertTrue(any(a.startswith("9 Oct 2026: 30 of 40 correct on the first attempt; all 40 questions attempted; "
+                                         "0 refused, 10 request errors") for a in page["aria"]), page["aria"])
+        self.assertIn("Latest result: 30 of 40 correct on 9 Oct 2026", page["text"])
+
+    def test_r2_the_open_home_page_drops_an_expired_movement_without_rebuilding(self):
+        render = self.site([self.several()], now=self.NOW)
+        within = render.page("#models", advance="2026-10-10T23:59:00Z")     # 9 Oct 00:00 + 48 h is 11 Oct 00:00
+        self.assertEqual(within["focus"]["kicker"], "Largest observed movement in our latest comparable tests")
+        self.assertEqual(within["kept"]["nodes"], within["kept"]["of"])      # nothing touched inside the window
+        for refresh in ("tick", "visibility"):
+            with self.subTest(refresh=refresh):
+                later = render.page("#models", advance="2026-10-11T00:00:01Z", refresh=refresh)
+                self.assertEqual(later["focus"]["kicker"], "Latest measurement")
+                self.assertNotIn("percentage point", later["focus"]["caption"])
+                self.assertIn("38 of 40 correct on 9 Oct 2026", later["focus"]["caption"])
+                self.assertEqual(later["kept"]["nodes"], later["kept"]["of"])   # same series: text updated in place
+                self.assertEqual(later["kept"]["charts"], later["kept"]["chartsBefore"])
+
+    def test_r2_the_open_model_page_caption_expires_and_keeps_the_selected_setup(self):
+        second = json.loads((GRAPH_FIXTURES / "second-setup.json").read_text(encoding="utf-8"))
+        render = self.site([self.several(), second], now=self.NOW)
+        index = str([s["series_id"] for s in render.data["baseline_tests"]["entries"][GEMINI]["daily_series"]]
+                    .index(self.several()["series"]["series_id"]))
+        before = render.page(f"#model/{GEMINI}", setup=index)
+        self.assertIn("Latest comparable movement: Down 2.5 percentage points", before["text"])
+        after = render.page(f"#model/{GEMINI}", setup=index, advance="2026-10-11T00:00:01Z")
+        self.assertEqual(after["selectedSetup"], index)                      # the chosen setup stays chosen
+        self.assertNotIn("Latest comparable movement", after["text"])
+        self.assertIn("Latest result: 38 of 40 correct on 9 Oct 2026", after["text"])
+        self.assertEqual(after["kept"]["charts"], after["kept"]["chartsBefore"])   # the graph and its points stay
+        self.assertGreaterEqual(after["kept"]["nodes"], after["kept"]["of"] - 4)    # only the caption is replaced
 
 
 class PageSourceTests(unittest.TestCase):
