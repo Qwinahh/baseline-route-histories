@@ -35,6 +35,10 @@
   {
    "reviewed_at": "2026-10-08T09:26:15Z",
    "sha256": "dde86e1e65da922f08f87c8df50ef08e0d71bd42ceb141a7a70ec1558b0f825e"
+  },
+  {
+   "reviewed_at": "2026-10-15T10:08:48Z",
+   "sha256": "f70762248475b11cc7c514e6b06d8931560097781a1227c76bab0fadb0b03975"
   }
  ],
  "format": "baseline-own-results-policy-review",
