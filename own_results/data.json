@@ -87,7 +87,7 @@
    }
   },
   "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082": {
-   "as_of": "2026-10-14T22:00:00Z",
+   "as_of": "2026-10-15T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -667,6 +667,55 @@
      },
      "route_id": "gemini-api.gemini-3.5-flash-lite",
      "run_id": "live-daily-20261014T074547Z-da4668c710",
+     "scheduled_items": 40,
+     "series_id": "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082",
+     "settings": {
+      "max_output_tokens": 4096,
+      "temperature": 1.0,
+      "thinking_level": "MINIMAL",
+      "timeout_seconds": 120
+     },
+     "status": "completed",
+     "valid_day": true
+    },
+    {
+     "aggregate_version": 1,
+     "attempted_items": 40,
+     "config_fingerprint": "da4668c71082324fa3272e5582851d02810e36ad5889615f4e3d8ccfa724ae11",
+     "date": "2026-10-15",
+     "evidence": "verified",
+     "first_attempt_correct": 34,
+     "first_attempt_outcomes": {
+      "answered_identity_mismatch": 0,
+      "answered_identity_unknown": 0,
+      "auth_error": 0,
+      "client_error": 0,
+      "correct": 34,
+      "empty": 0,
+      "format_error": 1,
+      "incorrect": 1,
+      "malformed": 0,
+      "not_sent": 0,
+      "provider_error": 4,
+      "rate_limited": 0,
+      "refusal": 0,
+      "timeout": 0,
+      "truncated": 0
+     },
+     "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+     "kind": "daily",
+     "panel_id": "calibration-v1",
+     "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+     "report_sha256": "3366d68c13bd885fdf31829e3271c48b3baca8e265fa1678bd4c0a1ab3d19872",
+     "requested_model": "gemini-3.5-flash-lite",
+     "retry_recovered": {
+      "correct": 3,
+      "format_error": 0,
+      "incorrect": 0,
+      "other": 1
+     },
+     "route_id": "gemini-api.gemini-3.5-flash-lite",
+     "run_id": "live-daily-20261015T073259Z-da4668c710",
      "scheduled_items": 40,
      "series_id": "gemini-api.gemini-3.5-flash-lite--daily--da4668c71082",
      "settings": {
@@ -2144,6 +2193,11 @@
    "admitted_at": "2026-10-13T03:30:15Z",
    "policy_sha256": "8f3daf7815cd30630530c901cc4ec0d3e3bf4aecae284cc72b2509c5cf241087",
    "sha256": "732527fed32ba87e800ff196fa7a7cb663388f146582baf0031f463c444a099f"
+  },
+  {
+   "admitted_at": "2026-10-16T01:27:52Z",
+   "policy_sha256": "89604208cd2eaff9b68c02814d83d6cd189aea5f13a402c28eae6a42dece69b7",
+   "sha256": "78f8b695d3c7bdbf6f701990148ff45b5422b2a8bd3147ff0b4a3f0075ca73a4"
   },
   {
    "admitted_at": "2026-10-08T09:29:13Z",
