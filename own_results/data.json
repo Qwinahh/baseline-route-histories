@@ -930,7 +930,7 @@
    }
   },
   "groq.openai.gpt-oss-120b--daily--1ef83cee36a9": {
-   "as_of": "2026-10-16T22:00:00Z",
+   "as_of": "2026-10-17T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -1020,6 +1020,55 @@
      },
      "route_id": "groq.openai.gpt-oss-120b",
      "run_id": "live-daily-20261016T090209Z-1ef83cee36",
+     "scheduled_items": 40,
+     "series_id": "groq.openai.gpt-oss-120b--daily--1ef83cee36a9",
+     "settings": {
+      "max_output_tokens": 1024,
+      "temperature": 1.0,
+      "thinking_level": "LOW",
+      "timeout_seconds": 120
+     },
+     "status": "completed",
+     "valid_day": true
+    },
+    {
+     "aggregate_version": 1,
+     "attempted_items": 40,
+     "config_fingerprint": "1ef83cee36a9c9afd7247128b2d6a81554c05eb58549816a1a056b8ad472fbf3",
+     "date": "2026-10-17",
+     "evidence": "verified",
+     "first_attempt_correct": 38,
+     "first_attempt_outcomes": {
+      "answered_identity_mismatch": 0,
+      "answered_identity_unknown": 0,
+      "auth_error": 0,
+      "client_error": 0,
+      "correct": 38,
+      "empty": 0,
+      "format_error": 0,
+      "incorrect": 2,
+      "malformed": 0,
+      "not_sent": 0,
+      "provider_error": 0,
+      "rate_limited": 0,
+      "refusal": 0,
+      "timeout": 0,
+      "truncated": 0
+     },
+     "interpretation": "Counts from Baseline's own runs on one route. Not a quality score, and not a decline, improvement or stability verdict.",
+     "kind": "daily",
+     "panel_id": "calibration-v1",
+     "panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+     "report_sha256": "536ffddbd516c308d3c81f7a08b3f90aa4f8fa37e79f16ad181e34861a1983ab",
+     "requested_model": "gpt-oss-120b",
+     "retry_recovered": {
+      "correct": 0,
+      "format_error": 0,
+      "incorrect": 0,
+      "other": 0
+     },
+     "route_id": "groq.openai.gpt-oss-120b",
+     "run_id": "live-daily-20261017T083404Z-1ef83cee36",
      "scheduled_items": 40,
      "series_id": "groq.openai.gpt-oss-120b--daily--1ef83cee36a9",
      "settings": {
@@ -2440,6 +2489,11 @@
    "admitted_at": "2026-10-13T03:30:15Z",
    "policy_sha256": "bd0dd35da6ffc5100c3205c032ec1feebd3e0d0e62458e6e9c1b4f37d1a5330a",
    "sha256": "694f7192a46f38c6aad2eebd92c7a672ca2a69d6779a85b51842d8a6d8f7d17a"
+  },
+  {
+   "admitted_at": "2026-10-18T01:28:46Z",
+   "policy_sha256": "f70762248475b11cc7c514e6b06d8931560097781a1227c76bab0fadb0b03975",
+   "sha256": "6ed8ce0e02be034ae8048f5df3f42119b5fd683eeed67d35280a249492da52b1"
   },
   {
    "admitted_at": "2026-10-13T03:30:15Z",
