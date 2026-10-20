@@ -1698,7 +1698,7 @@
    }
   },
   "puter-claude-sonnet-5-5--daily--485055318d01": {
-   "as_of": "2026-10-13T22:00:00Z",
+   "as_of": "2026-10-20T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -1762,6 +1762,88 @@
      "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
      "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
      "status": "completed"
+    },
+    {
+     "answered": null,
+     "attempted": null,
+     "correct": null,
+     "date": "2026-10-14",
+     "evidence": "unavailable",
+     "evidence_sha256": "cefad0aa6ac1659495aaf49ba23b3da3b23964d8a0fd01422739c4c6962669d6",
+     "format_error": null,
+     "identity": null,
+     "incorrect": null,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": null,
+     "not_sent": null,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-claude-sonnet-5-5",
+     "run_id": "puter-daily-20261014T115211Z-4f2f319973",
+     "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
+     "status": "incomplete"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 3,
+     "date": "2026-10-19",
+     "evidence": "verified",
+     "evidence_sha256": "13d0489ac2b59127c871789568af254dc33b61179b4de36f87460a7e4462b246",
+     "format_error": 1,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-claude-sonnet-5-5",
+     "run_id": "puter-daily-20261019T005831Z-1a626f12c9",
+     "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
+     "status": "completed"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 3,
+     "date": "2026-10-20",
+     "evidence": "verified",
+     "evidence_sha256": "e8404856138560d41a230ed365a7fe621f95bbe4a285094a8672431075e779dd",
+     "format_error": 1,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-claude-sonnet-5-5",
+     "run_id": "puter-daily-20261020T054216Z-74ddc404bc",
+     "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
+     "status": "completed"
     }
    ],
    "route": {
@@ -1782,11 +1864,64 @@
     "parent_panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
     "planned_items": 4,
     "schedule": {
-     "end_date": "2026-10-21",
-     "start_date": "2026-10-07",
-     "type": "daily",
-     "window_minutes": 1080,
-     "window_start_utc": "04:00"
+     "legacy_through": "2026-10-13",
+     "segments": [
+      {
+       "approval_id": "3c1bf544b083ea7ed13675b218aa5a2ec15597b4185ac6817d33da3372df2d81",
+       "config_sha256": "fe0b050f5fb31102f21530d9f2bbf511027688bc3690ebe167c4d7658b8a68a8",
+       "end_date": "2026-10-07",
+       "start_date": "2026-10-07",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": "06df13f23d574c990a544ee2dbf35c7de17ace64e28f0724dc57edc4d9d7e191",
+       "config_sha256": "e61f5b5231bc36c3cc67f7bcc5b0ca5f21021d8f60ab4a69c20447d48ae42e50",
+       "end_date": "2026-10-13",
+       "start_date": "2026-10-08",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": "2c84ee597925b77d6f6ca8bf585c253434c0c3789bfd3263f8715a7b28ae7c82",
+       "config_sha256": "03a92b772221bf8cb0cfb15ec8be568c1479c3218088e9c985a335adefe3881a",
+       "end_date": "2026-10-14",
+       "start_date": "2026-10-14",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": null,
+       "config_sha256": null,
+       "end_date": "2026-10-18",
+       "start_date": "2026-10-15",
+       "state": "pause",
+       "window_minutes": null,
+       "window_start_utc": null
+      },
+      {
+       "approval_id": "ab26e2ec4ac4b75c6847ea754e840ec0e48b35647a8810c1c34e5895d4cd3372",
+       "config_sha256": "b68a4aa2c36d728c8c403e8199f9b6baf10116ca5d2b824df82e0f127f9d0563",
+       "end_date": "2026-10-19",
+       "start_date": "2026-10-19",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      },
+      {
+       "approval_id": "70e5bfe50265324096265df70f103a7e8784a4541d7aeaf5a497cd824d101bcf",
+       "config_sha256": "e2be02ab5fa48b8240b4b0d2cf1cd3105c486a9abca4b6493449d9d8d9bb54c9",
+       "end_date": "2026-10-22",
+       "start_date": "2026-10-20",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      }
+     ],
+     "type": "daily_segments"
     },
     "series_fingerprint": "485055318d015b9fb2f702f4960ae4dec6e328a038036b06b17c0e675ebff59c",
     "series_id": "puter-claude-sonnet-5-5--daily--485055318d01",
@@ -2076,7 +2211,7 @@
    }
   },
   "puter-gpt-6.1-sol--daily--f0d9bf655682": {
-   "as_of": "2026-10-13T22:00:00Z",
+   "as_of": "2026-10-20T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -2140,6 +2275,88 @@
      "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
      "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
      "status": "completed"
+    },
+    {
+     "answered": null,
+     "attempted": null,
+     "correct": null,
+     "date": "2026-10-14",
+     "evidence": "unavailable",
+     "evidence_sha256": "cefad0aa6ac1659495aaf49ba23b3da3b23964d8a0fd01422739c4c6962669d6",
+     "format_error": null,
+     "identity": null,
+     "incorrect": null,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": null,
+     "not_sent": null,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-gpt-6.1-sol",
+     "run_id": "puter-daily-20261014T115211Z-4f2f319973",
+     "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
+     "status": "incomplete"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-19",
+     "evidence": "verified",
+     "evidence_sha256": "13d0489ac2b59127c871789568af254dc33b61179b4de36f87460a7e4462b246",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-gpt-6.1-sol",
+     "run_id": "puter-daily-20261019T005831Z-1a626f12c9",
+     "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
+     "status": "completed"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-20",
+     "evidence": "verified",
+     "evidence_sha256": "e8404856138560d41a230ed365a7fe621f95bbe4a285094a8672431075e779dd",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-gpt-6.1-sol",
+     "run_id": "puter-daily-20261020T054216Z-74ddc404bc",
+     "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
+     "status": "completed"
     }
    ],
    "route": {
@@ -2160,11 +2377,64 @@
     "parent_panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
     "planned_items": 4,
     "schedule": {
-     "end_date": "2026-10-21",
-     "start_date": "2026-10-07",
-     "type": "daily",
-     "window_minutes": 1080,
-     "window_start_utc": "04:00"
+     "legacy_through": "2026-10-13",
+     "segments": [
+      {
+       "approval_id": "3c1bf544b083ea7ed13675b218aa5a2ec15597b4185ac6817d33da3372df2d81",
+       "config_sha256": "fe0b050f5fb31102f21530d9f2bbf511027688bc3690ebe167c4d7658b8a68a8",
+       "end_date": "2026-10-07",
+       "start_date": "2026-10-07",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": "06df13f23d574c990a544ee2dbf35c7de17ace64e28f0724dc57edc4d9d7e191",
+       "config_sha256": "e61f5b5231bc36c3cc67f7bcc5b0ca5f21021d8f60ab4a69c20447d48ae42e50",
+       "end_date": "2026-10-13",
+       "start_date": "2026-10-08",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": "2c84ee597925b77d6f6ca8bf585c253434c0c3789bfd3263f8715a7b28ae7c82",
+       "config_sha256": "03a92b772221bf8cb0cfb15ec8be568c1479c3218088e9c985a335adefe3881a",
+       "end_date": "2026-10-14",
+       "start_date": "2026-10-14",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": null,
+       "config_sha256": null,
+       "end_date": "2026-10-18",
+       "start_date": "2026-10-15",
+       "state": "pause",
+       "window_minutes": null,
+       "window_start_utc": null
+      },
+      {
+       "approval_id": "ab26e2ec4ac4b75c6847ea754e840ec0e48b35647a8810c1c34e5895d4cd3372",
+       "config_sha256": "b68a4aa2c36d728c8c403e8199f9b6baf10116ca5d2b824df82e0f127f9d0563",
+       "end_date": "2026-10-19",
+       "start_date": "2026-10-19",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      },
+      {
+       "approval_id": "70e5bfe50265324096265df70f103a7e8784a4541d7aeaf5a497cd824d101bcf",
+       "config_sha256": "e2be02ab5fa48b8240b4b0d2cf1cd3105c486a9abca4b6493449d9d8d9bb54c9",
+       "end_date": "2026-10-22",
+       "start_date": "2026-10-20",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      }
+     ],
+     "type": "daily_segments"
     },
     "series_fingerprint": "f0d9bf6556822117a7f87091d7fcce241da403d2a95d1a8372465ae5c568830b",
     "series_id": "puter-gpt-6.1-sol--daily--f0d9bf655682",
@@ -2452,7 +2722,7 @@
    }
   },
   "puter-x-ai-grok-4.7--daily--291df76c8060": {
-   "as_of": "2026-10-13T22:00:00Z",
+   "as_of": "2026-10-20T22:00:00Z",
    "open_dates": [],
    "records": [
     {
@@ -2485,6 +2755,88 @@
      "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
      "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
      "status": "completed"
+    },
+    {
+     "answered": null,
+     "attempted": null,
+     "correct": null,
+     "date": "2026-10-14",
+     "evidence": "unavailable",
+     "evidence_sha256": "cefad0aa6ac1659495aaf49ba23b3da3b23964d8a0fd01422739c4c6962669d6",
+     "format_error": null,
+     "identity": null,
+     "incorrect": null,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": null,
+     "not_sent": null,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-x-ai-grok-4.7",
+     "run_id": "puter-daily-20261014T115211Z-4f2f319973",
+     "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+     "status": "incomplete"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-19",
+     "evidence": "verified",
+     "evidence_sha256": "13d0489ac2b59127c871789568af254dc33b61179b4de36f87460a7e4462b246",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-x-ai-grok-4.7",
+     "run_id": "puter-daily-20261019T005831Z-1a626f12c9",
+     "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+     "status": "completed"
+    },
+    {
+     "answered": 4,
+     "attempted": 4,
+     "correct": 4,
+     "date": "2026-10-20",
+     "evidence": "verified",
+     "evidence_sha256": "e8404856138560d41a230ed365a7fe621f95bbe4a285094a8672431075e779dd",
+     "format_error": 0,
+     "identity": {
+      "mismatch": 0,
+      "reported_match": 0,
+      "unknown": 4
+     },
+     "incorrect": 0,
+     "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+     "not_graded": {
+      "error": 0,
+      "malformed": 0,
+      "missing_text": 0,
+      "refusal": 0,
+      "truncated": 0,
+      "uncertain": 0
+     },
+     "not_sent": 0,
+     "planned_items": 4,
+     "record_version": 1,
+     "route_id": "puter-x-ai-grok-4.7",
+     "run_id": "puter-daily-20261020T054216Z-74ddc404bc",
+     "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+     "status": "completed"
     }
    ],
    "route": {
@@ -2505,11 +2857,55 @@
     "parent_panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
     "planned_items": 4,
     "schedule": {
-     "end_date": "2026-10-21",
-     "start_date": "2026-10-08",
-     "type": "daily",
-     "window_minutes": 1080,
-     "window_start_utc": "04:00"
+     "legacy_through": "2026-10-13",
+     "segments": [
+      {
+       "approval_id": "06df13f23d574c990a544ee2dbf35c7de17ace64e28f0724dc57edc4d9d7e191",
+       "config_sha256": "e61f5b5231bc36c3cc67f7bcc5b0ca5f21021d8f60ab4a69c20447d48ae42e50",
+       "end_date": "2026-10-13",
+       "start_date": "2026-10-08",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": "2c84ee597925b77d6f6ca8bf585c253434c0c3789bfd3263f8715a7b28ae7c82",
+       "config_sha256": "03a92b772221bf8cb0cfb15ec8be568c1479c3218088e9c985a335adefe3881a",
+       "end_date": "2026-10-14",
+       "start_date": "2026-10-14",
+       "state": "collect",
+       "window_minutes": 1080,
+       "window_start_utc": "04:00"
+      },
+      {
+       "approval_id": null,
+       "config_sha256": null,
+       "end_date": "2026-10-18",
+       "start_date": "2026-10-15",
+       "state": "pause",
+       "window_minutes": null,
+       "window_start_utc": null
+      },
+      {
+       "approval_id": "ab26e2ec4ac4b75c6847ea754e840ec0e48b35647a8810c1c34e5895d4cd3372",
+       "config_sha256": "b68a4aa2c36d728c8c403e8199f9b6baf10116ca5d2b824df82e0f127f9d0563",
+       "end_date": "2026-10-19",
+       "start_date": "2026-10-19",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      },
+      {
+       "approval_id": "70e5bfe50265324096265df70f103a7e8784a4541d7aeaf5a497cd824d101bcf",
+       "config_sha256": "e2be02ab5fa48b8240b4b0d2cf1cd3105c486a9abca4b6493449d9d8d9bb54c9",
+       "end_date": "2026-10-22",
+       "start_date": "2026-10-20",
+       "state": "collect",
+       "window_minutes": 1320,
+       "window_start_utc": "00:00"
+      }
+     ],
+     "type": "daily_segments"
     },
     "series_fingerprint": "291df76c8060d8fb98db55dc4653aa3583f8fbf84e4f1d309ddb4d98225c05e8",
     "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
@@ -2569,6 +2965,11 @@
    "sha256": "027850dce932ae773fa3f8748dd321f4b3bd938f5d1e84748c73e8c9700e61fb"
   },
   {
+   "admitted_at": "2026-10-20T22:27:39Z",
+   "policy_sha256": "6c47036650274b797accea307b58ebe6371951480296818137b683d3fafcd8cc",
+   "sha256": "051f8a9c98a56f17295ebcf2b496abb8ed29c7e4715b6ea7b08033f2273a6b71"
+  },
+  {
    "admitted_at": "2026-10-14T01:49:52Z",
    "policy_sha256": "bd0dd35da6ffc5100c3205c032ec1feebd3e0d0e62458e6e9c1b4f37d1a5330a",
    "sha256": "05526c055525baaf49033da9f0d64988cc7da1ac7bd6138e4c9473026ecdf3ec"
@@ -2597,6 +2998,11 @@
    "admitted_at": "2026-10-11T02:07:59Z",
    "policy_sha256": "552f5dd2c59afd7787b646efac55e1c4a53a22c0a6398d3ad4ee79dd3bbcbaac",
    "sha256": "2709a94f7ace78d18c063189fdb2f447f75d1bb05e96b3cd219cb79aa7eec7db"
+  },
+  {
+   "admitted_at": "2026-10-20T22:27:39Z",
+   "policy_sha256": "0a528d3e21068273d40e84e065b7dc8dcc38f27a8bda7a46758982bcca8aabca",
+   "sha256": "27f5cdd139837939f70883a3bd7e6dd8f0c896fe5477a8bbf8d38efac8274960"
   },
   {
    "admitted_at": "2026-10-16T01:36:48Z",
@@ -2651,6 +3057,11 @@
    "admitted_at": "2026-10-20T02:01:39Z",
    "policy_sha256": "f70762248475b11cc7c514e6b06d8931560097781a1227c76bab0fadb0b03975",
    "sha256": "4ef4d4655b6539331655d7da49e79df8d3fb6fb1f482da4f410a7d183d9c42c3"
+  },
+  {
+   "admitted_at": "2026-10-20T22:27:39Z",
+   "policy_sha256": "3ff7e5aae0420ca511a7eac17d510be952c613d55f6d815b8b5f7d528b2857c1",
+   "sha256": "525b30c395aec77e61eb86e306c9052e4141b8696aaed43d8aec2e38c0a34b3c"
   },
   {
    "reviewed_at": "2026-10-08T00:28:59Z",

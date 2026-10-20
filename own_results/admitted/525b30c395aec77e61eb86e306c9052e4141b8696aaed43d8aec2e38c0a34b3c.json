@@ -1,0 +1,234 @@
+{
+ "as_of": "2026-10-20T22:00:00Z",
+ "format": "baseline-own-results",
+ "format_version": 5,
+ "open_dates": [],
+ "records": [
+  {
+   "answered": 4,
+   "attempted": 4,
+   "correct": 4,
+   "date": "2026-10-08",
+   "evidence": "verified",
+   "evidence_sha256": "15191bf9ee4ecebea3dd2b4688658a4694f339c50235c304ddb0d69bc4457654",
+   "format_error": 0,
+   "identity": {
+    "mismatch": 0,
+    "reported_match": 0,
+    "unknown": 4
+   },
+   "incorrect": 0,
+   "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+   "not_graded": {
+    "error": 0,
+    "malformed": 0,
+    "missing_text": 0,
+    "refusal": 0,
+    "truncated": 0,
+    "uncertain": 0
+   },
+   "not_sent": 0,
+   "planned_items": 4,
+   "record_version": 1,
+   "route_id": "puter-x-ai-grok-4.7",
+   "run_id": "puter-daily-20261008T063226Z-a2eedc7860",
+   "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+   "status": "completed"
+  },
+  {
+   "answered": null,
+   "attempted": null,
+   "correct": null,
+   "date": "2026-10-14",
+   "evidence": "unavailable",
+   "evidence_sha256": "cefad0aa6ac1659495aaf49ba23b3da3b23964d8a0fd01422739c4c6962669d6",
+   "format_error": null,
+   "identity": null,
+   "incorrect": null,
+   "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+   "not_graded": null,
+   "not_sent": null,
+   "planned_items": 4,
+   "record_version": 1,
+   "route_id": "puter-x-ai-grok-4.7",
+   "run_id": "puter-daily-20261014T115211Z-4f2f319973",
+   "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+   "status": "incomplete"
+  },
+  {
+   "answered": 4,
+   "attempted": 4,
+   "correct": 4,
+   "date": "2026-10-19",
+   "evidence": "verified",
+   "evidence_sha256": "13d0489ac2b59127c871789568af254dc33b61179b4de36f87460a7e4462b246",
+   "format_error": 0,
+   "identity": {
+    "mismatch": 0,
+    "reported_match": 0,
+    "unknown": 4
+   },
+   "incorrect": 0,
+   "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+   "not_graded": {
+    "error": 0,
+    "malformed": 0,
+    "missing_text": 0,
+    "refusal": 0,
+    "truncated": 0,
+    "uncertain": 0
+   },
+   "not_sent": 0,
+   "planned_items": 4,
+   "record_version": 1,
+   "route_id": "puter-x-ai-grok-4.7",
+   "run_id": "puter-daily-20261019T005831Z-1a626f12c9",
+   "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+   "status": "completed"
+  },
+  {
+   "answered": 4,
+   "attempted": 4,
+   "correct": 4,
+   "date": "2026-10-20",
+   "evidence": "verified",
+   "evidence_sha256": "e8404856138560d41a230ed365a7fe621f95bbe4a285094a8672431075e779dd",
+   "format_error": 0,
+   "identity": {
+    "mismatch": 0,
+    "reported_match": 0,
+    "unknown": 4
+   },
+   "incorrect": 0,
+   "interpretation": "Counts from Baseline's own runs of 4 fixed questions on one requested route through Puter. Returned-model identity is counted separately; these are results for the requested Puter route, not verified maker model performance. Not a quality score, and not a decline, improvement or stability verdict.",
+   "not_graded": {
+    "error": 0,
+    "malformed": 0,
+    "missing_text": 0,
+    "refusal": 0,
+    "truncated": 0,
+    "uncertain": 0
+   },
+   "not_sent": 0,
+   "planned_items": 4,
+   "record_version": 1,
+   "route_id": "puter-x-ai-grok-4.7",
+   "run_id": "puter-daily-20261020T054216Z-74ddc404bc",
+   "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+   "status": "completed"
+  }
+ ],
+ "route": {
+  "access_kind": "intermediary",
+  "exact_identifier": "x-ai/grok-4.7",
+  "label": "Grok 4.7 via Puter",
+  "maker": "xAI",
+  "requested_provider": "xai",
+  "route_id": "puter-x-ai-grok-4.7",
+  "service_provider": "Puter"
+ },
+ "series": {
+  "contract": "puter-subset-v1",
+  "grader_version": "grader-v0",
+  "kind": "daily",
+  "parent_panel_id": "baseline-calibration-v1",
+  "parent_panel_items": 40,
+  "parent_panel_sha256": "9da52a504a0d96750f709689e59fa4ffbfb0b2731563a3615bc75316e1c908f7",
+  "planned_items": 4,
+  "schedule": {
+   "legacy_through": "2026-10-13",
+   "segments": [
+    {
+     "approval_id": "06df13f23d574c990a544ee2dbf35c7de17ace64e28f0724dc57edc4d9d7e191",
+     "config_sha256": "e61f5b5231bc36c3cc67f7bcc5b0ca5f21021d8f60ab4a69c20447d48ae42e50",
+     "end_date": "2026-10-13",
+     "start_date": "2026-10-08",
+     "state": "collect",
+     "window_minutes": 1080,
+     "window_start_utc": "04:00"
+    },
+    {
+     "approval_id": "2c84ee597925b77d6f6ca8bf585c253434c0c3789bfd3263f8715a7b28ae7c82",
+     "config_sha256": "03a92b772221bf8cb0cfb15ec8be568c1479c3218088e9c985a335adefe3881a",
+     "end_date": "2026-10-14",
+     "start_date": "2026-10-14",
+     "state": "collect",
+     "window_minutes": 1080,
+     "window_start_utc": "04:00"
+    },
+    {
+     "approval_id": null,
+     "config_sha256": null,
+     "end_date": "2026-10-18",
+     "start_date": "2026-10-15",
+     "state": "pause",
+     "window_minutes": null,
+     "window_start_utc": null
+    },
+    {
+     "approval_id": "ab26e2ec4ac4b75c6847ea754e840ec0e48b35647a8810c1c34e5895d4cd3372",
+     "config_sha256": "b68a4aa2c36d728c8c403e8199f9b6baf10116ca5d2b824df82e0f127f9d0563",
+     "end_date": "2026-10-19",
+     "start_date": "2026-10-19",
+     "state": "collect",
+     "window_minutes": 1320,
+     "window_start_utc": "00:00"
+    },
+    {
+     "approval_id": "70e5bfe50265324096265df70f103a7e8784a4541d7aeaf5a497cd824d101bcf",
+     "config_sha256": "e2be02ab5fa48b8240b4b0d2cf1cd3105c486a9abca4b6493449d9d8d9bb54c9",
+     "end_date": "2026-10-22",
+     "start_date": "2026-10-20",
+     "state": "collect",
+     "window_minutes": 1320,
+     "window_start_utc": "00:00"
+    }
+   ],
+   "type": "daily_segments"
+  },
+  "series_fingerprint": "291df76c8060d8fb98db55dc4653aa3583f8fbf84e4f1d309ddb4d98225c05e8",
+  "series_id": "puter-x-ai-grok-4.7--daily--291df76c8060",
+  "settings": {
+   "accepted_models": [
+    "grok-4.7",
+    "x-ai/grok-4.7"
+   ],
+   "max_tokens": 1000,
+   "meter_prefix": "xai:grok-4_dot_7:",
+   "model": "x-ai/grok-4.7",
+   "provider": "xai",
+   "reasoning_effort": null,
+   "retries": 0,
+   "sdk_package": "@heyputer/puter.js",
+   "sdk_version": "2.6.3",
+   "stream": false,
+   "temperature_forwarded": false
+  },
+  "subset_categories": [
+   "structured_extraction",
+   "constraint_following",
+   "evidence_bound",
+   "bounded_reasoning"
+  ],
+  "subset_fingerprint": "76eb13361969d4babdb303df85c639fc7e0eaa6ea76f501c4f69b14345a3015b",
+  "subset_item_ids": [
+   "ext-03",
+   "con-03",
+   "evi-03",
+   "rea-03"
+  ],
+  "subset_item_sha256": [
+   "782dfaa86771ab1f5f584c1f6b16f96aa9db79a31fcaf60c3bceb3b2cecf8dd8",
+   "8a4f0f12c6ac349926223a8b38ba28dc26d30b0fb111d2996f7cd18804764d8a",
+   "26936aa49aba3d631dd388244a06ae0c9562cafcc32cc8639fc54c8f51a751f3",
+   "36a09169fe640362275c692ff3644f6699c5ecda456abaf3e6181ca72193c72c"
+  ],
+  "subset_prompt_sha256": [
+   "1309f16668da9c85f886322fc18239c6b562eb65b5fca989d0f26504df29cba8",
+   "aef825f8f8b535693780efd33cf2c76b3152db9e6b6a0338b6251a0070be2018",
+   "4377af385581abbebca849af3e62fe853fe0befb871bc6f14fbee75976a35003",
+   "bc99c2043f3a0fc2f1f147692ab14dabeb045400ab2d3668a0d0587b7ddefb3a"
+  ],
+  "synthetic": false
+ }
+}
