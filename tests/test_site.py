@@ -890,6 +890,53 @@ class PuterSetupSelectorTests(OwnResultsPageTests):
 
 
 @unittest.skipUnless(shutil.which("node"), "node not available")
+class SegmentedScheduleTests(OwnResultsPageTests):
+    """Dated schedule segments (bundle v5): one series identity over a changed window and a pause, never a gap."""
+
+    def bundle(self):
+        own = json.loads((ROOT / "own_results" / "data.json").read_text(encoding="utf-8"))
+        sid = next(k for k in own["series"] if k.startswith("puter-claude-sonnet-5-5--daily--"))
+        body = own["series"][sid]
+        sha = lambda n: hashlib.sha256(str(n).encode("utf-8")).hexdigest()      # noqa: E731
+        seg = lambda a, b, state, start, minutes, n: {                             # noqa: E731
+            "start_date": a, "end_date": b, "state": state, "window_start_utc": start, "window_minutes": minutes,
+            "config_sha256": sha(n) if n else None, "approval_id": sha(-n) if n else None}
+        schedule = {"type": "daily_segments", "legacy_through": None, "segments": [
+            seg("2026-11-01", "2026-11-02", "collect", "04:00", 1080, 1), seg("2026-11-03", "2026-11-04", "pause", None, None, 0),
+            seg("2026-11-05", "2026-11-06", "collect", "00:00", 1320, 2)]}
+        series = dict(body["series"], synthetic=True, schedule=schedule)
+        def record(day, start, correct):
+            return {"record_version": 1, "date": day, "status": "completed",
+                    "run_id": "puter-daily-" + day.replace("-", "") + "T" + start + "Z-" + sha(day)[:10],
+                    "evidence": "verified", "evidence_sha256": sha(day), "route_id": body["route"]["route_id"],
+                    "series_id": sid, "planned_items": 4, "attempted": 4, "answered": 4, "correct": correct,
+                    "incorrect": 4 - correct, "format_error": 0,
+                    "not_graded": {k: 0 for k in own_results.NOT_GRADED_KEYS}, "not_sent": 0,
+                    "identity": {"mismatch": 0, "reported_match": 0, "unknown": 4},
+                    "interpretation": own_results.PUTER_INTERPRETATION}
+        return {"format": own_results.BUNDLE_FORMAT, "format_version": 5, "as_of": "2026-11-06T22:00:00Z",
+                "route": body["route"], "series": series, "open_dates": [],
+                "records": [record("2026-11-01", "043700", 3), record("2026-11-05", "010000", 4),
+                            record("2026-11-06", "010000", 4)]}
+
+    def test_segments_pauses_and_transitions_render(self):
+        render = self.site([self.bundle()])
+        entry = "puter.claude-sonnet-5-5"
+        view = render.data["baseline_tests"]["entries"][entry]["daily_series"][0]
+        self.assertEqual([r["state"] for r in view["rows"]],
+                         ["completed", "no_record", "paused", "paused", "completed", "completed"])
+        page = render.page(f"#model/{entry}")
+        text = page["text"]
+        self.assertIn("Scheduled in dated segments (the same questions, settings and identity throughout)", text)
+        self.assertIn("paused, no collection authorized", text)
+        self.assertIn("daily 00:00–22:00 UTC, configuration " + view["schedule_segments"][2]["configuration"], text)
+        self.assertIn("A paused date is not a missed day.", text)
+        self.assertIn("in 3 dated segments, latest daily 00:00", text)
+        self.assertEqual(page["dailyCharts"], 1)
+        self.assertEqual(render.problems(), [])
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
 class ThirdPartyEvidenceTests(OwnResultsPageTests):
     """Third-party records stay as attributed tables; Baseline's daily history is the page's only graph."""
 

@@ -448,7 +448,7 @@
   }
   var ROW_STATE = { completed: "Completed", stopped: "Stopped early", interrupted: "Interrupted",
                     gap: "Missed (recorded gap)", no_record: "No record", open: "Still open",
-                    incomplete: "Incomplete (outcome uncertain)" };
+                    incomplete: "Incomplete (outcome uncertain)", paused: "Paused (no collection authorized)" };
   function dailyRow(row) {
     var r = row.record;
     var state = ROW_STATE[row.state] || row.state;
@@ -472,7 +472,7 @@
   // One daily series as an SVG graph (T13). Layout comes from site/results-chart.js; this only draws it.
   // "~" also marks a scored run the Change view leaves out (not fully gradeable): visible, selectable, explained.
   var MARK_GLYPHS = { gap: "x", no_record: "x", partial: "~", unavailable: "?", open: "o", pending: "·", failed: "!",
-                      not_comparable: "~" };
+                      not_comparable: "~", paused: "\u2013" };
   var STACKED = 960;               // below this width the rail becomes one selector above the workspace (styles.css)
   // The width the graph is shown at, from the page's own layout: the workspace beside a 240px rail, or the full
   // column when stacked. The SVG is laid out at that size, so 12px labels render at about 12px.
@@ -538,6 +538,11 @@
     svg.appendChild(s("text", { x: lay.left - 8, y: lay.laneY + 4, "text-anchor": "end", class: "lane-label" },
       isChange ? "not plotted" : "no score"));
     svg.appendChild(s("line", { x1: lay.left, x2: lay.right, y1: lay.laneY - 11, y2: lay.laneY - 11, class: "lane" }));
+    (lay.transitions || []).forEach(function (t) {     // a dated schedule change: a new setup, window or a pause
+      var line = s("line", { x1: t.x, x2: t.x, y1: lay.top, y2: lay.laneY + 8, class: "transition", "data-date": t.date });
+      line.appendChild(s("title", {}, t.label));
+      svg.appendChild(line);
+    });
     lay.segments.forEach(function (seg) {
       svg.appendChild(s("polyline", { class: "score-line", fill: "none",
         points: seg.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") }));
@@ -666,9 +671,11 @@
     }
     var service = isPuter(d) ? d.route.label + " through " + d.route.service_provider : (e ? accessText(e) : "");
     var config = String(d.config_fingerprint || d.series_fingerprint || "").slice(0, 8);
+    var segmented = (d.schedule_segments || []).length > 1;
     return (isPuter(d) ? puterSettingsText(d.settings) : ownSettingsText(d.settings)) + " · " + d.panel_items +
       " questions · " + (service ? service + " · " : "") + "scheduled " + dayText(d.schedule.start_date) + " to " +
-      dayText(d.schedule.end_date) + ", daily " + windowText(d.schedule) + (config ? " · configuration " + config : "");
+      dayText(d.schedule.end_date) + (segmented ? " in " + d.schedule_segments.length + " dated segments, latest daily "
+        : ", daily ") + windowText(d.schedule) + (config ? " · configuration " + config : "");
   }
   // The workspace for one model (11 October 2026): its name; test size, date and identity; the latest raw score with
   // the observed change only where the comparison rules allow it; Score and Change views; the graph; a short caveat;
@@ -901,6 +908,7 @@
     var state = ROW_STATE[row.state] || row.state;
     if (!r || r.evidence !== "verified") {
       var why = row.state === "open" ? "run not yet resolved when last checked; no score"
+        : row.state === "paused" ? "no collection was authorized for this date; not a missed day"
         : !r ? "nothing was recorded for this date" : r.status === "gap" ? "no run took place"
         : r.status === "incomplete" ? "outcome uncertain; no counts" : "evidence unavailable; no counts";
       return el("tr", {}, [el("th", { scope: "row" }, dayText(row.date)), el("td", { "data-label": "Result" }, state + " — " + why),
@@ -977,8 +985,14 @@
     var closes = end[0] * 60 + end[1] + sch.window_minutes;
     var hhmm = ("0" + Math.floor(closes / 60) % 24).slice(-2) + ":" + ("0" + closes % 60).slice(-2);
     var last = d.rows.length ? d.rows[d.rows.length - 1] : null;
-    parts.push(el("p", {}, "Scheduled once a day between " + sch.window_start_utc + " and " + hhmm + " UTC, " +
-      dayText(sch.start_date) + " to " + dayText(sch.end_date) + ". Published results cover scheduled dates up to " +
+    var segs = d.schedule_segments || [];
+    var when = segs.length > 1
+      ? "Scheduled in dated segments (the same questions, settings and identity throughout): " + segs.map(function (seg) {
+          return dayText(seg.start_date) + " to " + dayText(seg.end_date) + ", " + Chart.segmentText(seg);
+        }).join("; ") + ". A paused date is not a missed day."
+      : "Scheduled once a day between " + sch.window_start_utc + " and " + hhmm + " UTC, " +
+        dayText(sch.start_date) + " to " + dayText(sch.end_date) + ".";
+    parts.push(el("p", {}, when + " Published results cover scheduled dates up to " +
       dayText(d.as_of) + "." + (last ? " Latest scheduled date: " + dayText(last.date) + " — " + (ROW_STATE[last.state] || last.state) + "." : "")));
     if (d.rows.length) {
       parts.push(el("details", { class: "evidence own-table" }, [el("summary", {}, "Daily results as a table"),

@@ -37,7 +37,8 @@
     open: "Run still open or unresolved when last checked: no score yet",
     pending: "Not yet tested or not yet published",
     failed: "Run finished without a gradeable answer (every question failed or was not answered): no score shown",
-    not_comparable: "Scored, but not every answer was gradeable or the returned model differed: not a change point"
+    not_comparable: "Scored, but not every answer was gradeable or the returned model differed: not a change point",
+    paused: "Paused: no collection was authorized for this date (not a missed day)"
   };
   var REQUEST_ERRORS = ["timeout", "provider_error", "rate_limited", "auth_error", "client_error"];
   var ANSWER_PROBLEMS = ["truncated", "empty", "malformed", "answered_identity_mismatch", "answered_identity_unknown"];
@@ -69,9 +70,22 @@
     if (row.eligible) return row.record && gradeable(row.record) === 0 ? "failed" : "point";
     if (row.state === "gap") return "gap";
     if (row.state === "open") return "open";
+    if (row.state === "paused") return "paused";             // dated schedule segments: never a missed day
     if (row.state === "no_record" || !row.record) return "no_record";
     if (row.record.evidence !== "verified" && !row.record.started_at) return "unavailable";   // reference: always counted
     return "partial";
+  }
+
+  function windowText(seg) {
+    var start = seg.window_start_utc.split(":").map(Number);
+    var closes = start[0] * 60 + start[1] + seg.window_minutes;
+    return seg.window_start_utc + "\u2013" + ("0" + Math.floor(closes / 60) % 24).slice(-2) + ":" +
+      ("0" + closes % 60).slice(-2) + " UTC";
+  }
+  // Where a dated schedule changes (a new configuration, window or a pause), from the series' own segments.
+  function segmentText(seg) {
+    return seg.state === "pause" ? "paused, no collection authorized"
+      : "daily " + windowText(seg) + (seg.configuration ? ", configuration " + seg.configuration : "");
   }
 
   function puterDetails(r, out) {
@@ -230,6 +244,12 @@
       marks.push({ date: date, kind: "pending", x: x(date), label: fullDay(date) + ": " + MARK_LABELS.pending + "." });
     });
     marks.sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+    var transitions = (series.schedule_segments || []).slice(1).filter(function (seg) {
+      return dayNumber(seg.start_date) <= last;
+    }).map(function (seg) {
+      return { date: seg.start_date, x: x(seg.start_date) - (W - L - R) / span / 2, state: seg.state,
+               label: "From " + fullDay(seg.start_date) + ": " + segmentText(seg) + "." };
+    });
 
     var puter = series.contract === "puter-subset-v1";
     var reference = series.contract === "puter-reference-v1";
@@ -243,7 +263,7 @@
       width: W, height: H, left: L, right: W - R, top: T, plotBottom: plotBottom, laneY: plotBottom + 40,
       max: max, yTicks: yTicks, xTicks: xTicks, points: points,
       segments: segments.filter(function (s) { return s.length > 1; }),
-      marks: marks, message: message, MARK_LABELS: MARK_LABELS
+      marks: marks, transitions: transitions, message: message, MARK_LABELS: MARK_LABELS
     };
   }
 
@@ -296,5 +316,5 @@
   }
 
   return { layout: layout, changeLayout: changeLayout, describe: describe, rowKind: rowKind, dayLabel: dayLabel,
-           fullDay: fullDay, signed: signed, MARK_LABELS: MARK_LABELS };
+           fullDay: fullDay, signed: signed, segmentText: segmentText, MARK_LABELS: MARK_LABELS };
 });

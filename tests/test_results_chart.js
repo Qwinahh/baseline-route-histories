@@ -7,6 +7,35 @@ const fs = require("fs");
 const C = require("../site/results-chart.js");
 
 const views = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));   // {name: [daily_series...]}
+
+// Dated schedule segments (bundle v5): a paused date is its own mark, never "missed", and breaks the line; each
+// segment boundary is a transition with its window or pause named. Synthetic inline series.
+{
+  const rec = (date, correct) => ({ record_version: 1, date, status: "completed", evidence: "verified", attempted: 4, answered: 4,
+    correct, planned_items: 4, not_graded: { error: 0, malformed: 0, missing_text: 0, refusal: 0, truncated: 0,
+    uncertain: 0 }, identity: { mismatch: 0, reported_match: 0, unknown: 4 }, not_sent: 0, incorrect: 4 - correct,
+    format_error: 0 });
+  const seg = (start_date, end_date, state, window_start_utc, window_minutes, configuration) =>
+    ({ start_date, end_date, state, window_start_utc, window_minutes, configuration });
+  const series = { contract: "puter-subset-v1", panel_items: 4, planned_items: 4, as_of: "2026-10-20T22:00:00Z",
+    schedule: { type: "daily", start_date: "2026-10-14", end_date: "2026-10-20", window_start_utc: "00:00", window_minutes: 1320 },
+    schedule_segments: [seg("2026-10-14", "2026-10-14", "collect", "04:00", 1080, "aaaaaaaa"),
+      seg("2026-10-15", "2026-10-18", "pause", null, null, null), seg("2026-10-19", "2026-10-20", "collect", "00:00", 1320, "bbbbbbbb")],
+    rows: [{ date: "2026-10-14", state: "completed", record: rec("2026-10-14", 3), eligible: true }]
+      .concat(["2026-10-15", "2026-10-16", "2026-10-17", "2026-10-18"].map((date) => ({ date, state: "paused", record: null, eligible: false })))
+      .concat([{ date: "2026-10-19", state: "completed", record: rec("2026-10-19", 4), eligible: true },
+               { date: "2026-10-20", state: "completed", record: rec("2026-10-20", 4), eligible: true }]),
+    pending_dates: [] };
+  const sl = C.layout(series, { width: 720, height: 250 });
+  assert.deepEqual(sl.marks.map((m) => m.kind), ["paused", "paused", "paused", "paused"]);
+  assert.ok(sl.marks[0].label.includes("not a missed day"));
+  assert.equal(C.rowKind({ state: "paused", record: null, eligible: false }), "paused");
+  assert.deepEqual(sl.segments.map((s) => s.map((p) => p.date)), [["2026-10-19", "2026-10-20"]]);   // no join across a pause
+  assert.deepEqual(sl.transitions.map((t) => t.label), ["From 15 Oct 2026: paused, no collection authorized.",
+    "From 19 Oct 2026: daily 00:00\u201322:00 UTC, configuration bbbbbbbb."]);
+  assert.ok(sl.transitions[0].x > sl.left && sl.transitions[1].x < sl.points[1].x);
+  assert.deepEqual(C.layout(Object.assign({}, series, { schedule_segments: undefined })).transitions, []);
+}
 const several = views["several-points"][0];
 const lay = C.layout(several, { width: 720, height: 250 });
 

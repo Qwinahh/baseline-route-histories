@@ -159,6 +159,7 @@ figure.own-chart { margin: 0; }
 .daily-chart .mark[data-kind="not_comparable"] text { fill: var(--ink); }
 .daily-chart .mark:focus-visible text { fill: var(--accent); }
 .daily-chart .lane { stroke: var(--rule); stroke-dasharray: 2 4; }
+.daily-chart .transition { stroke: var(--muted); stroke-dasharray: 4 3; stroke-width: 1; }
 .daily-chart .lane-label { fill: var(--muted); font-size: 10px; }
 .daily-chart .chart-message { fill: var(--muted); font-size: 14px; }
 .point-detail { min-height: 1.5em; font-size: 0.9rem; margin: 6px 0; }

@@ -48,8 +48,9 @@ FIXTURE_DIR = ROOT / "tests" / "fixtures" / "own_results"
 
 BUNDLE_FORMAT, DATA_FORMAT, REVIEW_FORMAT = "baseline-own-results", "baseline-own-results-data", "baseline-own-results-review"
 FORMAT_VERSION = 1                 # review manifest
-BUNDLE_VERSIONS = (1, 2, 3, 4)     # 2 (T13) also allows a schedule-only daily bundle; 3 is the Puter subset contract;
-                                   # 4 is the Puter 40-question reference contract
+BUNDLE_VERSIONS = (1, 2, 3, 4, 5)  # 2 (T13) also allows a schedule-only daily bundle; 3 is the Puter subset contract;
+                                   # 4 is the Puter 40-question reference contract; 5 is the Puter subset contract with
+                                   # dated schedule segments (schedule migration, 20 October 2026)
 BUNDLE_VERSION = 2                 # what the exporter writes now
 DATA_VERSION = 2                   # 2 (T13): sources may be person-reviewed or policy-admitted
 POLICY_FORMAT, POLICY_REVIEW_FORMAT = "baseline-own-results-policy", "baseline-own-results-policy-review"
@@ -369,8 +370,9 @@ def _check_open_dates(body: dict, as_of: datetime, record_dates: set) -> None:
     schedule = body["series"]["schedule"]
     for day in open_dates:
         parsed = _day(day)
-        if not schedule["start_date"] <= day <= schedule["end_date"]:
-            raise OwnResultsError(f"open date {day} is outside the scheduled campaign")
+        entry = day_entry(schedule, parsed)
+        if entry is None or entry["state"] != "collect":
+            raise OwnResultsError(f"open date {day} is outside the scheduled campaign (or on a paused date)")
         if window_bounds(schedule, parsed)[1] > as_of:
             raise OwnResultsError(f"open date {day} was not yet due at as_of; it is simply pending")
         if day in record_dates:
@@ -388,10 +390,13 @@ def validate_bundle(bundle, now: datetime | None = None) -> None:
     if not isinstance(bundle, dict) or bundle.get("format") != BUNDLE_FORMAT or version not in BUNDLE_VERSIONS \
             or isinstance(version, bool):
         raise OwnResultsError(f"not a {BUNDLE_FORMAT} bundle of a known version {BUNDLE_VERSIONS}")
-    fields = BODY_FIELDS + ("format", "format_version") + (("open_dates",) if version in (2, 3) else ())
+    fields = BODY_FIELDS + ("format", "format_version") + (("open_dates",) if version in (2, 3, 5) else ())
     _exact(bundle, fields, "bundle")
-    if (version == 3) != is_puter(bundle):
-        raise OwnResultsError("version 3 is exactly the Puter subset contract; versions 1 and 2 never carry it")
+    if (version in (3, 5)) != is_puter(bundle):
+        raise OwnResultsError("versions 3 and 5 are exactly the Puter subset contract; versions 1 and 2 never carry it")
+    if version in (3, 5) and (version == 5) != is_segmented(bundle["series"].get("schedule")):
+        raise OwnResultsError("version 5 is exactly the Puter subset contract with dated schedule segments; "
+                              "version 3 keeps one fixed schedule")
     if (version == 4) != is_reference(bundle):
         raise OwnResultsError("version 4 is exactly the Puter reference contract; no other version carries it")
     if version == 4 and not bundle["records"]:
@@ -439,6 +444,7 @@ def dumps(value) -> bytes:
 
 PUTER_CONTRACT = "puter-subset-v1"
 PUTER_BUNDLE_VERSION = 3
+PUTER_SEGMENTED_VERSION = 5                 # the same contract with dated schedule segments
 PUTER_SERVICE = "Puter"
 # The reviewed routes of the private daily Puter configuration. Labels name the intermediary.
 PUTER_ROUTES = {
@@ -599,7 +605,10 @@ def check_puter_series(series, route: dict) -> None:
         raise OwnResultsError("series_fingerprint does not match the subset, grader, route and settings")
     if series["series_id"] != f"{route['route_id']}--daily--{series['series_fingerprint'][:12]}":
         raise OwnResultsError("Puter series id must be route--daily--fingerprint prefix")
-    check_schedule(series["schedule"])
+    if is_segmented(series["schedule"]):
+        check_segmented_schedule(series["schedule"])
+    else:
+        check_schedule(series["schedule"])
 
 
 def validate_puter_record(record, route: dict, series: dict) -> None:
@@ -661,13 +670,23 @@ def check_puter_body(body: dict, now: datetime | None = None) -> None:
     if not isinstance(records, list) or len(records) > MAX_RECORDS:
         raise OwnResultsError(f"records must be a list of at most {MAX_RECORDS}")
     keys, dates, schedule = set(), set(), series["schedule"]
+    segmented = is_segmented(schedule)
+    if segmented and schedule["legacy_through"] is not None and as_of.date().isoformat() <= schedule["legacy_through"]:
+        raise OwnResultsError("a segmented schedule is published only after its legacy boundary (as_of after "
+                              "legacy_through)")
     for record in records:
         validate_puter_record(record, route, series)
         key = _record_key(record)
-        if record["date"] > as_of.date().isoformat() or not schedule["start_date"] <= record["date"] <= schedule["end_date"]:
-            raise OwnResultsError(f"record {key} is later than as_of or outside the scheduled campaign")
+        entry = day_entry(schedule, _day(record["date"]))
+        if record["date"] > as_of.date().isoformat() or entry is None or entry["state"] != "collect":
+            raise OwnResultsError(f"record {key} is later than as_of or outside the scheduled campaign "
+                                  "(or on a paused date)")
         if record["run_id"] is not None and puter_run_started(record["run_id"]) > as_of:
             raise OwnResultsError(f"record {key} started after as_of; a snapshot cannot report a later run")
+        if segmented and record["run_id"] is not None:
+            opens, closes = window_bounds(schedule, _day(record["date"]))
+            if not opens <= puter_run_started(record["run_id"]) < closes:
+                raise OwnResultsError(f"record {key} started outside the window of its dated segment")
         if record["date"] in dates or key in keys:
             raise OwnResultsError(f"two records for {record['date']} in one daily series")
         dates.add(record["date"])
@@ -950,6 +969,151 @@ def check_schedule(schedule) -> None:
         raise OwnResultsError("a daily schedule needs real start/end dates (at most a year) and a UTC window")
 
 
+# ---------------------------------------------------------------- dated schedule segments (bundle v5)
+#
+# A Puter subset series keeps its measurement identity (series id and fingerprints) while its campaign evolves:
+# the schedule lists consecutive dated segments, each either "collect" (one exact configuration and hash-bound
+# authorization, and the daily UTC window it ran in) or "pause" (no collection was authorized for this series:
+# never a missed day). A due collect date without a record is a missed day; a paused date never is.
+# `legacy_through` names the last date that earlier fixed-schedule (version 3) bundles of the same series may have
+# asserted; those dates must be collect dates with that same window, so published history is never rewritten.
+
+SEGMENTED = "daily_segments"
+SEGMENTED_FIELDS = ("legacy_through", "segments", "type")
+SEGMENT_FIELDS = ("approval_id", "config_sha256", "end_date", "start_date", "state", "window_minutes",
+                  "window_start_utc")
+SEGMENT_STATES = ("collect", "pause")
+MAX_SEGMENTS = 64
+
+
+def is_segmented(schedule) -> bool:
+    return isinstance(schedule, dict) and schedule.get("type") == SEGMENTED
+
+
+def _segment_key(segment: dict) -> tuple:
+    return tuple(segment[k] for k in ("state", "window_start_utc", "window_minutes", "config_sha256",
+                                      "approval_id"))
+
+
+def check_segmented_schedule(schedule) -> None:
+    """Consecutive, canonical (no two adjacent identical) dated segments; collect and pause exactly."""
+    _exact(schedule, SEGMENTED_FIELDS, "segmented schedule")
+    segments = schedule["segments"]
+    if schedule["type"] != SEGMENTED or not isinstance(segments, list) or not 1 <= len(segments) <= MAX_SEGMENTS:
+        raise OwnResultsError(f"a segmented schedule lists 1-{MAX_SEGMENTS} dated segments")
+    previous = None
+    for segment in segments:
+        _exact(segment, SEGMENT_FIELDS, "schedule segment")
+        start, end = _day(segment["start_date"]), _day(segment["end_date"])
+        if not start <= end or (previous is not None and start != _day(previous["end_date"]) + timedelta(days=1)):
+            raise OwnResultsError("schedule segments must be consecutive and in date order, without gaps or overlap")
+        if segment["state"] == "collect":
+            if not isinstance(segment["window_start_utc"], str) or not HHMM_RE.match(segment["window_start_utc"]) \
+                    or not _count(segment["window_minutes"], 1, 1440) \
+                    or not _sha(segment["config_sha256"]) or not _sha(segment["approval_id"]):
+                raise OwnResultsError("a collect segment needs its UTC window, configuration sha256 and authorization id")
+        elif segment["state"] == "pause":
+            if any(segment[k] is not None for k in ("window_start_utc", "window_minutes", "config_sha256",
+                                                    "approval_id")):
+                raise OwnResultsError("a pause segment has no window, configuration or authorization")
+        else:
+            raise OwnResultsError(f"a segment state is one of {SEGMENT_STATES}")
+        if previous is not None and _segment_key(previous) == _segment_key(segment):
+            raise OwnResultsError("adjacent identical segments must be one segment")
+        previous = segment
+    first, last = _day(segments[0]["start_date"]), _day(segments[-1]["end_date"])
+    if segments[0]["state"] != "collect" or segments[-1]["state"] != "collect" or (last - first).days > 366:
+        raise OwnResultsError("a segmented schedule starts and ends with collection and spans at most a year")
+    legacy = schedule["legacy_through"]
+    if legacy is not None:
+        if not first <= _day(legacy) <= last:
+            raise OwnResultsError("legacy_through must be a date of the schedule")
+        windows = {(s["state"], s["window_start_utc"], s["window_minutes"]) for s in segments
+                   if s["start_date"] <= legacy}
+        if len(windows) != 1 or next(iter(windows))[0] != "collect":
+            raise OwnResultsError("every date through legacy_through is a collect date with one shared window")
+
+
+def schedule_span(schedule: dict) -> tuple[str, str]:
+    if is_segmented(schedule):
+        return schedule["segments"][0]["start_date"], schedule["segments"][-1]["end_date"]
+    return schedule["start_date"], schedule["end_date"]
+
+
+def day_entry(schedule: dict, day: date) -> dict | None:
+    """The state and window of one date ({"state", "window_start_utc", "window_minutes", ...}); None outside."""
+    iso = day.isoformat()
+    if not is_segmented(schedule):
+        if not schedule["start_date"] <= iso <= schedule["end_date"]:
+            return None
+        return {"state": "collect", "window_start_utc": schedule["window_start_utc"],
+                "window_minutes": schedule["window_minutes"], "config_sha256": None, "approval_id": None}
+    for segment in schedule["segments"]:
+        if segment["start_date"] <= iso <= segment["end_date"]:
+            return {k: segment[k] for k in ("state", "window_start_utc", "window_minutes", "config_sha256",
+                                            "approval_id")}
+    return None
+
+
+def collect_days(schedule: dict) -> list:
+    return [d for d in campaign_days(schedule) if day_entry(schedule, d)["state"] == "collect"]
+
+
+def pause_days(schedule: dict) -> list:
+    return [d for d in campaign_days(schedule) if day_entry(schedule, d)["state"] == "pause"]
+
+
+def _same_entries(older: dict, newer: dict, until: date, *, provenance: bool) -> str | None:
+    """Why `newer` disagrees with `older` on older's dates through `until`, or None."""
+    for day in campaign_days(older):
+        if day > until:
+            break
+        a, b = day_entry(older, day), day_entry(newer, day)
+        if b is None:
+            return f"{day} leaves the campaign"
+        fields = ("state", "window_start_utc", "window_minutes") + (("config_sha256", "approval_id")
+                                                                     if provenance else ())
+        if any(a[k] != b[k] for k in fields):
+            return f"{day} changes its state, window or provenance"
+    return None
+
+
+def migrated_schedule(current: dict, current_as_of: str, incoming: dict, incoming_as_of: str) -> dict:
+    """The schedule of one series after merging two bundles whose schedules differ, or OwnResultsError.
+
+    Order-independent (the rebuild merges admitted copies in digest order): the result is the segmented schedule
+    of the latest as_of. Two segmented schedules must share their start and legacy boundary, and the older one's
+    dates through its as_of must be unchanged in the newer (state, window, configuration and authorization). A
+    fixed (version 3) schedule may migrate only into a segmented one that declares a legacy boundary covering
+    every date it asserted (through its as_of) with the same window; it never follows a segmented one."""
+    seg_a, seg_b = is_segmented(current), is_segmented(incoming)
+    if not seg_a and not seg_b:
+        raise OwnResultsError("fixed schedules differ")
+    if schedule_span(current)[0] != schedule_span(incoming)[0]:
+        raise OwnResultsError("the schedules start on different dates")
+    if seg_a and seg_b:
+        if current["legacy_through"] != incoming["legacy_through"]:
+            raise OwnResultsError("the segmented schedules declare different legacy boundaries")
+        if current_as_of == incoming_as_of:
+            raise OwnResultsError("two different segmented schedules at the same as_of")
+        (older, older_as_of), (newer, _n) = sorted(((current, current_as_of), (incoming, incoming_as_of)),
+                                                   key=lambda pair: pair[1])
+        problem = _same_entries(older, newer, parse_stamp(older_as_of).date(), provenance=True)
+        if problem:
+            raise OwnResultsError(f"the newer segmented schedule rewrites a published date: {problem}")
+        return newer
+    (plain, plain_as_of), (segmented, _s) = ((current, current_as_of), (incoming, incoming_as_of)) if seg_b \
+        else ((incoming, incoming_as_of), (current, current_as_of))
+    legacy = segmented["legacy_through"]
+    asserted = min(parse_stamp(plain_as_of).date(), _day(plain["end_date"]))
+    if legacy is None or asserted > _day(legacy):
+        raise OwnResultsError("the fixed schedule asserts dates after the segmented schedule's legacy boundary")
+    problem = _same_entries(plain, segmented, asserted, provenance=False)
+    if problem:
+        raise OwnResultsError(f"the segmented schedule rewrites a published date: {problem}")
+    return segmented
+
+
 # ---------------------------------------------------------------- dataset, review manifests and policies
 
 def empty_dataset() -> dict:
@@ -1197,8 +1361,18 @@ def merge(dataset: dict, bundle: dict, source: dict | None) -> dict:
         if "open_dates" in body:
             current["open_dates"] = []
     elif current["route"] != body["route"] or current["series"] != body["series"]:
-        raise OwnResultsError(f"series {sid} is already published with different route or series details; "
-                              "a reviewed correction is required")
+        same_identity = current["route"] == body["route"] and is_puter(current) and \
+            {k: v for k, v in current["series"].items() if k != "schedule"} == \
+            {k: v for k, v in body["series"].items() if k != "schedule"}
+        try:
+            if not same_identity:
+                raise OwnResultsError("not the same series identity")
+            schedule = migrated_schedule(current["series"]["schedule"], current["as_of"], body["series"]["schedule"],
+                                         body["as_of"])
+        except OwnResultsError as exc:
+            raise OwnResultsError(f"series {sid} is already published with different route or series details "
+                                  f"({exc}); a reviewed correction is required") from None
+        current["series"] = dict(current["series"], schedule=schedule)
     by_key = {_record_key(r): r for r in current["records"]}
     daily = body["series"]["kind"] == "daily"
     by_date = {r["date"]: r for r in current["records"]} if daily else {}
@@ -1227,6 +1401,8 @@ def merge(dataset: dict, bundle: dict, source: dict | None) -> dict:
             open_dates = set(current["open_dates"])
         current["open_dates"] = sorted(open_dates - {r["date"] for r in current["records"]})
     current["as_of"] = max(current["as_of"], body["as_of"])
+    if is_puter(current) and is_segmented(current["series"]["schedule"]):
+        check_puter_body(current)                         # every merged record and open date fits the result
     if source is not None and source["sha256"] not in {s["sha256"] for s in out["sources"]}:
         out["sources"] = sorted(out["sources"] + [dict(source)], key=lambda s: s["sha256"])
     return out
@@ -1331,20 +1507,53 @@ def admit_by_policy(raw: bytes, policy_sha256: str, admitted_at: str, review_pat
 # ---------------------------------------------------------------- site summary
 
 def window_bounds(schedule: dict, day: date) -> tuple[datetime, datetime]:
+    if is_segmented(schedule):
+        entry = day_entry(schedule, day)
+        if entry is None or entry["state"] != "collect":
+            raise OwnResultsError(f"{day} is not a collect date of the schedule")
+        schedule = entry
     hour, minute = map(int, schedule["window_start_utc"].split(":"))
     opens = datetime(day.year, day.month, day.day, hour, minute, tzinfo=timezone.utc)
     return opens, opens + timedelta(minutes=schedule["window_minutes"])
 
 
 def campaign_days(schedule: dict) -> list:
-    start, end = _day(schedule["start_date"]), _day(schedule["end_date"])
+    start, end = (_day(d) for d in schedule_span(schedule))
     return [start + timedelta(days=i) for i in range((end - start).days + 1)]
 
 
 def expected_dates(schedule: dict, as_of: datetime) -> tuple[list, int]:
-    """(campaign dates whose window had closed by as_of, count of campaign dates not yet due)."""
-    due = [d.isoformat() for d in campaign_days(schedule) if window_bounds(schedule, d)[1] <= as_of]
-    return due, len(campaign_days(schedule)) - len(due)
+    """(collect dates whose window had closed by as_of, count of collect dates not yet due). Paused dates of a
+    segmented schedule are neither: they are never due and never missed."""
+    days = collect_days(schedule)
+    due = [d.isoformat() for d in days if window_bounds(schedule, d)[1] <= as_of]
+    return due, len(days) - len(due)
+
+
+def _passed_pauses(schedule: dict, as_of: datetime) -> list:
+    """Paused dates whose whole UTC day had passed by as_of (shown as paused, never missed)."""
+    return [d.isoformat() for d in pause_days(schedule)
+            if datetime(d.year, d.month, d.day, tzinfo=timezone.utc) + timedelta(days=1) <= as_of]
+
+
+def schedule_segments_view(schedule: dict) -> list:
+    """The dated segments as the page lists them (a fixed schedule is one collect segment)."""
+    if not is_segmented(schedule):
+        return [{"start_date": schedule["start_date"], "end_date": schedule["end_date"], "state": "collect",
+                 "window_start_utc": schedule["window_start_utc"], "window_minutes": schedule["window_minutes"],
+                 "configuration": None}]
+    return [dict({k: s[k] for k in ("start_date", "end_date", "state", "window_start_utc", "window_minutes")},
+                 configuration=s["config_sha256"][:8] if s["config_sha256"] else None) for s in schedule["segments"]]
+
+
+def schedule_envelope(schedule: dict) -> dict:
+    """A fixed-schedule shape for older consumers: the whole span and the latest collect window."""
+    if not is_segmented(schedule):
+        return schedule
+    last = [s for s in schedule["segments"] if s["state"] == "collect"][-1]
+    start, end = schedule_span(schedule)
+    return {"type": "daily", "start_date": start, "end_date": end, "window_start_utc": last["window_start_utc"],
+            "window_minutes": last["window_minutes"]}
 
 
 def _usable(record: dict) -> bool:
@@ -1369,6 +1578,7 @@ def daily_rows(body: dict) -> dict:
     open_dates = set(body.get("open_dates", []))
     rows = [{"date": d, "state": by_date[d]["status"] if d in by_date else "open" if d in open_dates else "no_record",
              "record": by_date.get(d)} for d in due]
+    rows += [{"date": d, "state": "paused", "record": None} for d in _passed_pauses(body["series"]["schedule"], as_of)]
     for record in body["records"]:                       # a run published although its window closed after as_of
         if record["date"] not in due:
             rows.append({"date": record["date"], "state": record["status"], "record": record})
@@ -1377,7 +1587,7 @@ def daily_rows(body: dict) -> dict:
         row["eligible"] = row["record"] is not None and (
             puter_eligible(row["record"]) if is_puter(body) else _usable(row["record"]))
     shown = {r["date"] for r in rows}
-    pending = [d.isoformat() for d in campaign_days(body["series"]["schedule"]) if d.isoformat() not in shown]
+    pending = [d.isoformat() for d in collect_days(body["series"]["schedule"]) if d.isoformat() not in shown]
     return {"rows": rows, "not_yet_due": len(pending), "pending_dates": pending}
 
 
@@ -1409,7 +1619,9 @@ def puter_view(sid: str, body: dict) -> dict:
     """One Puter series as the page draws it: 0-4 scale, requested route, sample size and identity, never merged."""
     series, route = body["series"], body["route"]
     rows = daily_rows(body)
-    return {"contract": PUTER_CONTRACT, "series_id": sid, "as_of": body["as_of"], "schedule": series["schedule"],
+    return {"contract": PUTER_CONTRACT, "series_id": sid, "as_of": body["as_of"],
+            "schedule": schedule_envelope(series["schedule"]),
+            "schedule_segments": schedule_segments_view(series["schedule"]),
             "rows": rows["rows"], "not_yet_due": rows["not_yet_due"], "pending_dates": rows["pending_dates"],
             "open_dates": list(body.get("open_dates", [])), "panel_items": series["planned_items"],
             "planned_items": series["planned_items"], "parent_panel_id": series["parent_panel_id"],
