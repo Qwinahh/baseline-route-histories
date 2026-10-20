@@ -7,7 +7,7 @@
 })(this, function () {
   "use strict";
   var DAY_MS = 86400000;
-  var VIEWS = ["models", "model", "sources", "how-we-test"];
+  var VIEWS = ["models", "model", "coverage", "sources", "how-we-test"];
   var ALIASES = { about: "how-we-test" };     // first-release "About" links keep working
   var DEFAULT_SORT = "release";
   var FILTER_KEYS = ["q", "provider", "access", "evidence", "availability", "sort"];

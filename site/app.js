@@ -47,6 +47,9 @@
     if (text !== undefined) node.textContent = text;
     return node;
   }
+  function fire(node, type) {                      // a programmatic event (an Event object where the browser has one)
+    node.dispatchEvent(typeof Event === "function" ? new Event(type) : { type: type });
+  }
   function link(href, text) {
     var external = /^https:\/\//.test(href);
     return el("a", external ? { href: href, rel: "noopener noreferrer" } : { href: href }, text);
@@ -108,7 +111,11 @@
       return (M.isFull(b.series) - M.isFull(a.series)) || (b.latest.at - a.latest.at) || (a.entry.id < b.entry.id ? -1 : 1);
     });
     var top = leads[0];
+    // Every kind of scored test this model has (page audit P1): newest first, each with its own label and scale, so a
+    // newer quick check is never hidden behind an older full test. `newest` drives "Latest result" sorting.
+    var results = M.resultsByKind([].concat.apply([], leads.map(function (l) { return seriesOf(l.entry); })));
     return { id: g.id, group: g, entry: top.entry, series: top.series, latest: top.latest, leads: leads,
+             results: results, newest: results[0].latest,
              name: displayName(g), maker: top.entry.maker,
              exact_identifier: top.entry.exact_identifier, family: top.entry.family,
              service_provider: top.entry.service_provider, access_kind: top.entry.access_kind,
@@ -154,6 +161,7 @@
     if (state.view === "model") app.appendChild(modelView());
     else if (state.view === "sources") app.appendChild(sourcesView());
     else if (state.view === "how-we-test") app.appendChild(howView());
+    else if (state.view === "coverage") app.appendChild(coverageView());
     else app.appendChild(directoryView());
     var again = pendingFocus ? document.getElementById(pendingFocus) : null;
     pendingFocus = null;
@@ -237,6 +245,30 @@
       : d.panel_items + " questions · " + (e.access_kind === "direct_api" ? e.service_provider + " API" : e.service_provider);
   }
 
+  // Catalogue entries matching a search that Baseline has not measured (page audit P1): listed as untested, never
+  // as results. Matches the name, exact identifier, family or maker.
+  function catalogueMatches(q) {
+    var needle = String(q || "").trim().toLowerCase();
+    if (needle.length < 2) return [];
+    return entries.filter(function (e) {
+      return !measuredMember(e) && [e.name, e.exact_identifier, e.family, e.maker].some(function (v) {
+        return v && String(v).toLowerCase().indexOf(needle) !== -1;
+      });
+    }).slice(0, 8);
+  }
+  // The newest result of a setup is its fully gradeable maximum: the unchanged test cannot show a further gain.
+  function ceilingHere(r) { return M.atCeiling(r.series) && r.latest.correct === r.latest.total; }
+  // A setup named by what it is, never by its position in a list (page audit P2).
+  function setupLabel(d, e) {
+    var latest = M.latestScored(d);
+    var span = d.schedule ? (d.schedule.start_date === d.schedule.end_date ? dayText(d.schedule.start_date)
+      : dayText(d.schedule.start_date) + " to " + dayText(d.schedule.end_date)) : "";
+    var config = String(d.config_fingerprint || d.series_fingerprint || "").slice(0, 8);   // keeps every label unique
+    return M.kindLabel(d) + " · " + (latest ? scoreText(latest) + " on " + dayText(latest.date) : "no scored result yet") +
+      " · " + (e ? serviceText(e) : "") + (span ? " · " + (isReference(d) ? "evaluations " : "scheduled ") + span : "") +
+      (config ? " · configuration " + config : "");
+  }
+
   function focusModels() {
     return measuredModels.map(function (m) {
       return { id: m.id, measured: m, series: [].concat.apply([], m.leads.map(function (l) { return seriesOf(l.entry); })) };
@@ -270,8 +302,9 @@
     // Phones: every tested model, whatever the desktop filters; the link is made when one is chosen.
     var picker = el("select", { id: "model-picker" }, (selected ? [] : [el("option", { value: "" }, "Choose a tested model")])
       .concat(byName.map(function (m) {
-        return el("option", { value: m.id },
-          m.name + " — " + scoreText(m.latest) + ", " + shortDay(m.latest.date) + (isPuter(m.series) ? " (quick check)" : ""));
+        return el("option", { value: m.id }, m.name + " — " + m.results.map(function (r) {
+          return M.kindLabel(r.series).toLowerCase() + " " + scoreText(r.latest) + ", " + shortDay(r.latest.date);
+        }).join("; "));
       })));
     picker.value = selected || "";
     picker.addEventListener("change", function () {
@@ -319,7 +352,7 @@
     while (list.firstChild) list.removeChild(list.firstChild);
     var shown = Dir.filterEntries(measuredModels, { q: state.q, provider: state.provider,
                                                     sort: state.sort === "date" ? "name" : state.sort }, Date.now());
-    if (state.sort === "date") shown.sort(function (a, b) { return b.latest.at - a.latest.at; });   // stable: by name
+    if (state.sort === "date") shown.sort(function (a, b) { return b.newest.at - a.newest.at; });   // newest observation
     var n = measuredModels.length;
     status.textContent = shown.length === n ? n + (n === 1 ? " tested model" : " tested models")
       : shown.length + " of " + n + " tested models";
@@ -333,14 +366,25 @@
         drawRail(list, status, selected);
         if (q) q.focus();
       });
-      append(list, el("li", { class: "rail-empty" }, [el("p", {}, "No tested model matches your search."), clear]));
+      var untested = catalogueMatches(state.q);
+      append(list, el("li", { class: "rail-empty" }, [el("p", {}, "No tested model matches your search."),
+        untested.length ? el("div", { class: "untested-matches" }, [
+          el("p", { class: "sub" }, "In the catalogue, not tested by Baseline (no Baseline result; access not verified):"),
+          el("ul", {}, untested.map(function (e) {
+            return el("li", {}, [link(entryLink(e, ""), e.name), el("span", { class: "sub" }, accessText(e))]);
+          })),
+          el("p", { class: "sub" }, link("#coverage", "See what Baseline does and does not cover"))]) : null,
+        clear]));
       return;
     }
     shown.forEach(function (m) {
-      var a = el("a", { href: entryLink(m.entry, m.series.series_id), id: "rail-" + m.id, class: "rail-link" }, [
-        el("span", { class: "rail-name" }, m.name),
-        el("span", { class: "rail-score" }, [el("strong", {}, scoreText(m.latest)), " · " + shortDay(m.latest.date)]),
-        el("span", { class: "rail-kind" }, kindText(m.series, m.entry))]);
+      var a = el("a", { href: entryLink(m.entry, m.series.series_id), id: "rail-" + m.id, class: "rail-link" },
+        [el("span", { class: "rail-name" }, m.name)].concat(m.results.map(function (r) {
+          return el("span", { class: "rail-result", "data-kind": r.kind }, [
+            el("span", { class: "rail-kind" }, kindText(r.series, seriesOwner[r.series.series_id] || m.entry)),
+            el("span", { class: "rail-score" }, [el("strong", {}, scoreText(r.latest)), " · " + shortDay(r.latest.date),
+              ceilingHere(r) ? el("span", { class: "ceiling-tag" }, " · test ceiling") : null])]);
+        })));
       if (m.id === selected) a.setAttribute("aria-current", "true");
       a.addEventListener("click", function () { pendingFocus = a.getAttribute("id"); });
       list.appendChild(el("li", { class: "rail-item" }, a));
@@ -512,6 +556,7 @@
     var puter = isPuter(series), reference = isReference(series);
     var detail = el("p", { class: "point-detail", "aria-live": "polite" },
       lay.points.length || lay.marks.length ? "Select a point or mark to see that day's details." : "");
+    var latestDate = lay.points.length ? lay.points[lay.points.length - 1].date : null;
     var svg = s("svg", { class: "chart daily-chart fit", "data-mode": isChange ? "change" : "score",
       viewBox: "0 0 " + lay.width + " " + lay.height, role: "group",
       "aria-label": isChange ? "Change in correct answers out of " + lay.max + " since " + Chart.fullDay(lay.anchor.date) +
@@ -558,13 +603,18 @@
       node.setAttribute("aria-label", label);
       node.appendChild(s("title", {}, label));
       function show() {
-        detail.textContent = label;
+        var date = node.getAttribute("data-date");
+        detail.textContent = "Selected test: " + label + (latestDate && date !== latestDate
+          ? " Latest test: " + Chart.fullDay(latestDate) + "." : date === latestDate ? " (This is the latest test.)" : "");
         if (selected) selected.removeAttribute("data-selected");
         selected = node;
         node.setAttribute("data-selected", "true");
         if (live.chart) live.chart.selected = node.getAttribute("data-date");
-        if (p && p !== lastPoint) {
-          selLabel.setAttribute("x", p.x); selLabel.setAttribute("y", labelY(p)); selLabel.textContent = pointText(p);
+        // The selected label never covers the latest one: it goes above or below its point, whichever is clear, and is
+        // left off only when both would overlap (its ring and the "Selected test" line below the graph name it).
+        var spot = p && p !== lastPoint ? clearLabelY(p) : null;
+        if (spot !== null) {
+          selLabel.setAttribute("x", p.x); selLabel.setAttribute("y", spot); selLabel.textContent = pointText(p);
         } else selLabel.textContent = "";
       }
       if (node.getAttribute("data-date")) shows[node.getAttribute("data-date")] = show;
@@ -573,31 +623,67 @@
       node.addEventListener("focus", show);
       node.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); show(); }
+        if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") { ev.preventDefault(); step(ev.key === "ArrowLeft" ? -1 : 1, node); }
       });
+      order.push(node);
       return node;
+    }
+    var order = [];
+    // Previous/next selection: arrow keys on the graph and the buttons below it (an equivalent control wherever
+    // dates are too close for comfortable pointer targets).
+    function step(delta, from) {
+      var nodes = order.slice().sort(function (a, b) { return Number(a.getAttribute("data-x")) - Number(b.getAttribute("data-x")); });
+      var i = nodes.indexOf(from || selected);
+      var next = nodes[i === -1 ? (delta < 0 ? nodes.length - 1 : 0) : Math.max(0, Math.min(nodes.length - 1, i + delta))];
+      if (!next) return;
+      shows[next.getAttribute("data-date")]();
+      if (from) next.focus();
     }
     var lastPoint = lay.points.length ? lay.points[lay.points.length - 1] : null;
     function labelY(p) { return p.y - 12 < lay.top + 4 ? p.y + 20 : p.y - 12; }   // never clipped at the top edge
-    // Invisible hit areas (review R3): 40px where dates allow, never under 24px, never larger than half the gap to
-    // the nearest other date, so crowded dates stay separately selectable. The visible dots keep their size.
-    var xs = lay.points.map(function (p) { return p.x; }).concat(lay.marks.filter(function (m) { return m.kind !== "pending"; })
-      .map(function (m) { return m.x; })).sort(function (a, b) { return a - b; });
-    var gap = Infinity;
-    for (var i = 1; i < xs.length; i++) if (xs[i] - xs[i - 1] > 0.5) gap = Math.min(gap, xs[i] - xs[i - 1]);
-    var hit = Math.max(12, Math.min(20, Math.floor(gap / 2)));
+    // Approximate label boxes (13px bold digits are about 7.5px wide), so overlap is decided the same way everywhere.
+    function box(x, y, text, anchor) {
+      var w = 7.5 * text.length, x0 = anchor === "end" ? x - w : anchor === "start" ? x : x - w / 2;
+      return { x0: x0 - 2, x1: x0 + w + 2, y0: y - 14, y1: y + 4 };
+    }
+    function overlaps(a, b) { return !(a.x1 <= b.x0 || b.x1 <= a.x0 || a.y1 <= b.y0 || b.y1 <= a.y0); }
+    function latestBox() {
+      if (!lastPoint) return null;
+      var nearRight = lastPoint.x > lay.right - 60;
+      var text = pointText(lastPoint) + (isChange ? " (" + lastPoint.correct + "/" + lay.max + ")" : "");
+      return box(lastPoint.x + (nearRight ? -10 : 10), labelY(lastPoint), text, nearRight ? "end" : "start");
+    }
+    function clearLabelY(p) {
+      var other = latestBox(), text = pointText(p);
+      var above = p.y - 12, below = p.y + 20;
+      var tries = [labelY(p), labelY(p) === above ? below : above].filter(function (y) {
+        return y - 14 >= lay.top - 2 && y <= lay.plotBottom - 2;
+      });
+      for (var i = 0; i < tries.length; i++) if (!other || !overlaps(box(p.x, tries[i], text, "middle"), other)) return tries[i];
+      return null;
+    }
+    // Pointer targets (page audit P2): one band per selectable date, split at the midpoints between neighbours, so
+    // targets never overlap at any width (results-chart.js hitRegions). The visible dots and marks keep their size.
+    var targets = lay.points.map(function (p) { return p.x; }).concat(lay.marks.filter(function (m) { return m.kind !== "pending"; })
+      .map(function (m) { return m.x; }));
+    var bands = {};
+    Chart.hitRegions(targets, 0, lay.width, 20).forEach(function (b) { bands[b.x.toFixed(3)] = b; });
+    function band(x) {
+      var b = bands[x.toFixed(3)];
+      return s("rect", { x: b.x0, y: lay.top, width: Math.max(0, b.x1 - b.x0), height: lay.laneY + 14 - lay.top, class: "hit" });
+    }
     lay.marks.forEach(function (m) {
-      var g = s("g", { class: "mark", "data-kind": m.kind, "data-date": m.date });
-      if (m.kind !== "pending") {
-        g.appendChild(s("rect", { x: m.x - hit, y: lay.laneY - 14, width: 2 * hit, height: 28, class: "hit" }));
-      }
+      var g = s("g", { class: "mark", "data-kind": m.kind, "data-date": m.date, "data-x": m.x });
+      if (m.kind !== "pending") g.appendChild(band(m.x));
       g.appendChild(s("text", { x: m.x, y: lay.laneY + 4, "text-anchor": "middle" }, MARK_GLYPHS[m.kind] || "?"));
       svg.appendChild(m.kind === "pending" ? g : selectable(g, m.label));
     });
     lay.points.forEach(function (p) {
-      var g = s("g", { class: "score-point" + (isChange && p.date === lay.anchor.date ? " anchor" : ""), "data-date": p.date });
-      g.appendChild(s("circle", { cx: p.x, cy: p.y, r: hit, class: "hit" }));
+      var g = s("g", { class: "score-point" + (isChange && p.date === lay.anchor.date ? " anchor" : ""), "data-date": p.date,
+                       "data-x": p.x });
+      g.appendChild(band(p.x));
       g.appendChild(s("circle", { cx: p.x, cy: p.y, r: 5, class: "point" }));
-      svg.appendChild(selectable(g, p.label, p));
+      svg.appendChild(selectable(g, p.label + (isChange && p.date === lay.anchor.date ? " Starting point for Change view." : ""), p));
     });
     if (lastPoint) {                                    // the latest result, labelled directly
       var nearRight = lastPoint.x > lay.right - 60;
@@ -606,6 +692,28 @@
     }
     svg.appendChild(selLabel);
     if (selectedDate && shows[selectedDate]) shows[selectedDate]();   // a redraw keeps the selection (resize, view)
+    else if (latestDate && shows[latestDate]) shows[latestDate]();    // otherwise the latest test is selected first
+    var stepper = order.length > 1 ? el("div", { class: "stepper", role: "group", "aria-label": "Select a test date" }, [
+      ["Previous test", -1], ["Next test", 1]].map(function (b) {
+        var button = el("button", { type: "button", class: "button step" }, b[0]);
+        button.addEventListener("click", function () { step(b[1]); });
+        return button;
+      })) : null;
+    var excluded = isChange ? M.excludedFromChange(series) : [];
+    var exclusion = excluded.length ? el("p", { class: "change-excluded" }, [
+      lay.points.length + " comparable " + (lay.points.length === 1 ? "result is" : "results are") + " plotted; " +
+      excluded.length + " scored " + (excluded.length === 1 ? "date is" : "dates are") + " left out of Change view because " +
+      "not every answer could be compared: " + excluded.map(function (x) {
+        return Chart.fullDay(x.date) + " (" + x.correct + "/" + x.total + ", " + x.reason + ")";
+      }).join("; ") + ". Their scores stay in Score view and in the results table. ",
+      (function () {
+        var b = el("button", { type: "button", class: "button show-score" }, "Show Score view");
+        b.addEventListener("click", function () {
+          var score = live.modes && live.modes.score;
+          if (score) fire(score, "click");
+        });
+        return b;
+      })()]) : null;
     if (lay.message) {
       svg.appendChild(s("text", { x: (lay.left + lay.right) / 2, y: (lay.top + lay.plotBottom) / 2, "text-anchor": "middle",
                                   class: "chart-message" }, lay.message));
@@ -643,7 +751,7 @@
         : "Correct answers out of " + lay.max + " (first attempts), by test date (UTC)"),
       el("div", { class: "chart-scroll" }, svg),
       lay.message ? el("p", { class: "chart-note" }, lay.message + ".") : null,
-      detail, el("details", { class: "chart-key" }, [el("summary", {}, "How to read this graph"), legend])]);
+      detail, stepper, exclusion, el("details", { class: "chart-key" }, [el("summary", {}, "How to read this graph"), legend])]);
   }
 
   function checkedNote(d) {
@@ -705,21 +813,14 @@
         : (available ? "change" : "score");
       var chartSlot = el("div", { class: "chart-slot" });
       drawChart(chartSlot, d, mode, null);
-      var readout = readoutView(d, obs);
-      live.readout = { node: readout, series: d, key: obs ? obs.key : "" };
+      var readout = readoutView(d, obs, mode);
+      live.readout = { node: readout, series: d, key: obs ? obs.key : "", mode: mode };
       live.kicker = { node: kicker, series: d };
       kicker.textContent = kickerText(d);
-      append(body, [contextView(e, d, obs), readout,
-        modeControls(d, available, mode, function (next) {
-          chartMode = next;
-          drawChart(chartSlot, d, next, live.chart ? live.chart.selected : null);
-        }),
-        chartSlot, el("p", { class: "caveat" }, caveatText(d))]);
-      var details = el("details", { class: "evidence test-details" }, [
-        el("summary", {}, "Test details, other setups and results table")]);
-      if (list.length > 1) {
+      var switcher = null;
+      if (list.length > 1) {                           // the setup switch sits beside the graph (page audit P1/P2)
         var selector = el("select", { id: "daily-setup" }, list.map(function (x, i) {
-          return el("option", { value: String(i) }, (i === 0 ? "Latest setup" : "Earlier setup") + ": " + setupText(x, e));
+          return el("option", { value: String(i) }, setupLabel(x, e));
         }));
         selector.value = String(index);
         selector.addEventListener("change", function () {
@@ -727,11 +828,31 @@
           go(Object.assign({}, state, { view: "model", id: group.id, service: e.id, setup: list[i].series_id, route: "" }), true);
           showSeries(i, true);
         });
-        append(details, el("div", { class: "setup-choice" }, [
-          el("label", { for: "daily-setup" }, "Test setup"),
-          el("p", { class: "sub" }, "Choose a test setup. Different setups are kept separate and are never joined into one trend."),
-          selector]));
+        var shown = M.latestScored(d);
+        var newer = list.map(function (x, i) { return { i: i, x: x, latest: M.latestScored(x) }; }).filter(function (o) {
+          return o.i !== index && o.latest && (!shown || o.latest.at > shown.at);
+        }).sort(function (a, b) { return b.latest.at - a.latest.at; })[0];
+        var jump = null;
+        if (newer) {
+          jump = el("button", { type: "button", class: "button newer-setup" }, "Show the newer " +
+            M.kindLabel(newer.x).toLowerCase() + ": " + scoreText(newer.latest) + " on " + dayText(newer.latest.date));
+          jump.addEventListener("click", function () { selector.value = String(newer.i); fire(selector, "change"); });
+        }
+        switcher = el("div", { class: "setup-switch" }, [
+          el("label", { for: "daily-setup" }, "Test setup (" + list.length + " kept separate, never joined)"), selector,
+          newer ? el("p", { class: "newer-note" }, ["A newer result is in another setup of this model. ", jump]) : null]);
       }
+      append(body, [contextView(e, d, obs), switcher, readout, freshnessView(d, obs),
+        modeControls(d, available, mode, function (next) {
+          chartMode = next;
+          drawChart(chartSlot, d, next, live.chart ? live.chart.selected : null);
+          var again = readoutView(d, M.observation(d, Date.now()), next);
+          if (live.readout && live.readout.node.parentNode) live.readout.node.parentNode.replaceChild(again, live.readout.node);
+          live.readout = { node: again, series: d, key: live.readout ? live.readout.key : "", mode: next };
+        }),
+        chartSlot, el("p", { class: "caveat" }, caveatText(d))]);
+      var details = el("details", { class: "evidence test-details" }, [
+        el("summary", {}, "Test details and results table")]);
       append(details, el("p", { class: "setup-description" }, (list.length > 1 ? "Selected: " : "Setup: ") + setupText(d, e)));
       if (isPuter(d)) append(details, puterLabels(d));
       if (isReference(d)) append(details, referenceLabels(d));
@@ -741,8 +862,7 @@
       append(details, el("p", {}, "These scores describe this fixed test. A rise or fall alone does not establish an " +
         "overall change in model quality. Not enough repeated tests to judge a change."));
       seriesDetails.appendChild(details);
-      if (fromSelector) {                               // keep the open disclosure and the focus on the selector
-        details.setAttribute("open", "");
+      if (fromSelector) {                               // keep the focus on the selector beside the graph
         var again = document.getElementById("daily-setup");
         if (again) again.focus();
       }
@@ -798,17 +918,50 @@
   }
 
   // The latest raw score next to what changed, never only below the graph or in a tooltip.
-  function readoutView(d, obs) {
-    if (!obs) return el("div", { class: "readout" }, el("p", { class: "observation" }, "No scored result yet in this setup."));
+  function readoutView(d, obs, mode) {
+    if (!obs) {
+      return el("div", { class: "readout" }, el("p", { class: "observation" }, "No scored result yet in this setup" +
+        (d.rows.length ? ": none of its " + d.rows.length + (d.rows.length === 1 ? " date" : " dates") + " has a complete, " +
+          "gradeable result, so its graph has no score point." : ".")));
+    }
     var later = obs.later && obs.comparison.reason !== "later_attempt"
       ? "A later attempt, on " + dayText(obs.later.date) + ", has no score; the graph shows it." : "";
+    var max = d.panel_items, ceiling = M.atCeiling(d) && obs.latest.correct === max;
+    var unit = null;
+    if (mode === "change") {
+      var lay = Chart.changeLayout(d, {});
+      if (!lay.unavailable) {
+        var last = lay.points[lay.points.length - 1];
+        unit = "Change view: each point is correct answers gained or lost since " + dayText(lay.anchor.date) + " (" +
+          lay.anchor.correct + "/" + max + "), this setup's first fully gradeable result — a reference point, not a launch " +
+          "baseline or a health index. Latest point: " + Chart.signed(last.delta) + " change; score " + last.correct + "/" + max +
+          " on " + dayText(last.date) + ".";
+      }
+    }
+    if (!unit) unit = "Score view: correct answers out of " + max + " on each test date.";
     return el("div", { class: "readout", "data-change": obs.comparison.eligible ? String(obs.change) : "" }, [
       el("p", { class: "score" }, [el("strong", {}, scoreText(obs.latest)),
-        el("span", { class: "score-date" }, "correct · " + shortDay(obs.latest.date))]),
+        el("span", { class: "score-date" }, "correct · latest test " + shortDay(obs.latest.date)),
+        el("span", { class: "score-kind" }, M.kindLabel(d))]),
       el("div", { class: "readout-text" }, [
         el("p", { class: "observation" }, obs.text.replace(/\.?$/, ".")),
         obs.caution ? el("p", { class: "caution" }, obs.caution) : null,
-        later ? el("p", { class: "caution" }, later) : null])]);
+        later ? el("p", { class: "caution" }, later) : null,
+        ceiling ? el("p", { class: "ceiling" }, "Test ceiling reached: the latest fully gradeable result got all " + max +
+          " of " + max + " right. This unchanged test cannot show any further gain, so a flat line in Change view is not " +
+          "evidence that nothing improved. A harder test would be a new, separately calibrated setup.") : null,
+        el("p", { class: "unit-note" }, unit)])]);
+  }
+  // When it was measured, when it was published, and what is not known (page audit P2): a schedule is not proof that
+  // collection runs, and a later date with no published result is pending, never missed by the clock alone.
+  function freshnessView(d, obs) {
+    var end = d.schedule && d.schedule.end_date;
+    var future = end && Date.parse(end + "T23:59:59Z") > Date.now();
+    return el("p", { class: "freshness" }, [
+      obs ? "Latest test " + dayText(obs.latest.date) : "No scored test yet",
+      " · results published up to " + utc(d.as_of),
+      end ? (future ? " · scheduled to " + dayText(end) + "; whether collection is running now is not verified on this page"
+        : " · this setup's schedule ended " + dayText(end)) : ""]);
   }
 
   // Score and Change since first test. Change needs two fully gradeable results in this setup; the control says why
@@ -828,6 +981,7 @@
       });
       return b;
     });
+    live.modes = { score: buttons[0], change: buttons[1] };
     return el("div", { class: "modes" }, [el("div", { class: "mode-group", role: "group", "aria-label": "Graph view" }, buttons),
       available ? null : el("p", { id: "change-note", class: "mode-note" }, count === 1
         ? "Change view needs a second fully gradeable result in this setup."
@@ -854,9 +1008,9 @@
       var obs = M.observation(live.readout.series, Date.now());
       var key = obs ? obs.key : "";
       if (key !== live.readout.key) {
-        var fresh = readoutView(live.readout.series, obs);
+        var fresh = readoutView(live.readout.series, obs, live.readout.mode);
         live.readout.node.parentNode.replaceChild(fresh, live.readout.node);
-        live.readout = { node: fresh, series: live.readout.series, key: key };
+        live.readout = { node: fresh, series: live.readout.series, key: key, mode: live.readout.mode };
       }
     }
     if (live.kicker) {
@@ -1054,6 +1208,79 @@
         })]) : null,
       el("p", {}, link("#models", "See the models Baseline has tested")),
       el("details", { class: "evidence" }, [el("summary", {}, "Model details"), modelFacts(e)])];
+  }
+
+  // Coverage (page audit P1, 21 October 2026): which shortlisted models Baseline has measured and which it has not.
+  // The shortlist is the reviewed catalog/featured.json (families, ids and written reasons only: no ranks or counts).
+  // An entry is "measured" only with a scored Baseline result on that exact route; everything else says so, with the
+  // date its catalogue listing was checked. Nothing here claims popularity, free access or readiness to test.
+  function coverageStatus(e) {
+    if (measuredMember(e)) return { key: "measured", text: "Measured by Baseline on this exact route" };
+    if (hasOwnRecords(e)) return { key: "records", text: "Baseline records, but no scored result yet" };
+    if (e.access_kind === "consumer_app") {
+      return { key: "app", text: "Not measured: an app. Baseline tests exact API or hosted routes; those results never stand in for an app" };
+    }
+    return { key: "not_tested", text: "Not tested by Baseline · access for Baseline's free test not verified" };
+  }
+  function coverageItem(e) {
+    var st = coverageStatus(e), src = (e.sources || [])[0];
+    var results = st.key === "measured" ? M.resultsByKind(seriesOf(e)) : [];
+    return el("li", { class: "coverage-item", "data-status": st.key }, [
+      el("p", { class: "coverage-name" }, [st.key === "not_tested" || st.key === "app" ? e.name : link(entryLink(e, ""), e.name),
+        e.identity_kind === "exact" && e.exact_identifier !== e.name ? [" ", el("code", {}, e.exact_identifier)] : null,
+        el("span", { class: "sub" }, accessText(e))]),
+      el("p", { class: "coverage-status" }, st.text + "."),
+      results.length ? el("p", { class: "sub" }, results.map(function (r) {
+        return M.kindLabel(r.series) + ": " + scoreText(r.latest) + " on " + dayText(r.latest.date) +
+          (ceilingHere(r) ? " (test ceiling)" : "");
+      }).join(" · ")) : null,
+      src ? el("p", { class: "sub" }, ["Catalogue listing checked " + dayText(src.checked_at) + ": ", link(src.url, src.claim)]) : null]);
+  }
+  function coverageView() {
+    var featured = D.featured;
+    var measuredRoutes = entries.filter(measuredMember);
+    var listed = {};
+    var groups = featured ? featured.groups.map(function (g) {
+      var members = g.entries.map(function (id) { return entryById[id]; }).filter(Boolean);
+      members.forEach(function (e) { listed[e.id] = true; });
+      var partly = members.some(measuredMember);
+      return el("section", { class: "coverage-group" }, [el("h2", {}, g.family),
+        el("p", { class: "sub" }, "Why shortlisted: " + g.reason),
+        partly ? el("p", { class: "coverage-note" }, "Only the exact routes marked measured have Baseline results; other " +
+          "versions and services in this family are not covered.") : null,
+        el("ul", { class: "coverage-list" }, members.map(coverageItem))]);
+    }) : [el("p", {}, "No reviewed shortlist is published with this build.")];
+    var makers = {};
+    entries.forEach(function (e) {
+      if (listed[e.id] || e.availability === "retired" || e.access_kind === "consumer_app") return;
+      var m = makers[e.maker] || (makers[e.maker] = { maker: e.maker, total: 0, measured: 0, examples: [] });
+      m.total += 1;
+      if (measuredMember(e)) m.measured += 1;
+      if (m.examples.length < 3) m.examples.push(e.exact_identifier || e.name);
+    });
+    var others = Object.keys(makers).sort().map(function (k) { return makers[k]; });
+    return el("div", { class: "coverage" }, [
+      el("h1", {}, "Coverage"),
+      el("p", { class: "lede" }, "What Baseline has measured, and what it has not. Baseline has scored results for " +
+        measuredRoutes.length + (measuredRoutes.length === 1 ? " exact model route" : " exact model routes") + " (" +
+        "see Tested models). The families below are an editorial shortlist, not a popularity ranking; listing a model " +
+        "here does not mean it is free, available to Baseline or ready to test."),
+      featured ? el("p", { class: "sub" }, "Shortlist last reviewed " + dayText(featured.checked_at) + ".") : null,
+      groups,
+      el("section", { class: "coverage-group" }, [el("h2", {}, "Elsewhere in the catalogue"),
+        el("p", { class: "sub" }, "Current (not retired) API and hosted entries outside the shortlist, by maker. A count of " +
+          "catalogue listings, not of Baseline results."),
+        el("ul", { class: "coverage-makers" }, others.map(function (m) {
+          return el("li", {}, [el("strong", {}, m.maker), ": " + m.total + (m.total === 1 ? " listing" : " listings") +
+            " (for example " + m.examples.join(", ") + ") — " + (m.measured ? m.measured + " measured by Baseline"
+              : "none measured by Baseline"), " · ", link(Dir.encodeState(Object.assign(Dir.emptyState(), { view: "models",
+                q: m.maker })), "search")]);
+        }))]),
+      el("section", { class: "coverage-group" }, [el("h2", {}, "What would change this page"),
+        el("p", {}, "Only new published Baseline results. Measuring another model needs verified free access to its exact " +
+          "route and the same fixed test; that is future measurement work, not something this page can show in advance. " +
+          "A harder test for models at a test ceiling would be a new, separately calibrated setup, and existing results " +
+          "would never be rescaled or joined to it.")])]);
   }
 
   function modelFacts(e) {

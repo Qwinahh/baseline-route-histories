@@ -12,7 +12,22 @@
   --accent-soft: #e6edfa;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", "SF Mono", Consolas, "Liberation Mono", monospace;
-  color-scheme: light;
+  color-scheme: light dark;
+}
+/* A native dark palette (page audit P2, 21 October 2026). Without one, browsers that darken pages automatically
+   recolour the graph themselves, which is the likely cause of the near-invisible labels in the audited screenshot.
+   Declaring both schemes lets them use this palette instead. Same roles as the light tokens; contrast figures for
+   both palettes are checked in tests/test_site.py (PaletteContrastTests). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0f1519;
+    --plot: #172026;
+    --ink: #e8eef2;
+    --muted: #a9b7c2;
+    --rule: #33424d;
+    --accent: #8ab4ff;
+    --accent-soft: #1d2b45;
+  }
 }
 
 * { box-sizing: border-box; }
@@ -40,7 +55,9 @@ h3 { font-size: 1rem; font-weight: 650; margin: 16px 0 6px; }
 .masthead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px;
   padding: 10px 0; border-bottom: 1px solid var(--rule); }
 .brand { font-weight: 700; font-size: 1.05rem; color: var(--ink); text-decoration: none; }
-nav.primary { display: flex; gap: 18px; }
+nav.primary { display: flex; flex-wrap: wrap; gap: 0 18px; }
+nav.primary a { white-space: nowrap; }
+@media (max-width: 420px) { nav.primary { gap: 0 14px; font-size: 0.95rem; } }
 nav.primary a { color: var(--muted); text-decoration: none; padding: 6px 0; border-bottom: 2px solid transparent; }
 nav.primary a:hover { color: var(--ink); }
 nav.primary a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); }
@@ -210,3 +227,33 @@ footer { margin-top: 36px; padding-top: 10px; border-top: 1px solid var(--rule);
   .readout .score strong { font-size: 1.7rem; }
   .mode { padding: 8px 12px; }
 }
+
+/* Page audit repairs (21 October 2026): result lines, setup switch, readout notes, stepper, coverage */
+.rail-result { display: grid; gap: 0; margin-top: 2px; }
+.rail-result + .rail-result { border-top: 1px dashed var(--rule); padding-top: 3px; }
+.ceiling-tag { color: var(--muted); }
+.untested-matches ul { list-style: none; margin: 4px 0; padding: 0; }
+.untested-matches li { margin: 4px 0; overflow-wrap: anywhere; }
+.setup-switch { display: grid; gap: 4px; margin: 0 0 10px; max-width: 72ch; }
+.setup-switch label { font-weight: 600; font-size: 0.9rem; }
+.newer-note { margin: 2px 0 0; font-size: 0.9rem; }
+.readout .score-kind { font-size: 0.8rem; font-weight: 650; color: var(--muted); text-transform: none; }
+.ceiling, .unit-note { font-size: 0.9rem; }
+.ceiling { color: var(--ink); border-left: 3px solid var(--accent); padding-left: 8px; }
+.unit-note { color: var(--muted); }
+.freshness { color: var(--muted); font-size: 0.86rem; margin: 0 0 8px; max-width: none; }
+.stepper { display: flex; gap: 8px; margin: 6px 0; }
+.step { min-width: 44px; }
+.change-excluded { font-size: 0.9rem; border-left: 3px solid var(--muted); padding-left: 8px; }
+.show-score { margin-left: 6px; min-height: 36px; padding: 4px 12px; }
+.coverage-group { margin: 18px 0; }
+.coverage-list, .coverage-makers { list-style: none; margin: 8px 0; padding: 0; }
+.coverage-item { background: var(--plot); border: 1px solid var(--rule); border-left: 3px solid var(--muted); border-radius: 0 8px 8px 0;
+  padding: 8px 12px; margin: 6px 0; }
+.coverage-item[data-status="measured"] { border-left-color: var(--accent); }
+.coverage-item p { margin: 0 0 2px; }
+.coverage-name { font-weight: 600; overflow-wrap: anywhere; }
+.coverage-name .sub { display: inline; margin-left: 6px; font-weight: 400; }
+.coverage-status { font-size: 0.92rem; }
+.coverage-note { font-size: 0.9rem; }
+.coverage-makers li { margin: 4px 0; }

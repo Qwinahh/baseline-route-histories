@@ -267,6 +267,19 @@
     };
   }
 
+  // Pointer targets for the selectable dates of a graph (page audit, 21 October 2026): one vertical band per date,
+  // split at the midpoints between neighbouring dates, at most `half` px either side of its date and inside
+  // [lo, hi]. Bands never overlap, whatever the width; where dates are closer than a comfortable target, the page
+  // also offers Previous/Next test buttons and arrow keys (an equivalent control), never smaller hidden circles.
+  function hitRegions(xs, lo, hi, half) {
+    half = half || 20;
+    var sorted = xs.slice().sort(function (a, b) { return a - b; });
+    return sorted.map(function (x, i) {
+      var left = i ? (sorted[i - 1] + x) / 2 : lo, right = i < sorted.length - 1 ? (x + sorted[i + 1]) / 2 : hi;
+      return { x: x, x0: Math.max(left, x - half, lo), x1: Math.min(right, x + half, hi) };
+    });
+  }
+
   function signed(n) { return n > 0 ? "+" + n : n < 0 ? "\u2212" + Math.abs(n) : "0"; }
 
   // The Change view of a series: { unavailable: reason } with fewer than two fully gradeable results, otherwise the
@@ -316,5 +329,5 @@
   }
 
   return { layout: layout, changeLayout: changeLayout, describe: describe, rowKind: rowKind, dayLabel: dayLabel,
-           fullDay: fullDay, signed: signed, segmentText: segmentText, MARK_LABELS: MARK_LABELS };
+           fullDay: fullDay, signed: signed, segmentText: segmentText, hitRegions: hitRegions, MARK_LABELS: MARK_LABELS };
 });

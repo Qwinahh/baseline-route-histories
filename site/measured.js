@@ -234,6 +234,58 @@
   }
   function changeAvailable(series) { return comparableRows(series).length >= 2; }
 
+  // Which kind of test a series is (page audit, 21 October 2026): the label always travels with its score, and two
+  // kinds are never shown as one comparable number. "reference": all 40 questions through an intermediary, in
+  // batches; "quick": a 4-question quick check; "daily": a 40-question daily test through one route.
+  function testKind(series) { return isQuick(series) ? "quick" : isReference(series) ? "reference" : "daily"; }
+  var KIND_LABELS = { quick: "Quick check", reference: "Reference test", daily: "Full daily test" };
+  function kindLabel(series) {
+    var size = isQuick(series) ? series.planned_items : series.panel_items;
+    return KIND_LABELS[testKind(series)] + " (" + size + " questions)";
+  }
+  // The newest scored result in each kind of test across a model's series, newest first: so a newer quick check is
+  // never hidden behind an older full result, and neither is converted into the other's scale.
+  function resultsByKind(seriesList) {
+    var best = {};
+    (seriesList || []).forEach(function (s) {
+      var latest = latestScored(s);
+      if (!latest) return;
+      var kind = testKind(s);
+      if (!best[kind] || latest.at > best[kind].latest.at) best[kind] = { kind: kind, series: s, latest: latest };
+    });
+    return Object.keys(best).map(function (k) { return best[k]; }).sort(function (a, b) { return b.latest.at - a.latest.at; });
+  }
+  // A test ceiling: the newest fully gradeable result already got every question right, so this unchanged test cannot
+  // show any further gain. It says nothing about the model beyond this test.
+  function atCeiling(series) {
+    var rows = comparableRows(series);
+    var last = rows.length ? rows[rows.length - 1] : null;
+    return !!last && correct(last) === series.panel_items;
+  }
+  // Scored dates the Change view leaves out (not fully gradeable or a returned-model mismatch), with the reason in
+  // the record's own counts. Nothing is dropped: they stay points in Score view and rows in the table.
+  function excludedFromChange(series) {
+    return scoredRows(series).filter(function (row) { return !comparable(series, row); }).map(function (row) {
+      var r = row.record, parts = [];
+      if (identityMismatch(row)) parts.push("a returned model differed");
+      if (r.first_attempt_outcomes) {
+        var o = r.first_attempt_outcomes;
+        var errors = ["timeout", "provider_error", "rate_limited", "auth_error", "client_error"].reduce(function (n, k) {
+          return n + (o[k] || 0); }, 0);
+        if (errors) parts.push(errors + (errors === 1 ? " request error" : " request errors"));
+        if (o.refusal) parts.push(o.refusal + (o.refusal === 1 ? " refusal" : " refusals"));
+        var problems = ["truncated", "empty", "malformed"].reduce(function (n, k) { return n + (o[k] || 0); }, 0);
+        if (problems) parts.push(problems + (problems === 1 ? " unreadable or cut-off answer" : " unreadable or cut-off answers"));
+      } else if (r.not_graded) {
+        var ng = 0;
+        Object.keys(r.not_graded).forEach(function (k) { ng += r.not_graded[k] || 0; });
+        if (ng) parts.push(ng + (ng === 1 ? " answer not gradeable" : " answers not gradeable"));
+      }
+      if (!parts.length) parts.push("not every answer was gradeable");
+      return { date: row.date, correct: correct(row), total: series.panel_items, reason: parts.join(", ") };
+    });
+  }
+
   // The workspace readout for one series: its latest raw score and, only where the comparison rules allow it, the
   // observed change from the previous test, in correct answers; otherwise why no comparison is shown.
   var REASONS = {
@@ -295,6 +347,7 @@
            gradeable: gradeable, laterAttempt: laterAttempt,
            defaultIndex: defaultIndex, comparison: comparison, highlight: highlight, caption: caption,
            movements: movements, comparableRows: comparableRows, changeAvailable: changeAvailable,
-           observation: observation,
+           observation: observation, testKind: testKind, kindLabel: kindLabel, resultsByKind: resultsByKind,
+           atCeiling: atCeiling, excludedFromChange: excludedFromChange,
            sparkline: sparkline, dayText: dayText };
 });

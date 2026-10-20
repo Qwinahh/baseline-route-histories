@@ -8,6 +8,19 @@ const C = require("../site/results-chart.js");
 
 const views = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));   // {name: [daily_series...]}
 
+// Pointer bands (page audit P2): split at midpoints, at most 20px either side, never overlapping at any spacing; the
+// audited phone spacings (17.19px Gemini, 22.92px Grok) give disjoint bands, unlike the old 24px minimum circles.
+for (const spacing of [17.1875, 22.9167, 60]) {
+  const xs = [0, 1, 2, 3, 4].map((i) => 40 + i * spacing);
+  const bands = C.hitRegions(xs, 0, 400, 20);
+  bands.forEach((b, i) => {
+    assert.ok(b.x0 < b.x && b.x < b.x1 && b.x1 - b.x <= 20 && b.x - b.x0 <= 20);
+    if (i) assert.ok(bands[i - 1].x1 <= b.x0 + 1e-9);
+  });
+  if (spacing < 40) assert.ok(Math.abs((bands[1].x1 - bands[1].x0) - spacing) < 1e-9);   // the whole gap, no overlap
+}
+assert.deepEqual(C.hitRegions([390], 0, 400, 20), [{ x: 390, x0: 370, x1: 400 }]);       // clipped at the edge
+
 // Dated schedule segments (bundle v5): a paused date is its own mark, never "missed", and breaks the line; each
 // segment boundary is a transition with its window or pause named. Synthetic inline series.
 {

@@ -6,6 +6,7 @@ import hashlib
 import importlib
 import io
 import json
+import re
 import os
 from pathlib import Path
 import shutil
@@ -720,10 +721,10 @@ class DailyGraphPageTests(OwnResultsPageTests):
         self.assertEqual(render.last_result["selectedSetup"], "1")
         self.assertNotEqual(current, earlier)
         for text in (current, earlier):
-            self.assertIn("Test setup", text)
-            self.assertIn("Choose a test setup. Different setups are kept separate and are never joined into one trend.",
-                          text)
-            self.assertIn("Latest setup", text)                                   # an option label, not "active"
+            self.assertIn("Test setup (2 kept separate, never joined)", text)     # beside the graph (page audit P2)
+            self.assertNotIn("Latest setup", text)                                # never chronology from list position
+            self.assertNotIn("Earlier setup", text)
+            self.assertIn("Full daily test (40 questions) · ", text)              # named by kind, result and dates
             self.assertNotIn("history below", text)
             self.assertNotIn("Current setup", text)
         self.assertIn("Results checked up to 2026-10-12 12:00:00 UTC.", current)   # the newest setup first
@@ -1065,6 +1066,237 @@ class AdmittedPuterHistoryTests(unittest.TestCase):
                 if len(view.get("schedule_segments") or []) > 1:
                     self.assertIn("Scheduled in dated segments", score["text"])
                     self.assertIn("A paused date is not a missed day.", score["text"])
+
+
+def _gradeable(record):
+    o = record.get("first_attempt_outcomes")
+    if o:
+        return (o.get("correct") or 0) + (o.get("incorrect") or 0) + (o.get("format_error") or 0)
+    return record.get("answered") or 0
+
+
+def _mismatch(record):
+    if record.get("identity"):
+        return (record["identity"].get("mismatch") or 0) > 0
+    return ((record.get("first_attempt_outcomes") or {}).get("answered_identity_mismatch") or 0) > 0
+
+
+def _correct(record):
+    return record["first_attempt_correct"] if "first_attempt_correct" in record else record["correct"]
+
+
+def _full_day(iso):
+    return f"{render_short_day(iso)} {iso[:4]}"
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class PageAuditTests(unittest.TestCase):
+    """docs/PAGE_AUDIT_2026-10-21.md acceptance, on the site built from the full admitted own_results/ (21 October 2026).
+    Every expectation is derived from the admitted rows, so the checks hold as history grows."""
+
+    NOW = "2026-10-21T12:00:00Z"
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.out = Path(cls.tmp.name) / "dist"
+        cls.data = build_site.build(cls.out, generated_at=GENERATED)       # the production own_results/
+        cls.setups = [(entry, view) for entry, rec in cls.data["baseline_tests"]["entries"].items()
+                      for view in rec["daily_series"]]
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def page(self, hash_, mode=None, width=None):
+        env = dict(os.environ, RENDER_NOW=self.NOW)
+        if mode:
+            env["RENDER_MODE"] = mode
+        if width:
+            env["RENDER_WIDTH"] = str(width)
+        result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(self.out), hash_],
+                                capture_output=True, text=True, timeout=60, encoding="utf-8", env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def view(self, sid):
+        return next(v for _e, v in self.setups if v["series_id"] == sid)
+
+    @staticmethod
+    def scored(view):
+        return [r["record"] for r in view["rows"] if r["eligible"] and r["record"] and _gradeable(r["record"]) > 0]
+
+    @classmethod
+    def comparable(cls, view):
+        total = view["panel_items"]
+        return [r for r in cls.scored(view) if _gradeable(r) == total and not _mismatch(r)]
+
+    def test_render_matrix_every_setup_both_views_two_widths(self):
+        self.assertEqual(len(self.setups), 9)                                 # the nine published setups
+        for entry, view in self.setups:
+            for mode in ("score", "change"):
+                for width in (375, 1280):
+                    with self.subTest(setup=view["series_id"], mode=mode, width=width):
+                        page = self.page(f"#model/{entry}?setup={view['series_id']}", mode=mode, width=width)
+                        self.assertEqual(page["dailyCharts"], 1)
+                        self.assertNotIn("undefined", page["text"])
+                        self.assertNotIn("NaN", page["text"])
+                        expected = mode if mode == "score" or len(self.comparable(view)) >= 2 else "score"
+                        self.assertEqual(page["selected"]["graphMode"], expected)
+                        bands = sorted(page["chart"]["bands"], key=lambda b: b["x0"])
+                        self.assertTrue(all(a["x1"] <= b["x0"] + 1e-6 for a, b in zip(bands, bands[1:])))
+                        self.assertEqual(len(bands), page["chart"]["points"] +
+                                         len([m for m in page["chart"]["marks"] if m["kind"] != "pending"]))
+
+    def test_each_rail_result_carries_its_own_test_kind_score_and_date(self):
+        page = self.page("#models")
+        rail = page["text"][page["text"].index("Tested models"):page["text"].index("Each entry is one exact model")]
+        for entry, rec in self.data["baseline_tests"]["entries"].items():
+            newest = {}                                                       # the newest result of each test kind
+            for view in rec["daily_series"]:
+                rows = self.scored(view)
+                if rows:
+                    kind = view.get("contract") or "daily"
+                    if kind not in newest or rows[-1]["date"] > newest[kind][1]["date"]:
+                        newest[kind] = (view, rows[-1])
+            for kind, (view, latest) in newest.items():
+                label = {"puter-subset-v1": "Quick check · 4 questions", "puter-reference-v1": "Reference test · 40 questions",
+                         "daily": "40 questions"}[kind]
+                with self.subTest(view["series_id"]):
+                    self.assertIn(label, rail)
+                    self.assertIn(f"{_correct(latest)}/{view['panel_items']} · {render_short_day(latest['date'])}", rail)
+        self.assertNotIn("%", rail)                                           # never a converted common score
+
+    def test_gpt_exposes_its_newer_quick_check_beside_the_older_reference(self):
+        gpt = self.data["baseline_tests"]["entries"]["puter.gpt-6.1-sol"]["daily_series"]
+        quick = next(v for v in gpt if v.get("contract") == "puter-subset-v1")
+        ref = next(v for v in gpt if v.get("contract") == "puter-reference-v1")
+        q, r = self.scored(quick)[-1], self.scored(ref)[-1]
+        page = self.page("#model/puter.gpt-6.1-sol")
+        text = page["text"]
+        self.assertIn("Test setup (2 kept separate, never joined)", text)
+        self.assertIn(f"Quick check (4 questions) · {_correct(q)}/4 on {_full_day(q['date'])}", text)
+        self.assertIn(f"Reference test (40 questions) · {_correct(r)}/40 on {_full_day(r['date'])}", text)
+        shown = self.view(gpt[int(page["selectedSetup"])]["series_id"])
+        if shown is ref and q["date"] > r["date"]:
+            self.assertIn(f"Show the newer quick check (4 questions): {_correct(q)}/4 on {_full_day(q['date'])}", text)
+
+    def test_test_ceilings_are_disclosed_only_where_reached(self):
+        for entry, view in self.setups:
+            rows = self.comparable(view)
+            reached = bool(rows) and _correct(rows[-1]) == view["panel_items"] and \
+                _correct(self.scored(view)[-1]) == view["panel_items"]
+            with self.subTest(view["series_id"]):
+                text = self.page(f"#model/{entry}?setup={view['series_id']}", mode="score")["text"]
+                self.assertEqual("Test ceiling reached" in text, reached)
+
+    def test_change_view_explains_scored_dates_it_leaves_out(self):
+        found = False
+        for entry, view in self.setups:
+            scored, comparable = self.scored(view), self.comparable(view)
+            excluded = [r for r in scored if r not in comparable]
+            if len(comparable) < 2:
+                continue
+            page = self.page(f"#model/{entry}?setup={view['series_id']}", mode="change")
+            with self.subTest(view["series_id"]):
+                if not excluded:
+                    self.assertNotIn("left out of Change view", page["text"])
+                    continue
+                found = True
+                self.assertIn(f"{len(comparable)} comparable results are plotted; {len(excluded)} scored "
+                              f"{'date is' if len(excluded) == 1 else 'dates are'} left out of Change view", page["text"])
+                for r in excluded:
+                    self.assertIn(f"{_full_day(r['date'])} ({_correct(r)}/{view['panel_items']}, ", page["text"])
+                self.assertIn("Show Score view", page["text"])
+                self.assertEqual(page["chart"]["points"], len(comparable))     # every drawn point is a comparable row
+        self.assertTrue(found)                                                # the audited Gemini case exists
+
+    def test_selected_and_latest_tests_are_named_and_the_change_readout_states_its_unit(self):
+        for entry, view in self.setups:
+            rows = self.comparable(view)
+            if len(rows) < 2:
+                continue
+            with self.subTest(view["series_id"]):
+                page = self.page(f"#model/{entry}?setup={view['series_id']}")
+                latest = self.scored(view)[-1]
+                self.assertIn(f"Selected test: {_full_day(latest['date'])}: ", page["text"])
+                self.assertIn("(This is the latest test.)", page["text"])
+                first, last = rows[0], rows[-1]
+                delta = _correct(last) - _correct(first)
+                signed = "0" if delta == 0 else (f"+{delta}" if delta > 0 else f"\u2212{-delta}")
+                self.assertIn(f"since {_full_day(first['date'])} ({_correct(first)}/{view['panel_items']})", page["text"])
+                self.assertIn(f"Latest point: {signed} change; score {_correct(last)}/{view['panel_items']} on "
+                              f"{_full_day(last['date'])}.", page["text"])
+                self.assertIn("not a launch baseline or a health index", page["text"])
+
+    def test_freshness_is_visible_and_running_collection_is_never_claimed(self):
+        for entry, view in self.setups:
+            with self.subTest(view["series_id"]):
+                text = self.page(f"#model/{entry}?setup={view['series_id']}", mode="score")["text"]
+                self.assertIn("results published up to " + view["as_of"].replace("T", " ").replace("Z", " UTC"), text)
+                if view["schedule"]["end_date"] >= self.NOW[:10]:
+                    self.assertIn("whether collection is running now is not verified on this page", text)
+                self.assertNotIn("live daily", text.lower())
+
+    def test_an_empty_setup_says_why_its_graph_has_no_score(self):
+        ref = next(v for e, v in self.setups if e == "puter.claude-sonnet-5-5" and v.get("contract") == "puter-reference-v1")
+        self.assertFalse(self.scored(ref))
+        text = self.page(f"#model/puter.claude-sonnet-5-5?setup={ref['series_id']}")["text"]
+        n = len(ref["rows"])
+        self.assertIn(f"No scored result yet in this setup: none of its {n} {'date' if n == 1 else 'dates'} has a "
+                      "complete, gradeable result", text)
+
+    def test_coverage_view_and_search_show_untested_priority_models_honestly(self):
+        page = self.page("#coverage")
+        text = page["text"]
+        self.assertIn("not a popularity ranking", text)
+        self.assertIn("does not mean it is free, available to Baseline or ready to test", text)
+        for group in self.data["featured"]["groups"]:
+            self.assertIn(group["family"], text)
+        self.assertIn("gpt-6-astra", text)
+        self.assertIn("Not tested by Baseline · access for Baseline's free test not verified", text)
+        self.assertIn("Measured by Baseline on this exact route", text)            # the Puter Grok route
+        self.assertIn("Moonshot AI", text)                                         # Kimi, outside the shortlist
+        self.assertIn("none measured by Baseline", text)
+        for query, expect in (("astra", "gpt-6-astra"), ("kimi", "kimi-k3"), ("deepseek", "deepseek-v4-pro")):
+            with self.subTest(query):
+                found = self.page(f"#models?q={query}")
+                self.assertEqual(found["modelRows"], [])                          # never listed as tested
+                self.assertIn("No tested model matches your search.", found["text"])
+                self.assertIn("In the catalogue, not tested by Baseline (no Baseline result; access not verified):",
+                              found["text"])
+                self.assertIn(expect, found["text"])
+
+
+class PaletteContrastTests(unittest.TestCase):
+    """Text and marker tokens in both colour schemes meet 4.5:1 (page audit P2); computed from styles.css itself."""
+
+    @staticmethod
+    def tokens(block):
+        return dict(re.findall(r"--(canvas|plot|ink|muted|accent|rule):\s*(#[0-9a-fA-F]{6})", block))
+
+    @staticmethod
+    def ratio(a, b):
+        def lum(hexcolour):
+            rgb = [int(hexcolour[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+            rgb = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in rgb]
+            return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+        hi, lo = sorted((lum(a), lum(b)), reverse=True)
+        return (hi + 0.05) / (lo + 0.05)
+
+    def test_both_palettes(self):
+        css = (ROOT / "site" / "styles.css").read_text(encoding="utf-8")
+        light = self.tokens(css[css.index(":root {"):css.index("}", css.index(":root {"))])
+        dark_at = css.index("@media (prefers-color-scheme: dark)")
+        dark = self.tokens(css[dark_at:css.index("}", css.index(":root {", dark_at))])
+        self.assertIn("color-scheme: light dark", css)
+        self.assertIn('<meta name="color-scheme" content="light dark">', (ROOT / "site" / "index.html").read_text(encoding="utf-8"))
+        for name, t in (("light", light), ("dark", dark)):
+            self.assertEqual(set(t), {"canvas", "plot", "ink", "muted", "accent", "rule"}, name)
+            for fg, bg in (("ink", "canvas"), ("ink", "plot"), ("muted", "canvas"), ("muted", "plot"),
+                           ("accent", "plot"), ("accent", "canvas"), ("plot", "accent")):
+                with self.subTest(scheme=name, pair=(fg, bg)):
+                    self.assertGreaterEqual(self.ratio(t[fg], t[bg]), 4.5)
 
 
 @unittest.skipUnless(shutil.which("node"), "node not available")
@@ -1640,7 +1872,8 @@ class MonitorTests(unittest.TestCase):
         self.assertEqual(ticks[-1], "+30")                                   # symmetric about zero (range ±37)
         self.assertIn("0", ticks)
         changes = {a.split(":")[0]: a.split("): ")[-1] for a in page["aria"] if "Change from 2 Oct 2026 (37 of 40)" in a}
-        self.assertEqual(changes, {"2 Oct 2026": "0 correct answers.", "3 Oct 2026": "\u221237 correct answers.",
+        self.assertEqual(changes, {"2 Oct 2026": "0 correct answers. Starting point for Change view.",   # the anchor, named
+                                   "3 Oct 2026": "\u221237 correct answers.",
                                    "8 Oct 2026": "+2 correct answers.", "9 Oct 2026": "+1 correct answer."})
         self.assertIn("+1 (38/40)", sel["pointLabels"])                      # the latest point, labelled directly
         raw = self.site([self.graph("several-points.json")], now="2026-10-10T06:00:00Z").page(f"#model/{GEMINI}")
@@ -1680,7 +1913,8 @@ class MonitorTests(unittest.TestCase):
         explicit = render.page(f"#model/{GEMINI}?setup={sid}")
         ids = [s["series_id"] for s in render.data["baseline_tests"]["entries"][GEMINI]["daily_series"]]
         self.assertEqual(explicit["selectedSetup"], str(ids.index(sid)))     # an explicit setup link is respected
-        self.assertIn("Test details, other setups and results table", explicit["text"])
+        self.assertIn("Test details and results table", explicit["text"])
+        self.assertIn("Test setup (2 kept separate, never joined)", explicit["text"])   # the switch is not hidden
         unknown = render.page("#model/no-such-model")
         self.assertEqual(unknown["selected"]["name"], "Not found")
         self.assertEqual(len(unknown["modelRows"]), 2)                       # the tested models stay one click away
@@ -1763,21 +1997,30 @@ class MonitorFixTests(unittest.TestCase):
             sizes[width] = (w, h)
             self.assertGreaterEqual(h, 280, width)                            # a useful height everywhere
             self.assertLessEqual(h, 380, width)
-            self.assertTrue(all(r >= 12 for r in page["chart"]["hits"]), width)   # at least 24px hit areas
+            bands = sorted(page["chart"]["bands"], key=lambda b: b["x0"])         # page audit P2: never overlapping
+            self.assertTrue(all(a["x1"] <= b["x0"] + 1e-6 for a, b in zip(bands, bands[1:])), width)
+            self.assertTrue(all(0 <= b["x0"] < b["x1"] <= w for b in bands), width)
+            self.assertTrue(all(r <= 20 for r in page["chart"]["hits"]), width)
             self.assertEqual(len(page["chart"]["hits"]), page["chart"]["points"] +
                              len([m for m in page["chart"]["marks"] if m["kind"] != "pending"]))
+            self.assertEqual(page["chart"]["steppers"], 2)                      # Previous/Next: an equivalent control
         self.assertEqual(sizes[375][0], 349)                                  # the stacked column, drawn 1:1
         self.assertEqual(sizes[800][0], 774)                                  # below 960px the graph has the column
         self.assertEqual(sizes[1366], (1010, 380))                            # beside the rail on a wide screen
         self.assertGreater(sizes[800][0], sizes[1024][0])                     # never squeezed beside the rail at 800
         wide = render.page(f"#model/{GEMINI}", width=1366)
-        self.assertEqual(set(wide["chart"]["hits"]), {20})                    # 40px where the dates allow
+        self.assertEqual(set(wide["chart"]["hits"][:-1]), {20})               # 40px where the dates allow
+        self.assertLessEqual(wide["chart"]["hits"][-1], 20)                   # the last band ends at the graph's edge
 
     def test_r3_crowded_dates_keep_separate_hit_areas(self):
-        """A month-long campaign on a phone: hit areas shrink to half the gap between dates, never below 24px."""
+        """A month-long campaign on a phone: one band per date split at the midpoints (page audit P2: the old 24px
+        minimum overlapped neighbours below 24px spacing), plus Previous/Next buttons as an equivalent control."""
         render = self.site([several_points()], now="2026-10-29T12:00:00Z")
         page = render.page(f"#model/{GEMINI}", width=375)
-        self.assertTrue(all(12 <= r <= 20 for r in page["chart"]["hits"]))
+        bands = sorted(page["chart"]["bands"], key=lambda b: b["x0"])
+        self.assertTrue(all(a["x1"] <= b["x0"] + 1e-6 for a, b in zip(bands, bands[1:])))
+        self.assertTrue(all(0 < r <= 20 for r in page["chart"]["hits"]))
+        self.assertEqual(page["chart"]["steppers"], 2)
 
 
 class PageSourceTests(unittest.TestCase):

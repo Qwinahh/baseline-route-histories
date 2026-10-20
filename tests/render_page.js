@@ -134,6 +134,9 @@ const chart = graph ? {
     label: g.getAttribute("aria-label"), focusable: g.getAttribute("tabindex") === "0" })),
   lane: text(byClass("lane-label")[0]),
   hits: byClass("hit").map((h) => Number(h.getAttribute("r") || h.getAttribute("width") / 2)),
+  bands: byClass("hit").filter((h) => h.tagName === "rect").map((h) => ({ x0: Number(h.getAttribute("x")),
+    x1: Number(h.getAttribute("x")) + Number(h.getAttribute("width")) })),
+  steppers: byClass("step").length,
   points: byClass("score-point").length,
 } : null;
 const railLinks = byClass("rail-link").map((a) => a.getAttribute("href"));
