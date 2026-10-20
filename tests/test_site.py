@@ -936,6 +936,137 @@ class SegmentedScheduleTests(OwnResultsPageTests):
         self.assertEqual(render.problems(), [])
 
 
+def render_short_day(iso):
+    """The page's short day ("8 Oct") for an ISO date, as site/app.js shortDay writes it."""
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    return f"{int(iso[8:10])} {months[int(iso[5:7]) - 1]}"
+
+
+def synthetic_puter_bundle(route_id, days, as_of):
+    """A labelled synthetic Puter quick-check bundle (series synthetic: true), deterministic and built only from the
+    validator's reviewed route constants: no production record, score or hash. `days` lists (date, kind[, correct])
+    with kind "scored" (a verified completed run), "incomplete" (outcome uncertain, null counts) or "gap"."""
+    route = dict(own_results.PUTER_ROUTES[route_id], route_id=route_id, access_kind="intermediary",
+                 service_provider=own_results.PUTER_SERVICE)
+    label = lambda *parts: hashlib.sha256(("synthetic-fixture:" + ":".join(map(str, parts))).encode("utf-8")).hexdigest()  # noqa: E731
+    settings = {"sdk_package": "@heyputer/puter.js", "sdk_version": "2.6.3", "model": route["exact_identifier"],
+                "provider": route["requested_provider"], "max_tokens": 128, "stream": False, "reasoning_effort": None,
+                "retries": 0}
+    settings.update(own_results.PUTER_ROUTE_SETTINGS.get(route_id, {}))
+    ids = ["ext-03", "con-03", "evi-03", "rea-03"]
+    series = {"contract": own_results.PUTER_CONTRACT, "kind": "daily", "synthetic": True,
+              "parent_panel_id": "baseline-calibration-v1", "parent_panel_sha256": label("panel"), "parent_panel_items": 40,
+              "grader_version": "grader-v0", "planned_items": 4, "subset_item_ids": ids,
+              "subset_item_sha256": [label("item", i) for i in ids], "subset_prompt_sha256": [label("prompt", i) for i in ids],
+              "subset_categories": ["structured_extraction", "constraint_following", "evidence_bound", "bounded_reasoning"],
+              "settings": settings, "schedule": {"type": "daily", "start_date": days[0][0], "end_date": days[-1][0],
+                                                 "window_start_utc": "04:00", "window_minutes": 1080}}
+    series["subset_fingerprint"] = own_results.puter_subset_fingerprint(series)
+    series["series_fingerprint"] = own_results.puter_series_fingerprint(series)
+    series["series_id"] = f"{route_id}--daily--{series['series_fingerprint'][:12]}"
+    records = []
+    for day, kind, *correct in days:
+        record = {"record_version": 1, "date": day, "status": {"scored": "completed"}.get(kind, kind),
+                  "run_id": None if kind == "gap" else "puter-daily-" + day.replace("-", "") + "T043700Z-" + label(day)[:10],
+                  "evidence": {"scored": "verified", "incomplete": "unavailable", "gap": "none"}[kind],
+                  "evidence_sha256": label("evidence", day) if kind == "scored" else None, "route_id": route_id,
+                  "series_id": series["series_id"], "planned_items": 4, "interpretation": own_results.PUTER_INTERPRETATION}
+        for key in own_results.PUTER_COUNTS:
+            record[key] = None                                   # never a fabricated number for an unscored day
+        if kind == "scored":
+            right = correct[0]
+            record.update(attempted=4, answered=4, correct=right, incorrect=4 - right, format_error=0, not_sent=0,
+                          not_graded={k: 0 for k in own_results.NOT_GRADED_KEYS},
+                          identity={"mismatch": 0, "reported_match": 0, "unknown": 4})
+        records.append(record)
+    return {"format": own_results.BUNDLE_FORMAT, "format_version": own_results.PUTER_BUNDLE_VERSION, "as_of": as_of,
+            "route": route, "series": series, "open_dates": [], "records": records}
+
+
+@unittest.skipUnless(shutil.which("node"), "node not available")
+class AdmittedPuterHistoryTests(unittest.TestCase):
+    """The site as released: built from the full admitted own_results/ (not fixtures or a pre-admission copy). The
+    expectations are derived from the admitted data, so they hold as history grows (21 October 2026)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        cls.out = Path(cls.tmp.name) / "dist"
+        cls.data = build_site.build(cls.out, generated_at=GENERATED)       # the production own_results/
+        cls.dataset = own_results.load_admitted()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.tmp.cleanup()
+
+    def page(self, hash_, mode=None):
+        env = dict(os.environ, RENDER_NOW="2026-10-21T12:00:00Z")
+        if mode:
+            env["RENDER_MODE"] = mode
+        result = subprocess.run(["node", str(ROOT / "tests" / "render_page.js"), str(self.out), hash_],
+                                capture_output=True, text=True, timeout=60, encoding="utf-8", env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def puter_daily(self):
+        return {sid: body for sid, body in self.dataset["series"].items()
+                if own_results.is_puter(body) and body["series"]["kind"] == "daily"}
+
+    def test_every_admitted_puter_day_is_shown_as_admitted_and_never_filled_in(self):
+        series = self.puter_daily()
+        self.assertTrue(series)
+        entries = self.data["baseline_tests"]["entries"]
+        for sid, body in series.items():
+            with self.subTest(sid):
+                view = next(v for e in entries.values() for v in e["daily_series"] if v["series_id"] == sid)
+                expected = own_results.daily_rows(body)["rows"]
+                self.assertEqual(view["rows"], expected)
+                by_date = {r["date"]: r for r in body["records"]}
+                for row in view["rows"]:
+                    record = row["record"]
+                    if record is None:                                       # missed or paused: no numbers at all
+                        self.assertIn(row["state"], ("no_record", "paused", "open"))
+                        self.assertFalse(row["eligible"])
+                        continue
+                    self.assertEqual(record, by_date[row["date"]])           # the admitted record, byte for byte
+                    if record["evidence"] != "verified":
+                        self.assertFalse(row["eligible"])
+                        self.assertTrue(all(record[k] is None for k in own_results.PUTER_COUNTS))
+
+    def test_graphs_of_the_admitted_history_in_both_views(self):
+        entries = self.data["baseline_tests"]["entries"]
+        states = {r["state"] for body in self.puter_daily().values() for r in own_results.daily_rows(body)["rows"]}
+        self.assertTrue({"completed", "incomplete", "paused", "no_record"} <= states, states)   # the admitted history
+        for sid, body in self.puter_daily().items():
+            entry = next(k for k, e in entries.items() if any(v["series_id"] == sid for v in e["daily_series"]))
+            view = next(v for v in entries[entry]["daily_series"] if v["series_id"] == sid)
+            hash_ = f"#model/{entry}?setup={sid}"
+            with self.subTest(sid):
+                score = self.page(hash_, mode="score")
+                self.assertEqual(score["selected"]["graphMode"], "score")
+                self.assertIn("Correct answers out of 4, by test date (UTC)", score["text"])
+                self.assertNotIn("out of 40", score["text"])
+                self.assertEqual(score["dailyCharts"], 1)
+                graded = [r["record"] for r in view["rows"] if r["eligible"] and r["record"]["answered"] == 4]
+                default = self.page(hash_)
+                if len(graded) >= 2:                                         # Change is available and opens first
+                    self.assertEqual(default["selected"]["graphMode"], "change")
+                    self.assertIn(f"Change from {render_short_day(graded[0]['date'])}: {graded[0]['correct']}/4",
+                                  default["text"])
+                    self.assertIn("out of 4", default["text"])
+                else:
+                    self.assertEqual(default["selected"]["graphMode"], "score")
+                for row in view["rows"]:
+                    if row["state"] == "paused":
+                        self.assertIn("Paused (no collection authorized) — no collection was authorized for this "
+                                      "date; not a missed day", score["text"])
+                    if row["record"] is not None and row["record"]["status"] == "incomplete":
+                        self.assertIn("Incomplete (outcome uncertain) — outcome uncertain; no counts", score["text"])
+                if len(view.get("schedule_segments") or []) > 1:
+                    self.assertIn("Scheduled in dated segments", score["text"])
+                    self.assertIn("A paused date is not a missed day.", score["text"])
+
+
 @unittest.skipUnless(shutil.which("node"), "node not available")
 class ThirdPartyEvidenceTests(OwnResultsPageTests):
     """Third-party records stay as attributed tables; Baseline's daily history is the page's only graph."""
@@ -1027,11 +1158,21 @@ class MeasuredCoverageTests(OwnResultsPageTests):
     def test_each_graph_names_its_test_and_keeps_its_own_denominator(self):
         grok, claude = self.published("puter-x-ai-grok-4.7--"), self.published("puter-claude-sonnet-5-5--")
         render = self.site([self.fixture("daily-part1.json"), grok, claude])
+        graded = [r for r in grok["records"] if r["evidence"] == "verified" and r["answered"] == r["planned_items"]]
+        self.assertGreaterEqual(len(graded), 2)          # admitted history: the page opens on Change (site/app.js)
         page = render.page("#model/puter.x-ai-grok-4.7")
         self.assertTrue(page["selected"]["context"].startswith("Quick check: 4 questions"))
-        self.assertIn("Correct answers out of 4", page["text"])
+        self.assertEqual((page["selected"]["mode"], page["selected"]["graphMode"]), ("change", "change"))
+        first = min(r["date"] for r in graded)
+        self.assertIn(f"Change from {render_short_day(first)}: ", page["text"])
+        self.assertIn("correct answers gained or lost, out of 4, by test date (UTC)", page["text"])   # its own denominator
         self.assertNotIn("out of 40", page["text"])
         self.assertEqual(page["dailyCharts"], 1)
+        score = render.page("#model/puter.x-ai-grok-4.7", mode="score")
+        self.assertEqual((score["selected"]["mode"], score["selected"]["graphMode"]), ("score", "score"))
+        self.assertIn("Correct answers out of 4, by test date (UTC)", score["text"])
+        self.assertNotIn("out of 40", score["text"])
+        self.assertEqual(score["dailyCharts"], 1)
         gemini = render.page(f"#model/{GEMINI}", mode="score")
         self.assertTrue(gemini["selected"]["context"].startswith("Reference test: all 40 questions"))
         self.assertIn("Correct answers out of 40", gemini["text"])
@@ -1067,20 +1208,38 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         self.assertEqual(empty["selectedSetup"], "0")                        # an explicit setup link is respected
 
     def test_review_r1_a_zero_score_counts_and_a_gap_or_calibration_does_not(self):
-        zero = copy.deepcopy(self.published("puter-x-ai-grok-4.7--"))
-        zero["records"] = [dict(r, correct=0, incorrect=r["answered"] - r["format_error"]) for r in zero["records"]]
-        self.assertTrue(zero["records"])
+        # A labelled synthetic bundle (review of 21 October 2026): a scored zero, then an incomplete run with null
+        # counts (the shape of the genuine 14 October record) and a gap. Only the zero is a score; nothing is invented.
+        zero = synthetic_puter_bundle("puter-x-ai-grok-4.7", [("2026-10-12", "scored", 0), ("2026-10-13", "incomplete"),
+                                                              ("2026-10-14", "gap")], "2026-10-14T22:00:00Z")
         gap_only = copy.deepcopy(self.fixture("graph/open-day.json"))
         gap_only["records"] = [r for r in gap_only["records"] if r["status"] == "gap"]
         gap_only["as_of"] = "2026-10-05T03:00:00Z"
         render = self.site([zero, gap_only, self.fixture("calibration.json")])
         section = self.measured_section(render("#models"))
-        self.assertIn("1 tested model", section)                             # Grok's genuine zero only
+        self.assertIn("1 tested model", section)                             # Grok's scored zero only
         self.assertIn("Grok 4.7", section)
         self.assertIn("0/4", section)
         self.assertNotIn("gemini-3.5-flash-lite", section)                   # a gap or a one-off setup test is not one
-        grok = render.page("#model/puter.x-ai-grok-4.7")
+        tests = render.data["baseline_tests"]["entries"]
+        self.assertEqual(tests["puter.x-ai-grok-4.7"]["runs"], 1)            # the zero; never the incomplete day or gap
+        rows = {r["date"]: r for r in tests["puter.x-ai-grok-4.7"]["daily_series"][0]["rows"]}
+        self.assertEqual([(d, r["state"], r["eligible"]) for d, r in sorted(rows.items())],
+                         [("2026-10-12", "completed", True), ("2026-10-13", "incomplete", False), ("2026-10-14", "gap", False)])
+        self.assertIsNone(rows["2026-10-13"]["record"]["correct"])           # null stays null: no fabricated score
+        grok = render.page("#model/puter.x-ai-grok-4.7", mode="score")
         self.assertIn("0 of 4 correct; all 4 questions attempted", grok["text"])   # a scored zero, not a gap
+        self.assertIn("Synthetic preview — not real measurements", grok["text"])   # the fixture is labelled on the page
+        self.assertIn("Incomplete (outcome uncertain) — outcome uncertain; no counts", grok["text"])
+        self.assertIn("Missed (recorded gap) — no run took place", grok["text"])
+        unscored = synthetic_puter_bundle("puter-x-ai-grok-4.7", [("2026-10-13", "incomplete"), ("2026-10-14", "gap")],
+                                          "2026-10-14T22:00:00Z")
+        none = self.site([unscored, gap_only, self.fixture("calibration.json")])
+        self.assertEqual(none.data["baseline_tests"]["entries"]["puter.x-ai-grok-4.7"]["runs"], 0)
+        models = none.page("#models")
+        self.assertIn("No tested models yet", models["text"])                # an incomplete run and gaps never score
+        self.assertIn("Baseline has published only a one-off setup test so far.", models["text"])
+        self.assertEqual(models["modelRows"], [])
 
     def test_review_r1_card_route_and_test_name_come_from_the_same_result(self):
         claude = self.published("puter-claude-sonnet-5-5--")
