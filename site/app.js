@@ -256,6 +256,16 @@
       });
     }).slice(0, 8);
   }
+  // Verified releases on the not-tested list (catalog/coverage_queue.json) that are not catalogue entries.
+  function queueMatches(q) {
+    var needle = String(q || "").trim().toLowerCase(), queue = D.coverage_queue;
+    if (needle.length < 2 || !queue) return [];
+    return queue.items.filter(function (item) {
+      return !item.catalog_id && [item.name, item.identifier, item.maker].some(function (v) {
+        return String(v).toLowerCase().indexOf(needle) !== -1;
+      });
+    });
+  }
   // The newest result of a setup is its fully gradeable maximum: the unchanged test cannot show a further gain.
   function ceilingHere(r) { return M.atCeiling(r.series) && r.latest.correct === r.latest.total; }
   // A setup named by what it is, never by its position in a list (page audit P2).
@@ -366,7 +376,7 @@
         drawRail(list, status, selected);
         if (q) q.focus();
       });
-      var untested = catalogueMatches(state.q);
+      var untested = catalogueMatches(state.q), queued = queueMatches(state.q);
       append(list, el("li", { class: "rail-empty" }, [el("p", {}, "No tested model matches your search."),
         untested.length ? el("div", { class: "untested-matches" }, [
           el("p", { class: "sub" }, "In the catalogue, not tested by Baseline (no Baseline result; access not verified):"),
@@ -374,6 +384,11 @@
             return el("li", {}, [link(entryLink(e, ""), e.name), el("span", { class: "sub" }, accessText(e))]);
           })),
           el("p", { class: "sub" }, link("#coverage", "See what Baseline does and does not cover"))]) : null,
+        queued.length ? el("div", { class: "untested-matches" }, [
+          el("p", { class: "sub" }, "Verified newer releases, not tested by Baseline:"),
+          el("ul", {}, queued.map(function (q) {
+            return el("li", {}, [link("#coverage", q.name), el("span", { class: "sub" }, q.maker + " · " + q.route)]);
+          }))]) : null,
         clear]));
       return;
     }
@@ -1030,7 +1045,7 @@
       return "Reference test: all " + d.planned_items + " questions, through " + d.route.service_provider + ", in batches";
     }
     return isPuter(d) ? "Quick check: " + d.planned_items + " of the " + d.parent_panel_items + " reference questions, " +
-      "through " + d.route.service_provider : "Reference test: all " + d.panel_items + " questions";
+      "through " + d.route.service_provider : "Full daily test: all " + d.panel_items + " questions";
   }
   function puterSettingsText(x) {
     return "Puter SDK " + x.sdk_version + ", provider " + x.provider + ", output limit " + x.max_tokens + " tokens" +
@@ -1236,18 +1251,37 @@
       }).join(" · ")) : null,
       src ? el("p", { class: "sub" }, ["Catalogue listing checked " + dayText(src.checked_at) + ": ", link(src.url, src.claim)]) : null]);
   }
+  function queueItem(item) {
+    var entry = item.catalog_id ? entryById[item.catalog_id] : null;
+    var measured = entry && measuredMember(entry);
+    return el("li", { class: "coverage-item", "data-status": measured ? "measured" : "not_tested" }, [
+      el("p", { class: "coverage-name" }, [item.name, item.identifier !== item.name ? [" ", el("code", {}, item.identifier)] : null,
+        el("span", { class: "sub" }, item.maker)]),
+      el("p", { class: "coverage-status" }, measured ? "Measured by Baseline on this exact route."
+        : "Not tested by Baseline. " + item.access),
+      el("p", { class: "sub" }, (item.released ? "Released " + dayText(item.released) : "Release date not verified") +
+        " · route: " + item.route + "."),
+      el("p", { class: "sub" }, [item.sources.map(function (src, i) {
+        return [i ? " · " : "", link(src.url, src.claim), " (checked " + dayText(src.checked_on) + ")"];
+      }), entry ? [" · ", link(entryLink(entry, ""), "catalogue entry")] : null])]);
+  }
   function coverageView() {
-    var featured = D.featured;
+    var featured = D.featured, queue = D.coverage_queue;
     var measuredRoutes = entries.filter(measuredMember);
     var listed = {};
     var groups = featured ? featured.groups.map(function (g) {
       var members = g.entries.map(function (id) { return entryById[id]; }).filter(Boolean);
       members.forEach(function (e) { listed[e.id] = true; });
-      var partly = members.some(measuredMember);
-      return el("section", { class: "coverage-group" }, [el("h2", {}, g.family),
+      // The measured routes in this family, wherever they are listed (never "above" or "below": a real link).
+      var family = entries.filter(function (x) {
+        return measuredMember(x) && members.some(function (m) { return m.maker === x.maker && m.family === x.family; });
+      });
+      return el("section", { class: "coverage-group" }, [el("h3", {}, g.family),
         el("p", { class: "sub" }, "Why shortlisted: " + g.reason),
-        partly ? el("p", { class: "coverage-note" }, "Only the exact routes marked measured have Baseline results; other " +
-          "versions and services in this family are not covered.") : null,
+        family.length ? el("p", { class: "coverage-note" }, ["Measured in this family: ", family.map(function (x, i) {
+          return [i ? " · " : "", link(entryLink(x, ""), x.name + " · " + accessText(x))];
+        }), ". Only those exact routes have Baseline results; other versions and services in this family are not covered."])
+          : null,
         el("ul", { class: "coverage-list" }, members.map(coverageItem))]);
     }) : [el("p", {}, "No reviewed shortlist is published with this build.")];
     var makers = {};
@@ -1256,7 +1290,15 @@
       var m = makers[e.maker] || (makers[e.maker] = { maker: e.maker, total: 0, measured: 0, examples: [] });
       m.total += 1;
       if (measuredMember(e)) m.measured += 1;
-      if (m.examples.length < 3) m.examples.push(e.exact_identifier || e.name);
+      m.examples.push(e);
+    });
+    // Examples: newest cited release first, then the identifier (so kimi-k3 precedes kimi-k2.x); never list order.
+    Object.keys(makers).forEach(function (k) {
+      makers[k].examples = makers[k].examples.sort(function (a, b) {
+        var ra = a.release ? a.release.date : "", rb = b.release ? b.release.date : "";
+        var ia = a.exact_identifier || a.name, ib = b.exact_identifier || b.name;
+        return ra !== rb ? (ra < rb ? 1 : -1) : (ia < ib ? 1 : ia > ib ? -1 : 0);
+      }).slice(0, 3).map(function (e) { return e.exact_identifier || e.name; });
     });
     var others = Object.keys(makers).sort().map(function (k) { return makers[k]; });
     return el("div", { class: "coverage" }, [
@@ -1265,8 +1307,17 @@
         measuredRoutes.length + (measuredRoutes.length === 1 ? " exact model route" : " exact model routes") + " (" +
         "see Tested models). The families below are an editorial shortlist, not a popularity ranking; listing a model " +
         "here does not mean it is free, available to Baseline or ready to test."),
-      featured ? el("p", { class: "sub" }, "Shortlist last reviewed " + dayText(featured.checked_at) + ".") : null,
-      groups,
+      queue ? el("section", { class: "coverage-group coverage-queue" }, [
+        el("h2", {}, "Priority models and newer releases not yet tested"),
+        el("p", { class: "sub" }, queue.explanation),
+        el("p", { class: "sub" }, "Compiled " + dayText(queue.compiled_on) + " from Baseline's dated release intake; each " +
+          "source shows the date it was checked."),
+        el("ul", { class: "coverage-list" }, queue.items.map(queueItem))]) : null,
+      el("section", { class: "coverage-group" }, [
+        el("h2", {}, "Editorial shortlist" + (featured ? " (reviewed " + dayText(featured.checked_at) + ")" : "")),
+        el("p", { class: "sub" }, "Model families chosen on that date, with the catalogue entries named then. It is not " +
+          "current release coverage: newer releases are in the list above."),
+        groups]),
       el("section", { class: "coverage-group" }, [el("h2", {}, "Elsewhere in the catalogue"),
         el("p", { class: "sub" }, "Current (not retired) API and hosted entries outside the shortlist, by maker. A count of " +
           "catalogue listings, not of Baseline results."),
@@ -1277,10 +1328,11 @@
                 q: m.maker })), "search")]);
         }))]),
       el("section", { class: "coverage-group" }, [el("h2", {}, "What would change this page"),
-        el("p", {}, "Only new published Baseline results. Measuring another model needs verified free access to its exact " +
-          "route and the same fixed test; that is future measurement work, not something this page can show in advance. " +
-          "A harder test for models at a test ceiling would be a new, separately calibrated setup, and existing results " +
-          "would never be rescaled or joined to it.")])]);
+        el("p", {}, "Scores appear only when Baseline publishes new measured results. The untested lists change when " +
+          "release or access evidence is verified and reviewed; that never creates a score or marks a model as tested. " +
+          "Measuring another model needs verified free access to its exact route and the same fixed test: future " +
+          "measurement work, not something this page can show in advance. A harder test for models at a test ceiling " +
+          "would be a new, separately calibrated setup, and existing results would never be rescaled or joined to it.")])]);
   }
 
   function modelFacts(e) {

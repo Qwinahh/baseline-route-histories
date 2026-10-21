@@ -24,7 +24,7 @@
   },
   {
    "family": "Gemini",
-   "reason": "The Gemini app and a recent Flash release. The measured Gemini 3.5 Flash-Lite API route is listed under Measured by Baseline above.",
+   "reason": "The Gemini app and a recent Flash release. Baseline's measured Gemini route, gemini-3.5-flash-lite through the Gemini API, is listed under Tested models.",
    "entries": [
     "google-app.gemini",
     "google-api.gemini-3.8-flash"

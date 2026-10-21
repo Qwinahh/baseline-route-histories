@@ -585,7 +585,7 @@ class OwnResultsPageTests(unittest.TestCase):
         render = self.site([self.fixture("daily-part1.json"), self.fixture("daily-part2.json"),
                             self.fixture("calibration.json")])
         page = render(f"#model/{GEMINI}")
-        for text in ("Reference test: all 40 questions", "Daily results by date", "rows are not joined into a trend",
+        for text in ("Full daily test: all 40 questions", "Daily results by date", "rows are not joined into a trend",
                      "Missed (recorded gap) — no run took place", "No record — nothing was recorded for this date",
                      "Stopped early — fewer than 90% attempted; not a usable day", "Interrupted — evidence unavailable",
                      "38 of 40", "37 of 40", "1 refused", "3 later scheduled dates were not yet due",
@@ -643,7 +643,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
         render = self.site([self.graph("several-points.json")])
         result = render.page(f"#model/{GEMINI}", mode="score")
         text, aria = result["text"], result["aria"]
-        for phrase in ("Reference test: all 40 questions", "Correct answers out of 40 (first attempts), by test date (UTC)",
+        for phrase in ("Full daily test: all 40 questions", "Correct answers out of 40 (first attempts), by test date (UTC)",
                        "Lines join consecutive days only", "x a missed day", "~ an incomplete run",
                        "These scores describe this fixed test. A rise or fall alone does not establish an overall "
                        "change in model quality.", "Results checked up to 2026-10-09 12:00:00 UTC.",
@@ -677,7 +677,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
         render = self.site([self.graph("several-points.json"), groq])
         gemini_page = render(f"#model/{GEMINI}")
         groq_page = render("#model/openai-groq.gpt-oss-120b")
-        self.assertIn("Reference test: all 40 questions", groq_page)
+        self.assertIn("Full daily test: all 40 questions", groq_page)
         self.assertIn("Third-party host (Groq)", groq_page)
         self.assertIn("Results checked up to 2026-10-12 12:00:00 UTC.", groq_page)
         self.assertNotIn("Results checked up to 2026-10-12", gemini_page)
@@ -762,7 +762,7 @@ class DailyGraphPageTests(OwnResultsPageTests):
         for setup in (None, "1"):
             text = render(f"#model/{GEMINI}", setup=setup)
             self.assertEqual(render.last_result["dailyCharts"], 1)
-            graph = text[text.index("Reference test: all 40 questions"):text.index("One-off setup test")]
+            graph = text[text.index("Full daily test: all 40 questions"):text.index("One-off setup test")]
             self.assertNotIn("correct on this test", graph)                       # calibration never in a setup
             self.assertIn("31 of 40 correct on this test", text[text.index("One-off setup test"):])
         app = render.page("#model/google-app.gemini")                             # similar name, different access
@@ -773,9 +773,9 @@ class DailyGraphPageTests(OwnResultsPageTests):
     def test_calibration_and_daily_stay_apart_and_entries_without_results_unchanged(self):
         render = self.site([self.fixture("calibration.json"), self.graph("several-points.json")])
         text = render(f"#model/{GEMINI}")
-        self.assertLess(text.index("Reference test: all 40 questions"), text.index("One-off setup test"))
+        self.assertLess(text.index("Full daily test: all 40 questions"), text.index("One-off setup test"))
         self.assertIn("31 of 40 correct on this test", text)
-        self.assertNotIn("31 of 40", text[text.index("Reference test: all 40 questions"):text.index("One-off setup test")])
+        self.assertNotIn("31 of 40", text[text.index("Full daily test: all 40 questions"):text.index("One-off setup test")])
         other = render("#model/google-app.gemini")
         self.assertNotIn("Reference test", other)
         self.assertIn("Baseline has no scored test of", other)
@@ -1268,6 +1268,65 @@ class PageAuditTests(unittest.TestCase):
                 self.assertIn(expect, found["text"])
 
 
+class CoverageQueuePageTests(PageAuditTests):
+    """Codex review of cc7344b (21 October 2026): newer and priority releases are visible as not tested, with their
+    route, release date or its absence, access uncertainty and dated sources; the 8 October shortlist is labelled as
+    such; wording no longer points at sections that do not exist. Built from the production data like its parent."""
+
+    def test_coverage_shows_the_not_tested_releases_first(self):
+        text = self.page("#coverage")["text"]
+        queue = self.data["coverage_queue"]
+        start, end = text.index("Priority models and newer releases not yet tested"), text.index("Editorial shortlist")
+        self.assertLess(start, end)
+        section = text[start:end]
+        for item in queue["items"]:
+            with self.subTest(item["identifier"]):
+                self.assertIn(item["name"], section)
+                self.assertIn(item["identifier"], section)
+                self.assertIn("Not tested by Baseline. " + item["access"], section)
+                self.assertIn("Released " + _full_day(item["released"]) if item["released"] else "Release date not verified",
+                              section)
+                self.assertIn("route: " + item["route"], section)
+                for src in item["sources"]:
+                    self.assertIn(f"{src['claim']} (checked {_full_day(src['checked_on'])})", section)
+        self.assertIn("Muse Wonder Full", section)                                # two distinct Meta routes
+        self.assertIn("catalogue entry", section)                                 # Kimi K3 links its listing
+        self.assertNotIn("/40", section)                                          # no scores in this list
+        self.assertNotIn("/4 ", section)
+
+    def test_shortlist_and_wording_are_accurate(self):
+        text = self.page("#coverage")["text"]
+        self.assertIn("Editorial shortlist (reviewed " + _full_day(self.data["featured"]["checked_at"][:10]) + ")", text)
+        self.assertIn("It is not current release coverage", text)
+        for group in self.data["featured"]["groups"]:
+            self.assertNotIn(" above", group["reason"])                            # no reason points to a missing section
+        self.assertNotIn("Measured by Baseline above", text)
+        self.assertIn("Measured in this family: gemini-3.5-flash-lite", text)
+        self.assertNotIn("))", text)                                               # no doubled brackets in route labels
+        self.assertIn("Scores appear only when Baseline publishes new measured results", text)
+        self.assertIn("that never creates a score or marks a model as tested", text)
+        self.assertNotIn("Only new published Baseline results", text)
+        moonshot = text[text.index("Moonshot AI:"):]
+        self.assertTrue(moonshot.split("(for example ")[1].startswith("kimi-k3"))   # the current K3 first
+
+    def test_search_finds_verified_untested_releases(self):
+        page = self.page("#models?q=muse")
+        self.assertEqual(page["modelRows"], [])
+        self.assertIn("Verified newer releases, not tested by Baseline:", page["text"])
+        self.assertIn("Muse Wonder Full", page["text"])
+
+    def test_a_daily_test_is_never_called_a_reference_test(self):
+        page = self.page("#model/google-api.gemini-3.5-flash-lite")
+        self.assertTrue(page["selected"]["context"].startswith("Full daily test: all 40 questions"))
+        self.assertNotIn("Reference test", page["selected"]["context"])
+        ref = self.page("#model/puter.gpt-6.1-sol")                               # the Puter reference keeps its name
+        self.assertTrue(ref["selected"]["context"].startswith("Reference test: all 40 questions, in batches"))
+
+
+for _inherited in [name for name in dir(PageAuditTests) if name.startswith("test_")]:
+    setattr(CoverageQueuePageTests, _inherited, None)                             # the parent's checks run once
+
+
 class PaletteContrastTests(unittest.TestCase):
     """Text and marker tokens in both colour schemes meet 4.5:1 (page audit P2); computed from styles.css itself."""
 
@@ -1331,7 +1390,7 @@ class ThirdPartyEvidenceTests(OwnResultsPageTests):
         render = self.site([retarget(self.graph_fixture("several-points.json"), entry)])
         page = render.page(f"#model/{entry['id']}")
         self.assertEqual((page["totalCharts"], page["dailyCharts"]), (1, 1))
-        self.assertIn("Reference test: all 40 questions", page["text"])
+        self.assertIn("Full daily test: all 40 questions", page["text"])
         self.assert_evidence_not_rendered(page["text"], route, source)
         self.assertEqual(len(render.data["routes"]), len(data["routes"]))         # still in the data, unchanged
 
@@ -1406,7 +1465,7 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         self.assertNotIn("out of 40", score["text"])
         self.assertEqual(score["dailyCharts"], 1)
         gemini = render.page(f"#model/{GEMINI}", mode="score")
-        self.assertTrue(gemini["selected"]["context"].startswith("Reference test: all 40 questions"))
+        self.assertTrue(gemini["selected"]["context"].startswith("Full daily test: all 40 questions"))
         self.assertIn("Correct answers out of 40", gemini["text"])
         self.assertNotIn("Quick check", gemini["selected"]["context"] + gemini["selected"]["caveat"])
         rows = render.data["baseline_tests"]["entries"]["puter.claude-sonnet-5-5"]["daily_series"][0]["rows"]
@@ -1431,7 +1490,7 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         self.assertIn("setup=" + old, href)                                  # the link opens the measured setup
         page = render.page(href)
         self.assertEqual(page["selectedSetup"], "1")                         # the older setup, not the empty one
-        self.assertTrue(page["selected"]["context"].startswith("Reference test: all 40 questions"))
+        self.assertTrue(page["selected"]["context"].startswith("Full daily test: all 40 questions"))
         self.assertEqual(page["selected"]["score"], "37/40")
         self.assertIn("21 Sep 2026", page["text"])
         opened = render.page(f"#model/{GEMINI}")
@@ -1486,7 +1545,7 @@ class MeasuredCoverageTests(OwnResultsPageTests):
         self.assertIn("model identity not confirmed", page["selected"]["context"])
         self.assertIn("Correct answers out of 4", page["text"])
         gemini = render.page(self.card_link(render, "gemini-3.5-flash-lite"))
-        self.assertTrue(gemini["selected"]["context"].startswith("Reference test: all 40 questions"))
+        self.assertTrue(gemini["selected"]["context"].startswith("Full daily test: all 40 questions"))
         self.assertNotIn("Quick check", gemini["selected"]["context"])
 
     def test_the_editorial_list_carries_no_fixed_result_counts(self):

@@ -219,6 +219,56 @@ class FeaturedListTests(unittest.TestCase):
                 self.assertTrue(catalog.validate_featured(doc, self.entries, later))
 
 
+class CoverageQueueTests(unittest.TestCase):
+    """Page audit (21 October 2026): the not-tested priority and newer-release list carries dated official sources,
+    states what is not verified, and has no scores, ranks or counts."""
+
+    def setUp(self):
+        self.entries = catalog.load()["entries"]
+        self.doc = json.loads((ROOT / "catalog" / "coverage_queue.json").read_text(encoding="utf-8"))
+
+    def test_production_queue_validates_and_keeps_routes_distinct(self):
+        now = datetime(2026, 10, 21, 12, tzinfo=timezone.utc)
+        self.assertEqual(catalog.validate_coverage_queue(self.doc, self.entries, now), [])
+        ids = {i["identifier"]: i for i in self.doc["items"]}
+        for identifier in ("muse-wonder-1.0", "muse-wonder-full-1.0", "gemini-4-argon", "claude-haiku-5-5", "kimi-k3"):
+            self.assertIn(identifier, ids)
+        self.assertIn("subscription", ids["muse-wonder-full-1.0"]["route"])         # never presented as the API route
+        self.assertIn("no Model API availability established", ids["muse-wonder-full-1.0"]["route"])
+        self.assertEqual(ids["kimi-k3"]["catalog_id"], "moonshot-api.kimi-k3")       # catalogued, not promoted
+        self.assertIsNone(ids["kimi-k3"]["released"])                                # no unverified release date
+        known = {e["id"] for e in self.entries}
+        for item in self.doc["items"]:
+            if item["catalog_id"] is None:
+                self.assertFalse(any(e.get("exact_identifier") == item["identifier"] for e in self.entries))
+            else:
+                self.assertIn(item["catalog_id"], known)
+
+    def test_refusals(self):
+        now = datetime(2026, 10, 21, 12, tzinfo=timezone.utc)
+
+        def changed(mutate):
+            doc = copy.deepcopy(self.doc)
+            mutate(doc)
+            return doc
+        cases = {
+            "a score": changed(lambda d: d["items"][0].update(score=4)),
+            "a rank": changed(lambda d: d.update(rank=[1])),
+            "access implied": changed(lambda d: d["items"][0].update(access="Free API access.")),
+            "unknown catalogue id": changed(lambda d: d["items"][0].update(catalog_id="meta-api.muse-wonder")),
+            "future release": changed(lambda d: d["items"][0].update(released="2027-01-01")),
+            "bad date": changed(lambda d: d["items"][0].update(released="12 Oct 2026")),
+            "no sources": changed(lambda d: d["items"][0].update(sources=[])),
+            "http source": changed(lambda d: d["items"][0]["sources"][0].update(url="http://example.com")),
+            "future check": changed(lambda d: d["items"][0]["sources"][0].update(checked_on="2027-01-01")),
+            "listed twice": changed(lambda d: d["items"].append(copy.deepcopy(d["items"][0]))),
+            "no explanation": changed(lambda d: d.update(explanation="list")),
+        }
+        for label, doc in cases.items():
+            with self.subTest(case=label):
+                self.assertTrue(catalog.validate_coverage_queue(doc, self.entries, now))
+
+
 class ProductionCatalogTests(unittest.TestCase):
     def setUp(self):
         self.document = json.loads((ROOT / "catalog" / "models.json").read_text(encoding="utf-8"))

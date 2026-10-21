@@ -210,6 +210,65 @@ def validate_featured(document, entries: list, now: datetime | None = None) -> l
     return problems
 
 
+COVERAGE_QUEUE_FIELDS = ("compiled_on", "explanation", "items", "schema_version")
+COVERAGE_ITEM_FIELDS = ("access", "catalog_id", "identifier", "maker", "name", "released", "route", "sources")
+COVERAGE_SOURCE_FIELDS = ("checked_on", "claim", "url")
+_DAY = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _past_day(value, now: datetime) -> bool:
+    if not isinstance(value, str) or not _DAY.match(value):
+        return False
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date() <= now.date()
+    except ValueError:
+        return False
+
+
+def validate_coverage_queue(document, entries: list, now: datetime | None = None) -> list:
+    """The not-tested priority and newer-release list (page audit, 21 October 2026): exact fields, dated official
+    sources, known catalogue ids. Every entry must state what is not verified about access; it carries no scores,
+    ranks or counts (exact field lists), so it cannot present an untested model as measured or free."""
+    now = now or datetime.now(timezone.utc)
+    if not isinstance(document, dict) or tuple(sorted(document)) != COVERAGE_QUEUE_FIELDS             or document.get("schema_version") != 1:
+        return [f"coverage queue must have exactly the fields {list(COVERAGE_QUEUE_FIELDS)} (schema_version 1)"]
+    problems = []
+    if not _past_day(document["compiled_on"], now):
+        problems.append("coverage_queue.compiled_on must be a past YYYY-MM-DD date")
+    if not isinstance(document["explanation"], str) or not 40 <= len(document["explanation"].strip()) <= 600:
+        problems.append("coverage_queue.explanation must say in 40-600 characters what the list is and is not")
+    items = document["items"]
+    if not isinstance(items, list) or not 1 <= len(items) <= 30:
+        return problems + ["coverage_queue.items must list 1-30 entries"]
+    known = {e["id"] for e in entries if isinstance(e, dict)}
+    seen = set()
+    for i, item in enumerate(items):
+        where = f"coverage_queue.items[{i}]"
+        if not isinstance(item, dict) or tuple(sorted(item)) != COVERAGE_ITEM_FIELDS:
+            problems.append(f"{where}: must have exactly the fields {list(COVERAGE_ITEM_FIELDS)}")
+            continue
+        for key in ("maker", "name", "identifier", "route", "access"):
+            if not isinstance(item[key], str) or not 1 <= len(item[key].strip()) <= 240:
+                problems.append(f"{where}.{key}: must be short text")
+        if isinstance(item["access"], str) and not re.search(r"not (verified|established)", item["access"]):
+            problems.append(f"{where}.access: must say what is not verified (never imply access)")
+        if item["identifier"] in seen:
+            problems.append(f"{where}: {item['identifier']} is listed twice")
+        seen.add(item["identifier"])
+        if item["catalog_id"] is not None and item["catalog_id"] not in known:
+            problems.append(f"{where}: unknown catalogue id {item['catalog_id']!r}")
+        if item["released"] is not None and not _past_day(item["released"], now):
+            problems.append(f"{where}.released: must be null or a past YYYY-MM-DD date")
+        sources = item["sources"]
+        if not isinstance(sources, list) or not 1 <= len(sources) <= 4:
+            problems.append(f"{where}.sources: must list 1-4 dated sources")
+            continue
+        for j, src in enumerate(sources):
+            if not isinstance(src, dict) or tuple(sorted(src)) != COVERAGE_SOURCE_FIELDS                     or not isinstance(src["url"], str) or not src["url"].startswith("https://")                     or not isinstance(src["claim"], str) or not 5 <= len(src["claim"]) <= 200                     or not _past_day(src["checked_on"], now):
+                problems.append(f"{where}.sources[{j}]: needs an https url, a short claim and a past checked_on date")
+    return problems
+
+
 MAKER_KEYS = {"OpenAI": "openai", "Anthropic": "anthropic", "Google": "google", "DeepSeek": "deepseek",
               "xAI": "xai", "Mistral AI": "mistral", "Alibaba (Qwen)": "qwen", "Moonshot AI": "moonshot",
               "Cohere": "cohere", "Meta": "meta"}

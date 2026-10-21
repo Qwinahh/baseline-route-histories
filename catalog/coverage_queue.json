@@ -1,0 +1,84 @@
+{
+ "schema_version": 1,
+ "compiled_on": "2026-10-21",
+ "explanation": "Priority models and verified newer releases that Baseline has not tested, from Baseline's dated release intake and catalogue sources. Each entry names its exact identifier, route and what is not verified. None has a Baseline score; listing does not mean an entry is free, available to Baseline or ready to test, and it is not a popularity ranking.",
+ "items": [
+  {
+   "maker": "Meta",
+   "name": "Muse Wonder",
+   "identifier": "muse-wonder-1.0",
+   "catalog_id": null,
+   "released": "2026-10-12",
+   "route": "Meta Model API (metered) and Muse Code",
+   "access": "A free route for Baseline's test is not verified.",
+   "sources": [
+    {"url": "https://dev.meta.ai/models/muse-wonder", "claim": "Official model listing: muse-wonder-1.0 for the Model API and Muse Code", "checked_on": "2026-10-14"},
+    {"url": "https://about.fb.com/news/2026/10/introducing-muse-wonder-models/", "claim": "Meta's dated announcement, 12 October 2026", "checked_on": "2026-10-14"}
+   ]
+  },
+  {
+   "maker": "Meta",
+   "name": "Muse Wonder Full",
+   "identifier": "muse-wonder-full-1.0",
+   "catalog_id": null,
+   "released": "2026-10-12",
+   "route": "Muse Code subscription only; no Model API availability established",
+   "access": "A subscription route does not establish API access for Baseline's test; not verified.",
+   "sources": [
+    {"url": "https://dev.meta.ai/models/muse-wonder", "claim": "Official model listing: muse-wonder-full-1.0 for Muse Code subscription access", "checked_on": "2026-10-14"},
+    {"url": "https://about.fb.com/news/2026/10/introducing-muse-wonder-models/", "claim": "Meta's dated announcement, 12 October 2026", "checked_on": "2026-10-14"}
+   ]
+  },
+  {
+   "maker": "Google",
+   "name": "Gemini 4 Argon",
+   "identifier": "gemini-4-argon",
+   "catalog_id": null,
+   "released": "2026-10-13",
+   "route": "Gemini API, generally available; a public request identifier, not an independently pinned checkpoint",
+   "access": "Account access and free measurement capacity are not verified.",
+   "sources": [
+    {"url": "https://ai.google.dev/gemini-api/docs/models/gemini-4-argon", "claim": "Official Gemini 4 Argon model page", "checked_on": "2026-10-14"},
+    {"url": "https://ai.google.dev/gemini-api/docs/changelog", "claim": "Gemini API release notes, 13 October 2026", "checked_on": "2026-10-14"}
+   ]
+  },
+  {
+   "maker": "Anthropic",
+   "name": "Claude Haiku 5.5",
+   "identifier": "claude-haiku-5-5",
+   "catalog_id": null,
+   "released": "2026-10-07",
+   "route": "Claude API; partner availability is listed separately",
+   "access": "Measurement access at no cost is not verified.",
+   "sources": [
+    {"url": "https://platform.claude.com/docs/en/models/haiku-5-5/overview", "claim": "Official overview: model ID, release date and routes", "checked_on": "2026-10-14"},
+    {"url": "https://www.anthropic.com/claude-haiku-5-5", "claim": "Anthropic's announcement", "checked_on": "2026-10-14"}
+   ]
+  },
+  {
+   "maker": "Mistral AI",
+   "name": "Mistral Large 4",
+   "identifier": "mistral-large-4",
+   "catalog_id": null,
+   "released": "2026-10-06",
+   "route": "Public preview (v26.10) in Mistral Studio and the API",
+   "access": "Free measurement access is not verified; a future weights release is not evidence that weights are available.",
+   "sources": [
+    {"url": "https://docs.mistral.ai/models/mistral-large-4", "claim": "Official Mistral Large 4 model page", "checked_on": "2026-10-14"},
+    {"url": "https://mistral.ai/news/mistral-large-4/", "claim": "Mistral's announcement, 6 October 2026", "checked_on": "2026-10-14"}
+   ]
+  },
+  {
+   "maker": "Moonshot AI",
+   "name": "Kimi K3",
+   "identifier": "kimi-k3",
+   "catalog_id": "moonshot-api.kimi-k3",
+   "released": null,
+   "route": "Kimi API, listed on Moonshot's official chat pricing page",
+   "access": "No free route for Baseline's test is verified, and a release date is not verified.",
+   "sources": [
+    {"url": "https://platform.kimi.ai/docs/pricing/chat", "claim": "'kimi-k3' appears in the official model listing", "checked_on": "2026-09-30"}
+   ]
+  }
+ ]
+}

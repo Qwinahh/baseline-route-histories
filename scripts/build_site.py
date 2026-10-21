@@ -217,6 +217,19 @@ def build(out_dir: Path, registry_dir: Path | None = None, evidence_root: Path |
         data["featured"] = featured
     else:
         data["featured"] = None
+    # Not-tested priority models and newer releases (page audit, 21 October 2026): dated sources only, validated.
+    queue_path = featured_path.parent / "coverage_queue.json"
+    if queue_path.exists():
+        try:
+            queue = json.loads(queue_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as exc:
+            raise BuildError(f"coverage queue unreadable: {exc}") from exc
+        problems = catalog.validate_coverage_queue(queue, entries, now)
+        if problems:
+            raise BuildError("coverage queue does not validate: " + "; ".join(problems[:10]))
+        data["coverage_queue"] = queue
+    else:
+        data["coverage_queue"] = None
     data["catalog_evidence_only"] = added
     data["catalog_checked_at"] = document.get("checked_at")
     data["baseline_tests"] = own_tests(entries, own_data_path, own_review_path, tuple(own_preview), now)
